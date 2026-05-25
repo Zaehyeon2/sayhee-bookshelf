@@ -1,8 +1,18 @@
+import Link from 'next/link'
+
 export default function NotFound() {
   return (
-    <div className="text-center py-20">
-      <h1 className="text-4xl font-bold">404</h1>
-      <p className="mt-2 text-neutral-600">그런 책이 없어요.</p>
+    <div className="mx-auto max-w-md text-center py-20">
+      <div className="rounded-[var(--radius-toss-lg)] bg-[var(--color-surface)] p-10 shadow-[var(--shadow-toss)]">
+        <div className="text-[56px] font-bold text-[var(--color-toss-blue)] font-tabular leading-none">404</div>
+        <p className="mt-3 text-[15px] text-[var(--color-text-muted)]">그런 책이 없어요.</p>
+        <Link
+          href="/books"
+          className="mt-6 inline-flex h-11 items-center px-5 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface-2)] hover:bg-[var(--color-border-subtle)] text-[14px] font-semibold text-[var(--color-text-strong)] transition"
+        >
+          목록으로
+        </Link>
+      </div>
     </div>
   )
 }

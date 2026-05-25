@@ -3,6 +3,31 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { GENRES } from '@/lib/genres'
 
+function ChipButton({
+  label,
+  active,
+  onClick,
+}: {
+  label: string
+  active: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        'shrink-0 h-9 px-4 rounded-full text-[13px] font-semibold transition active:scale-[0.97] ' +
+        (active
+          ? 'bg-[var(--color-toss-blue)] text-white'
+          : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)]')
+      }
+    >
+      {label}
+    </button>
+  )
+}
+
 export function Filters() {
   const router = useRouter()
   const sp = useSearchParams()
@@ -17,30 +42,23 @@ export function Filters() {
     router.push(qs ? `/books?${qs}` : '/books')
   }
 
-  function ChipButton({ label, value }: { label: string; value: string }) {
-    const active = currentGenre === value || (value === '' && currentGenre === '')
-    return (
-      <button
-        type="button"
-        onClick={() => setParam('genre', value || null)}
-        className={
-          'shrink-0 h-9 px-4 rounded-full text-[13px] font-semibold transition active:scale-[0.97] ' +
-          (active
-            ? 'bg-[var(--color-toss-blue)] text-white'
-            : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)]')
-        }
-      >
-        {label}
-      </button>
-    )
-  }
-
   return (
     <div className="flex items-center gap-3">
       <div className="flex-1 -mx-1 overflow-x-auto">
         <div className="flex gap-2 px-1 pb-1">
-          <ChipButton label="전체" value="" />
-          {GENRES.map((g) => <ChipButton key={g} label={g} value={g} />)}
+          <ChipButton
+            label="전체"
+            active={currentGenre === ''}
+            onClick={() => setParam('genre', null)}
+          />
+          {GENRES.map((g) => (
+            <ChipButton
+              key={g}
+              label={g}
+              active={currentGenre === g}
+              onClick={() => setParam('genre', g)}
+            />
+          ))}
         </div>
       </div>
       <select
