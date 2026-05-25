@@ -1,0 +1,37 @@
+import { db } from '@/lib/db/client'
+import { listBooks, searchBooks } from '@/lib/db/queries'
+import { BookCard } from '@/components/BookCard'
+
+interface SP {
+  searchParams: Promise<{ genre?: string; tag?: string; year?: string; q?: string; sort?: string }>
+}
+
+export default async function BooksPage({ searchParams }: SP) {
+  const sp = await searchParams
+  let books
+  if (sp.q && sp.q.trim()) {
+    books = await searchBooks(db, sp.q.trim())
+  } else {
+    books = await listBooks(db, {
+      genre: sp.genre,
+      tag: sp.tag,
+      year: sp.year ? Number(sp.year) : undefined,
+      sort: sp.sort === 'rating' ? 'rating' : 'date',
+    })
+  }
+  return (
+    <div>
+      <h2 className="mb-6 text-2xl font-bold">
+        {sp.q ? `"${sp.q}" 검색 결과` : sp.genre ? `장르: ${sp.genre}` : sp.tag ? `태그: ${sp.tag}` : '전체 책'}
+        <span className="ml-2 text-base font-normal text-neutral-500">({books.length}권)</span>
+      </h2>
+      {books.length === 0 ? (
+        <p className="text-neutral-500">결과가 없습니다.</p>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+          {books.map((b) => <BookCard key={b.id} book={b} />)}
+        </div>
+      )}
+    </div>
+  )
+}
