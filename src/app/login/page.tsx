@@ -47,7 +47,7 @@ function LoginForm() {
             onChange={(e) => setPw(e.target.value)}
             placeholder="비밀번호"
             autoFocus
-            className="w-full h-12 px-4 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition"
+            className="w-full h-12 px-4 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition"
           />
           {error && <p className="text-[13px] text-[var(--color-danger)] font-medium">{error}</p>}
           <button

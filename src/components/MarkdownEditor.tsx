@@ -28,7 +28,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, Props>(({ initial
       ref={editorRef}
       initialValue={initialValue || ' '}
       previewStyle="vertical"
-      height="400px"
+      height="clamp(280px, 50vh, 480px)"
       initialEditType="wysiwyg"
       useCommandShortcut
     />

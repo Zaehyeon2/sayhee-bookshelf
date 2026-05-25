@@ -82,7 +82,7 @@ export function TagInput({ value, onChange }: Props) {
           }
         }}
         placeholder="태그 입력 후 Enter"
-        className="w-full h-11 px-4 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[14px] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition"
+        className="w-full h-11 px-4 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition"
       />
       {suggestions.length > 0 && (
         <ul className="mt-2 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-toss-hover)] overflow-hidden">

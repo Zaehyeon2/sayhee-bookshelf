@@ -79,10 +79,10 @@ export default async function HomePage() {
 
 function StatCard({ label, value, suffix }: { label: string; value: string; suffix: string }) {
   return (
-    <div className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-toss)]">
+    <div className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-4 sm:p-5 shadow-[var(--shadow-toss)]">
       <div className="text-[12px] font-medium text-[var(--color-text-weak)]">{label}</div>
       <div className="mt-1 flex items-baseline gap-1">
-        <span className="text-[28px] font-bold text-[var(--color-text-strong)] font-tabular leading-none">
+        <span className="text-[22px] sm:text-[28px] font-bold text-[var(--color-text-strong)] font-tabular leading-none">
           {value}
         </span>
         {suffix && (

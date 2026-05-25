@@ -31,7 +31,7 @@ export function SearchBox() {
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="제목·작가 검색"
-        className="w-full h-12 pl-11 pr-24 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition"
+        className="w-full h-12 pl-11 pr-24 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition"
       />
       <button
         type="submit"
