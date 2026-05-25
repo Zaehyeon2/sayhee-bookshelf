@@ -2,6 +2,12 @@ import { db } from '@/lib/db/client'
 import { listBooks, searchBooks } from '@/lib/db/queries'
 import { BookCard } from '@/components/BookCard'
 
+function parseYear(value: string | undefined): number | undefined {
+  if (!value) return undefined
+  const n = Number(value)
+  return Number.isFinite(n) ? n : undefined
+}
+
 interface SP {
   searchParams: Promise<{ genre?: string; tag?: string; year?: string; q?: string; sort?: string }>
 }
@@ -15,7 +21,7 @@ export default async function BooksPage({ searchParams }: SP) {
     books = await listBooks(db, {
       genre: sp.genre,
       tag: sp.tag,
-      year: sp.year ? Number(sp.year) : undefined,
+      year: parseYear(sp.year),
       sort: sp.sort === 'rating' ? 'rating' : 'date',
     })
   }

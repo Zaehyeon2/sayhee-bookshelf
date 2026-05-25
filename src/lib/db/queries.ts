@@ -1,4 +1,4 @@
-import { eq, like, desc, and, sql } from 'drizzle-orm'
+import { eq, like, desc, and, sql, inArray } from 'drizzle-orm'
 import type { LibSQLDatabase } from 'drizzle-orm/libsql'
 import { books, tags, bookTags } from './schema'
 import type * as schema from './schema'
@@ -20,6 +20,22 @@ async function attachTags(db: Db, bookId: number): Promise<string[]> {
     .innerJoin(tags, eq(bookTags.tagId, tags.id))
     .where(eq(bookTags.bookId, bookId))
   return rows.map((r) => r.name)
+}
+
+async function attachTagsBatch(db: Db, bookIds: number[]): Promise<Map<number, string[]>> {
+  if (bookIds.length === 0) return new Map()
+  const rows = await db
+    .select({ bookId: bookTags.bookId, name: tags.name })
+    .from(bookTags)
+    .innerJoin(tags, eq(bookTags.tagId, tags.id))
+    .where(inArray(bookTags.bookId, bookIds))
+  const map = new Map<number, string[]>()
+  for (const r of rows) {
+    const existing = map.get(r.bookId) ?? []
+    existing.push(r.name)
+    map.set(r.bookId, existing)
+  }
+  return map
 }
 
 async function getOrCreateTag(db: Db, name: string): Promise<number> {
@@ -187,12 +203,8 @@ export async function listBooks(
         filters.sort === 'rating' ? desc(books.rating) : desc(books.readDate),
       )
 
-    const result: BookWithTags[] = []
-    for (const row of rows) {
-      const tagNames = await attachTags(db, row.book.id)
-      result.push({ ...row.book, tags: tagNames })
-    }
-    return result
+    const tagMap = await attachTagsBatch(db, rows.map((r) => r.book.id))
+    return rows.map((r) => ({ ...r.book, tags: tagMap.get(r.book.id) ?? [] }))
   }
 
   // No tag filter — simple query
@@ -205,12 +217,8 @@ export async function listBooks(
       filters.sort === 'rating' ? desc(books.rating) : desc(books.readDate),
     )
 
-  const result: BookWithTags[] = []
-  for (const row of rows) {
-    const tagNames = await attachTags(db, row.id)
-    result.push({ ...row, tags: tagNames })
-  }
-  return result
+  const tagMap = await attachTagsBatch(db, rows.map((r) => r.id))
+  return rows.map((r) => ({ ...r, tags: tagMap.get(r.id) ?? [] }))
 }
 
 export async function searchBooks(db: Db, q: string): Promise<BookWithTags[]> {
@@ -223,12 +231,8 @@ export async function searchBooks(db: Db, q: string): Promise<BookWithTags[]> {
     )
     .orderBy(desc(books.readDate))
 
-  const result: BookWithTags[] = []
-  for (const row of rows) {
-    const tagNames = await attachTags(db, row.id)
-    result.push({ ...row, tags: tagNames })
-  }
-  return result
+  const tagMap = await attachTagsBatch(db, rows.map((r) => r.id))
+  return rows.map((r) => ({ ...r, tags: tagMap.get(r.id) ?? [] }))
 }
 
 export async function suggestTags(db: Db, q: string): Promise<string[]> {

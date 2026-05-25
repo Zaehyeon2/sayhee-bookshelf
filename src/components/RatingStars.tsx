@@ -25,7 +25,7 @@ export function RatingStars({ value, onChange, size = 'md' }: Props) {
             type="button"
             onClick={() => onChange?.(n)}
             aria-label={`${n}점`}
-            className="cursor-pointer"
+            className="cursor-pointer rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500"
           >
             {Star}
           </button>
