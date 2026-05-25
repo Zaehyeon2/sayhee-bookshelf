@@ -1,8 +1,16 @@
 import type { Genre } from '@/lib/genres'
 
-export function GenreBadge({ genre }: { genre: Genre | string }) {
+interface Props {
+  genre: Genre | string
+  active?: boolean
+}
+
+export function GenreBadge({ genre, active = false }: Props) {
+  const cls = active
+    ? 'bg-[var(--color-toss-blue-light)] text-[var(--color-toss-blue)]'
+    : 'bg-[var(--color-surface-2)] text-[var(--color-text-muted)]'
   return (
-    <span className="inline-block rounded-full bg-neutral-200 px-2 py-0.5 text-xs text-neutral-700">
+    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-medium ${cls}`}>
       {genre}
     </span>
   )
