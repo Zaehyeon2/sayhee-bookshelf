@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { verifySession, SESSION } from '@/lib/auth'
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const token = req.cookies.get(SESSION.name)?.value
   const ok = await verifySession(token)
   if (ok) return NextResponse.next()
