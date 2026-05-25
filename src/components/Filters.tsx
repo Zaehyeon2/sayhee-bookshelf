@@ -44,7 +44,7 @@ export function Filters() {
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex-1 -mx-1 overflow-x-auto">
+      <div className="flex-1 -mx-1 scroll-x-touch">
         <div className="flex gap-2 px-1 pb-1">
           <ChipButton
             label="전체"
@@ -64,7 +64,7 @@ export function Filters() {
       <select
         value={currentSort}
         onChange={(e) => setParam('sort', e.target.value === 'date' ? null : e.target.value)}
-        className="shrink-0 h-9 pl-3 pr-8 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[13px] text-[var(--color-text-strong)] focus:border-[var(--color-toss-blue)] outline-none"
+        className="shrink-0 h-9 pl-3 pr-8 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] text-[var(--color-text-strong)] focus:border-[var(--color-toss-blue)] outline-none"
       >
         <option value="date">최근 순</option>
         <option value="rating">별점 순</option>

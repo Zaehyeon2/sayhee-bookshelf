@@ -61,7 +61,7 @@ export function TagInput({ value, onChange }: Props) {
                 type="button"
                 onClick={() => remove(t)}
                 aria-label={`${t} 제거`}
-                className="text-[var(--color-text-weak)] hover:text-[var(--color-text-strong)] w-4 h-4 inline-flex items-center justify-center"
+                className="text-[var(--color-text-weak)] hover:text-[var(--color-text-strong)] inline-flex items-center justify-center w-6 h-6 -mr-1 leading-none text-[16px]"
               >
                 ×
               </button>
