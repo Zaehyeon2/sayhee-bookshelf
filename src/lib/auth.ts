@@ -10,10 +10,12 @@ function secret(): Uint8Array {
   return new TextEncoder().encode(s)
 }
 
+const DUMMY_HASH = '$2a$10$aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+
 export async function verifyPassword(input: string): Promise<boolean> {
-  const hash = process.env.ADMIN_PASSWORD_HASH
-  if (!hash) return false
-  return bcrypt.compare(input, hash)
+  const hash = process.env.ADMIN_PASSWORD_HASH ?? DUMMY_HASH
+  const result = await bcrypt.compare(input, hash)
+  return Boolean(process.env.ADMIN_PASSWORD_HASH) && result
 }
 
 export async function signSession(): Promise<string> {
@@ -27,9 +29,11 @@ export async function signSession(): Promise<string> {
 export async function verifySession(token: string | undefined): Promise<boolean> {
   if (!token) return false
   try {
-    await jwtVerify(token, secret())
+    await jwtVerify(token, secret(), { algorithms: ['HS256'] })
     return true
   } catch {
+    // Returns false on signature failure, malformed token, OR misconfigured AUTH_SECRET.
+    // AUTH_SECRET validation should happen at deploy time.
     return false
   }
 }

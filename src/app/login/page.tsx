@@ -24,7 +24,9 @@ function LoginForm() {
       setError('로그인 실패')
       return
     }
-    router.push(sp.get('from') || '/admin/new')
+    const from = sp.get('from')
+    const dest = from && from.startsWith('/') && !from.startsWith('//') ? from : '/admin/new'
+    router.push(dest)
     router.refresh()
   }
 
