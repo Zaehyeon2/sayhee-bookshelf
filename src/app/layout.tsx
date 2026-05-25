@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -9,17 +10,35 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
-      <body className="min-h-screen bg-neutral-50 text-neutral-900 antialiased">
-        <header className="border-b bg-white">
-          <nav className="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
-            <a href="/" className="text-lg font-semibold">📚 독후감</a>
-            <div className="flex items-center gap-4">
-              <a href="/books" className="text-sm text-neutral-600 hover:text-neutral-900">목록</a>
-              <a href="/admin/new" className="text-sm text-neutral-500 hover:text-neutral-800">관리</a>
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
+        />
+      </head>
+      <body className="min-h-screen">
+        <header className="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-[var(--color-border-subtle)]">
+          <nav className="mx-auto max-w-5xl px-5 h-14 flex items-center justify-between">
+            <Link href="/" className="text-[17px] font-bold text-[var(--color-text-strong)] tracking-tight">
+              📚 독후감
+            </Link>
+            <div className="flex items-center gap-1">
+              <Link
+                href="/books"
+                className="px-3 h-9 inline-flex items-center text-[14px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)] transition"
+              >
+                목록
+              </Link>
+              <Link
+                href="/admin/new"
+                className="px-3 h-9 inline-flex items-center text-[14px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)] transition"
+              >
+                관리
+              </Link>
             </div>
           </nav>
         </header>
-        <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+        <main className="mx-auto max-w-5xl px-5 py-8">{children}</main>
       </body>
     </html>
   )
