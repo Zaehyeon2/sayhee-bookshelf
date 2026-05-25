@@ -6,7 +6,7 @@ import { BookForm } from '@/components/BookForm'
 export default async function EditBookPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const numId = Number(id)
-  if (!Number.isInteger(numId)) notFound()
+  if (!Number.isSafeInteger(numId) || numId <= 0) notFound()
   const book = await getBookById(db, numId)
   if (!book) notFound()
   return (

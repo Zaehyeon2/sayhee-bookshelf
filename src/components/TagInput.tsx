@@ -18,13 +18,24 @@ export function TagInput({ value, onChange }: Props) {
       setSuggestions([])
       return
     }
+    let cancelled = false
     debounceRef.current = setTimeout(async () => {
-      const res = await fetch(`/api/tags/suggest?q=${encodeURIComponent(input.trim())}`)
-      if (res.ok) {
-        const data = await res.json()
-        setSuggestions(data.tags.filter((t: string) => !value.includes(t)))
+      try {
+        const res = await fetch(`/api/tags/suggest?q=${encodeURIComponent(input.trim())}`)
+        if (cancelled || !res.ok) return
+        const data = await res.json() as { tags?: unknown }
+        const raw = Array.isArray(data.tags) ? (data.tags as string[]) : []
+        if (!cancelled) {
+          setSuggestions(raw.filter((t) => !value.includes(t)))
+        }
+      } catch {
+        // network errors are silently ignored — suggestions stay empty
       }
     }, 200)
+    return () => {
+      cancelled = true
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
   }, [input, value])
 
   function add(t: string) {

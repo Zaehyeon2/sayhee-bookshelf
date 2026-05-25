@@ -38,10 +38,14 @@ export function BookForm({ initial, mode }: Props) {
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-    const content = editorRef.current?.getMarkdown() ?? ''
-    const payload = { title, author, genre, readDate, rating, content, tags }
-
     startTransition(async () => {
+      const editor = editorRef.current
+      if (!editor) {
+        setError('에디터가 준비되지 않았습니다. 다시 시도해주세요.')
+        return
+      }
+      const content = editor.getMarkdown()
+      const payload = { title, author, genre, readDate, rating, content, tags }
       const url = mode === 'create' ? '/api/books' : `/api/books/${initial?.id}`
       const res = await fetch(url, {
         method: mode === 'create' ? 'POST' : 'PUT',
