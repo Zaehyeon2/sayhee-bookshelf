@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+
+# Local databases
+*.db
+*.db-shm
+*.db-wal
+local.db*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Tooling caches
+.cache/
+.turbo/
+.vercel/
+coverage/
+
+# Playwright
+playwright-report/
+test-results/
+
+# Tool-generated working dirs (not part of the source tree)
+.superpowers/
+.omc/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
