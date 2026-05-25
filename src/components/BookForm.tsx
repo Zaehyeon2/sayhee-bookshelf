@@ -22,6 +22,11 @@ interface Props {
   mode: 'create' | 'edit'
 }
 
+const inputCls =
+  'w-full h-12 px-4 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] text-[var(--color-text-strong)] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition'
+
+const labelCls = 'block text-[13px] font-semibold text-[var(--color-text-muted)] mb-2'
+
 export function BookForm({ initial, mode }: Props) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -64,45 +69,65 @@ export function BookForm({ initial, mode }: Props) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium">제목</label>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} required className="mt-1 w-full rounded border px-3 py-2" />
-      </div>
-      <div>
-        <label className="block text-sm font-medium">작가</label>
-        <input value={author} onChange={(e) => setAuthor(e.target.value)} required className="mt-1 w-full rounded border px-3 py-2" />
-      </div>
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={submit} className="space-y-6">
+      <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-toss)] space-y-5">
         <div>
-          <label className="block text-sm font-medium">장르</label>
-          <select value={genre} onChange={(e) => setGenre(e.target.value)} className="mt-1 w-full rounded border px-3 py-2">
-            {GENRES.map((g) => <option key={g} value={g}>{g}</option>)}
-          </select>
+          <label className={labelCls}>제목</label>
+          <input value={title} onChange={(e) => setTitle(e.target.value)} required className={inputCls} />
         </div>
         <div>
-          <label className="block text-sm font-medium">읽은 날짜</label>
-          <input type="date" value={readDate} onChange={(e) => setReadDate(e.target.value)} required className="mt-1 w-full rounded border px-3 py-2" />
+          <label className={labelCls}>작가</label>
+          <input value={author} onChange={(e) => setAuthor(e.target.value)} required className={inputCls} />
         </div>
-      </div>
-      <div>
-        <label className="block text-sm font-medium">별점</label>
-        <RatingStars value={rating} onChange={setRating} size="lg" />
-      </div>
-      <div>
-        <label className="block text-sm font-medium">태그</label>
-        <TagInput value={tags} onChange={setTags} />
-      </div>
-      <div>
-        <label className="block text-sm font-medium">본문</label>
-        <div className="mt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className={labelCls}>장르</label>
+            <select value={genre} onChange={(e) => setGenre(e.target.value)} className={inputCls}>
+              {GENRES.map((g) => <option key={g} value={g}>{g}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>읽은 날짜</label>
+            <input type="date" value={readDate} onChange={(e) => setReadDate(e.target.value)} required className={inputCls} />
+          </div>
+        </div>
+        <div>
+          <label className={labelCls}>별점</label>
+          <RatingStars value={rating} onChange={setRating} size="lg" />
+        </div>
+        <div>
+          <label className={labelCls}>태그</label>
+          <TagInput value={tags} onChange={setTags} />
+        </div>
+      </section>
+
+      <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-toss)]">
+        <label className={labelCls}>본문</label>
+        <div className="rounded-[var(--radius-toss-sm)] border border-[var(--color-border)] overflow-hidden">
           <MarkdownEditor ref={editorRef} initialValue={initial?.content ?? ''} />
         </div>
+      </section>
+
+      {error && (
+        <p className="text-[14px] text-[var(--color-danger)] font-medium">{error}</p>
+      )}
+
+      <div className="flex items-center justify-end gap-3">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="h-12 px-5 rounded-[var(--radius-toss-sm)] text-[15px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] hover:bg-[var(--color-surface-2)] transition"
+        >
+          취소
+        </button>
+        <button
+          type="submit"
+          disabled={pending}
+          className="h-12 px-6 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[15px] font-semibold hover:bg-[var(--color-toss-blue-hover)] active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 transition"
+        >
+          {pending ? '저장 중…' : mode === 'create' ? '등록' : '수정'}
+        </button>
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <button type="submit" disabled={pending} className="rounded bg-neutral-900 px-4 py-2 text-white disabled:opacity-50">
-        {pending ? '저장 중…' : mode === 'create' ? '등록' : '수정'}
-      </button>
     </form>
   )
 }
