@@ -10,8 +10,10 @@ export default async function EditBookPage({ params }: { params: Promise<{ id: s
   const book = await getBookById(db, numId)
   if (!book) notFound()
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-bold">독후감 수정</h1>
+    <div className="space-y-6">
+      <h1 className="text-[28px] font-bold tracking-tight text-[var(--color-text-strong)]">
+        독후감 수정
+      </h1>
       <BookForm mode="edit" initial={book} />
     </div>
   )
