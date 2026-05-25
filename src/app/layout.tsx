@@ -13,7 +13,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="border-b bg-white">
           <nav className="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
             <a href="/" className="text-lg font-semibold">📚 독후감</a>
-            <a href="/books" className="text-sm text-neutral-600 hover:text-neutral-900">목록</a>
+            <div className="flex items-center gap-4">
+              <a href="/books" className="text-sm text-neutral-600 hover:text-neutral-900">목록</a>
+              <a href="/admin/new" className="text-sm text-neutral-500 hover:text-neutral-800">관리</a>
+            </div>
           </nav>
         </header>
         <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
