@@ -6,28 +6,33 @@ interface Props {
   size?: 'sm' | 'md' | 'lg'
 }
 
+const SIZE: Record<NonNullable<Props['size']>, string> = {
+  sm: 'text-[16px] gap-0.5',
+  md: 'text-[20px] gap-1',
+  lg: 'text-[28px] gap-1',
+}
+
 export function RatingStars({ value, onChange, size = 'md' }: Props) {
-  const sizeClass = { sm: 'text-sm', md: 'text-base', lg: 'text-2xl' }[size]
   const editable = !!onChange
   return (
-    <div className={`inline-flex gap-0.5 ${sizeClass}`} aria-label={`별점 ${value}/5`}>
+    <div
+      className={`inline-flex font-tabular ${SIZE[size]}`}
+      aria-label={`별점 ${value}/5`}
+    >
       {[1, 2, 3, 4, 5].map((n) => {
         const filled = n <= value
-        const Star = (
-          <span data-filled={filled} className={filled ? 'text-amber-500' : 'text-neutral-300'}>
-            ★
-          </span>
-        )
-        if (!editable) return <span key={n}>{Star}</span>
+        const color = filled ? 'text-[var(--color-toss-yellow)]' : 'text-[var(--color-border)]'
+        const star = <span data-filled={filled} className={color}>★</span>
+        if (!editable) return <span key={n}>{star}</span>
         return (
           <button
             key={n}
             type="button"
             onClick={() => onChange?.(n)}
             aria-label={`${n}점`}
-            className="cursor-pointer rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500"
+            className="leading-none hover:scale-110 active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/30 rounded-sm"
           >
-            {Star}
+            {star}
           </button>
         )
       })}
