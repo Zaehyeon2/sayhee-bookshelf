@@ -59,7 +59,7 @@ macOS/CI 환경에서는 별도 설정 없이 동작합니다.
 - `src/lib/db/` — Drizzle 스키마·클라이언트·쿼리
 - `src/lib/auth.ts` — 인증 (bcrypt + HS256 JWT)
 - `src/lib/genres.ts` — 14개 장르 enum
-- `src/middleware.ts` — `/admin/*`, `/api/books/*`, `/api/tags/suggest` 보호
+- `src/proxy.ts` — `/admin/*`, `/api/books/*`, `/api/tags/suggest` 보호 (Next.js 16 명명)
 - `drizzle/` — 마이그레이션
 - `tests/unit/` — Vitest 단위 테스트
 - `tests/e2e/` — Playwright E2E
