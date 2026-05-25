@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 독후감 사이트
 
-## Getting Started
+1인용 독후감/독서 기록 사이트. Next.js 16 + Drizzle + Turso + Vercel.
 
-First, run the development server:
+## 로컬 실행
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.example .env.local
+# .env.local 안의 ADMIN_PASSWORD_HASH, AUTH_SECRET 채우기
+node -e "console.log(require('bcryptjs').hashSync('내비밀번호', 10))"
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+pnpm exec dotenv -e .env.local -- drizzle-kit push   # 로컬 SQLite 마이그레이션
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 테스트
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm test         # Vitest 단위 (29개)
+pnpm e2e          # Playwright E2E (2개 — 인증 차단 + 골든 패스)
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### E2E 환경 준비
 
-## Learn More
+Playwright의 Chromium은 Linux/WSL2에서 시스템 공유 라이브러리(`libnspr4`, `libnss3` 등)를 요구합니다.
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# 최초 1회 (sudo 필요):
+sudo pnpm exec playwright install-deps chromium
+# 또는 수동:
+sudo apt install libnspr4 libnss3 libasound2t64
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+macOS/CI 환경에서는 별도 설정 없이 동작합니다.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Vercel 배포
 
-## Deploy on Vercel
+1. GitHub 저장소 생성 후 main 브랜치 push
+2. Turso CLI로 prod DB 생성:
+   ```bash
+   turso db create book-report
+   turso db show book-report --url      # → TURSO_URL
+   turso db tokens create book-report   # → TURSO_TOKEN
+   ```
+3. Vercel에서 GitHub 저장소 연결
+4. 환경변수 등록: `TURSO_URL`, `TURSO_TOKEN`, `ADMIN_PASSWORD_HASH`, `AUTH_SECRET`
+5. 첫 배포 후 운영 DB에 스키마 push:
+   ```bash
+   TURSO_URL=libsql://... TURSO_TOKEN=... pnpm exec drizzle-kit push
+   ```
+6. 이후 `git push origin main` → Vercel 자동 빌드/배포
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 구조
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/app/` — Next.js App Router 페이지/API
+- `src/components/` — UI 컴포넌트 (BookForm, BookCard, RatingStars, TagInput 등)
+- `src/lib/db/` — Drizzle 스키마·클라이언트·쿼리
+- `src/lib/auth.ts` — 인증 (bcrypt + HS256 JWT)
+- `src/lib/genres.ts` — 14개 장르 enum
+- `src/middleware.ts` — `/admin/*`, `/api/books/*`, `/api/tags/suggest` 보호
+- `drizzle/` — 마이그레이션
+- `tests/unit/` — Vitest 단위 테스트
+- `tests/e2e/` — Playwright E2E
+- `docs/superpowers/` — 설계서/구현 계획서
