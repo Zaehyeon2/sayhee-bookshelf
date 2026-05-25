@@ -10,9 +10,13 @@ export function SearchBox() {
 
   function submit(e: React.FormEvent) {
     e.preventDefault()
-    const params = new URLSearchParams()
-    if (q.trim()) params.set('q', q.trim())
-    router.push(`/books?${params.toString()}`)
+    // Preserve other filters (genre/tag/sort) when searching; only swap q.
+    const params = new URLSearchParams(sp.toString())
+    const trimmed = q.trim()
+    if (trimmed) params.set('q', trimmed)
+    else params.delete('q')
+    const qs = params.toString()
+    router.push(qs ? `/books?${qs}` : '/books')
   }
 
   return (

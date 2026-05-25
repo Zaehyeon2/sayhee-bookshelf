@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { db } from '@/lib/db/client'
 import { listBooks, searchBooks } from '@/lib/db/queries'
 import { BookCard } from '@/components/BookCard'
@@ -36,8 +37,10 @@ export default async function BooksPage({ searchParams }: SP) {
 
   return (
     <div className="space-y-6">
-      <SearchBox />
-      <Filters />
+      <Suspense fallback={null}>
+        <SearchBox />
+        <Filters />
+      </Suspense>
       <h2 className="text-xl font-semibold">
         {title}
         <span className="ml-2 text-sm font-normal text-neutral-500">({books.length}권)</span>
