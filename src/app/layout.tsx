@@ -18,7 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-screen">
-        <header className="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-[var(--color-border-subtle)]">
+        <header className="sticky top-0 z-10 bg-[var(--color-header-bg)] backdrop-blur border-b border-[var(--color-border-subtle)]">
           <nav className="mx-auto max-w-5xl px-5 h-14 flex items-center justify-between">
             <Link href="/" className="text-[17px] font-bold text-[var(--color-text-strong)] tracking-tight">
               📚 독후감
