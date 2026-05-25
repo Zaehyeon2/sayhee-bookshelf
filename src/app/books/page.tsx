@@ -31,8 +31,8 @@ export default async function BooksPage({ searchParams }: SP) {
 
   const title =
     sp.q ? `"${sp.q}" 검색 결과`
-    : sp.genre ? `장르: ${sp.genre}`
-    : sp.tag ? `태그: ${sp.tag}`
+    : sp.genre ? `장르 · ${sp.genre}`
+    : sp.tag ? `태그 · ${sp.tag}`
     : '전체 책'
 
   return (
@@ -41,12 +41,14 @@ export default async function BooksPage({ searchParams }: SP) {
         <SearchBox />
         <Filters />
       </Suspense>
-      <h2 className="text-xl font-semibold">
-        {title}
-        <span className="ml-2 text-sm font-normal text-neutral-500">({books.length}권)</span>
-      </h2>
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-[22px] font-bold text-[var(--color-text-strong)]">{title}</h2>
+        <span className="text-[13px] text-[var(--color-text-weak)] font-tabular">{books.length}권</span>
+      </div>
       {books.length === 0 ? (
-        <p className="text-neutral-500">결과가 없습니다.</p>
+        <div className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-10 text-center shadow-[var(--shadow-toss)]">
+          <p className="text-[14px] text-[var(--color-text-weak)]">결과가 없습니다.</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           {books.map((b) => <BookCard key={b.id} book={b} />)}
