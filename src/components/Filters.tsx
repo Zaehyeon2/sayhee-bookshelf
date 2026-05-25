@@ -6,31 +6,50 @@ import { GENRES } from '@/lib/genres'
 export function Filters() {
   const router = useRouter()
   const sp = useSearchParams()
+  const currentGenre = sp.get('genre') ?? ''
+  const currentSort = sp.get('sort') ?? 'date'
 
   function setParam(key: string, value: string | null) {
     const params = new URLSearchParams(sp.toString())
     if (value) params.set(key, value)
     else params.delete(key)
-    router.push(`/books?${params.toString()}`)
+    const qs = params.toString()
+    router.push(qs ? `/books?${qs}` : '/books')
+  }
+
+  function ChipButton({ label, value }: { label: string; value: string }) {
+    const active = currentGenre === value || (value === '' && currentGenre === '')
+    return (
+      <button
+        type="button"
+        onClick={() => setParam('genre', value || null)}
+        className={
+          'shrink-0 h-9 px-4 rounded-full text-[13px] font-semibold transition active:scale-[0.97] ' +
+          (active
+            ? 'bg-[var(--color-toss-blue)] text-white'
+            : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)]')
+        }
+      >
+        {label}
+      </button>
+    )
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex items-center gap-3">
+      <div className="flex-1 -mx-1 overflow-x-auto">
+        <div className="flex gap-2 px-1 pb-1">
+          <ChipButton label="전체" value="" />
+          {GENRES.map((g) => <ChipButton key={g} label={g} value={g} />)}
+        </div>
+      </div>
       <select
-        value={sp.get('genre') ?? ''}
-        onChange={(e) => setParam('genre', e.target.value || null)}
-        className="rounded border px-3 py-2 text-sm"
-      >
-        <option value="">전체 장르</option>
-        {GENRES.map((g) => <option key={g} value={g}>{g}</option>)}
-      </select>
-      <select
-        value={sp.get('sort') ?? 'date'}
+        value={currentSort}
         onChange={(e) => setParam('sort', e.target.value === 'date' ? null : e.target.value)}
-        className="rounded border px-3 py-2 text-sm"
+        className="shrink-0 h-9 pl-3 pr-8 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[13px] text-[var(--color-text-strong)] focus:border-[var(--color-toss-blue)] outline-none"
       >
-        <option value="date">최근 읽은 순</option>
-        <option value="rating">별점 높은 순</option>
+        <option value="date">최근 순</option>
+        <option value="rating">별점 순</option>
       </select>
     </div>
   )
