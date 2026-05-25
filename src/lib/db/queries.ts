@@ -23,7 +23,7 @@ async function attachTags(db: Db, bookId: number): Promise<string[]> {
 }
 
 async function getOrCreateTag(db: Db, name: string): Promise<number> {
-  await db.insert(tags).values({ name }).onConflictDoNothing()
+  await db.insert(tags).values({ name }).onConflictDoNothing({ target: tags.name })
   const [row] = await db.select({ id: tags.id }).from(tags).where(eq(tags.name, name)).limit(1)
   if (!row) throw new Error(`Tag insert+select failed for ${name}`)
   return row.id
@@ -38,9 +38,13 @@ async function replaceBookTags(db: Db, bookId: number, tagNames: string[]): Prom
 }
 
 function isSlugUniqueViolation(e: unknown): boolean {
-  // Walk the error cause chain — drizzle wraps LibsqlError in a generic Error
+  // Walk the error cause chain — drizzle wraps LibsqlError in a generic Error.
+  // WeakSet guards against circular .cause references.
+  const seen = new WeakSet<object>()
   let current: unknown = e
   while (current != null && typeof current === 'object') {
+    if (seen.has(current as object)) break
+    seen.add(current as object)
     const err = current as { code?: string; message?: string; cause?: unknown }
     if (
       err.code === 'SQLITE_CONSTRAINT' &&
@@ -61,6 +65,7 @@ export async function createBook(db: Db, input: CreateBookInput): Promise<BookWi
   const base = toSlug(input.title)
   const now = Date.now()
 
+  // suffix counter starts at -2 (i=1 → `${base}-2`) by convention; first attempt has no suffix.
   for (let i = 0; i < 100; i++) {
     const candidate = i === 0 ? base : `${base}-${i + 1}`
     try {
