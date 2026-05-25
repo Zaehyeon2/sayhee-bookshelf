@@ -30,6 +30,7 @@
 - **입력 검증**: Zod (폼·API 양쪽)
 - **알림 UI**: `sonner` (가벼운 토스트)
 - **테스트**: Vitest + @testing-library/react + Playwright (E2E 1~2개)
+- **패키지 매니저**: pnpm (빠르고 디스크 효율적, lockfile은 `pnpm-lock.yaml`)
 
 ### 라이브러리 선택 근거
 
