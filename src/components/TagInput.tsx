@@ -25,11 +25,9 @@ export function TagInput({ value, onChange }: Props) {
         if (cancelled || !res.ok) return
         const data = await res.json() as { tags?: unknown }
         const raw = Array.isArray(data.tags) ? (data.tags as string[]) : []
-        if (!cancelled) {
-          setSuggestions(raw.filter((t) => !value.includes(t)))
-        }
+        if (!cancelled) setSuggestions(raw.filter((t) => !value.includes(t)))
       } catch {
-        // network errors are silently ignored — suggestions stay empty
+        // ignore
       }
     }, 200)
     return () => {
@@ -45,23 +43,32 @@ export function TagInput({ value, onChange }: Props) {
     setInput('')
     setSuggestions([])
   }
-
   function remove(t: string) {
     onChange(value.filter((x) => x !== t))
   }
 
   return (
     <div>
-      <ul className="mb-2 flex flex-wrap gap-2">
-        {value.map((t) => (
-          <li key={t} className="inline-flex items-center gap-1 rounded bg-neutral-200 px-2 py-1 text-sm">
-            #{t}
-            <button type="button" onClick={() => remove(t)} aria-label={`${t} 제거`} className="text-neutral-500 hover:text-neutral-900">
-              ×
-            </button>
-          </li>
-        ))}
-      </ul>
+      {value.length > 0 && (
+        <ul className="mb-2 flex flex-wrap gap-1.5">
+          {value.map((t) => (
+            <li
+              key={t}
+              className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-surface-2)] text-[var(--color-text-muted)] pl-3 pr-2 py-1 text-[12px] font-medium"
+            >
+              #{t}
+              <button
+                type="button"
+                onClick={() => remove(t)}
+                aria-label={`${t} 제거`}
+                className="text-[var(--color-text-weak)] hover:text-[var(--color-text-strong)] w-4 h-4 inline-flex items-center justify-center"
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
       <input
         type="text"
         value={input}
@@ -75,13 +82,17 @@ export function TagInput({ value, onChange }: Props) {
           }
         }}
         placeholder="태그 입력 후 Enter"
-        className="w-full rounded border px-3 py-2"
+        className="w-full h-11 px-4 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[14px] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition"
       />
       {suggestions.length > 0 && (
-        <ul className="mt-1 rounded border bg-white shadow">
+        <ul className="mt-2 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-toss-hover)] overflow-hidden">
           {suggestions.map((s) => (
             <li key={s}>
-              <button type="button" onClick={() => add(s)} className="block w-full px-3 py-1 text-left hover:bg-neutral-100">
+              <button
+                type="button"
+                onClick={() => add(s)}
+                className="block w-full px-4 py-2 text-left text-[14px] text-[var(--color-text-strong)] hover:bg-[var(--color-surface-2)] transition"
+              >
                 #{s}
               </button>
             </li>
