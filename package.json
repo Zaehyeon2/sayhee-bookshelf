@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@libsql/client": "^0.17.3",
+    "@toast-ui/editor": "^3.2.2",
+    "@toast-ui/react-editor": "^3.2.3",
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.45.2",
     "jose": "^6.2.3",
