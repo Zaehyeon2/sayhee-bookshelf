@@ -60,3 +60,6 @@ export const bookTagsRelations = relations(bookTags, ({ one }) => ({
 export type Book = typeof books.$inferSelect
 export type NewBook = typeof books.$inferInsert
 export type Tag = typeof tags.$inferSelect
+export type NewTag = typeof tags.$inferInsert
+export type BookTag = typeof bookTags.$inferSelect
+export type NewBookTag = typeof bookTags.$inferInsert
