@@ -1,8 +1,8 @@
-import { eq, like, desc, inArray, and, sql } from 'drizzle-orm'
+import { eq, like, desc, and, sql } from 'drizzle-orm'
 import type { LibSQLDatabase } from 'drizzle-orm/libsql'
 import { books, tags, bookTags } from './schema'
 import type * as schema from './schema'
-import { toSlug, uniqueSlug } from '@/lib/slug'
+import { toSlug } from '@/lib/slug'
 import type { CreateBookInput, UpdateBookInput } from '@/lib/validations'
 
 export type BookWithTags = typeof books.$inferSelect & { tags: string[] }
@@ -23,14 +23,10 @@ async function attachTags(db: Db, bookId: number): Promise<string[]> {
 }
 
 async function getOrCreateTag(db: Db, name: string): Promise<number> {
-  const existing = await db
-    .select({ id: tags.id })
-    .from(tags)
-    .where(eq(tags.name, name))
-    .limit(1)
-  if (existing.length > 0) return existing[0].id
-  const inserted = await db.insert(tags).values({ name }).returning({ id: tags.id })
-  return inserted[0].id
+  await db.insert(tags).values({ name }).onConflictDoNothing()
+  const [row] = await db.select({ id: tags.id }).from(tags).where(eq(tags.name, name)).limit(1)
+  if (!row) throw new Error(`Tag insert+select failed for ${name}`)
+  return row.id
 }
 
 async function replaceBookTags(db: Db, bookId: number, tagNames: string[]): Promise<void> {
@@ -41,9 +37,20 @@ async function replaceBookTags(db: Db, bookId: number, tagNames: string[]): Prom
   }
 }
 
-async function existingSlugs(db: Db): Promise<string[]> {
-  const rows = await db.select({ slug: books.slug }).from(books)
-  return rows.map((r) => r.slug)
+function isSlugUniqueViolation(e: unknown): boolean {
+  // Walk the error cause chain — drizzle wraps LibsqlError in a generic Error
+  let current: unknown = e
+  while (current != null && typeof current === 'object') {
+    const err = current as { code?: string; message?: string; cause?: unknown }
+    if (
+      err.code === 'SQLITE_CONSTRAINT' &&
+      err.message?.includes('UNIQUE constraint failed: books.slug')
+    ) {
+      return true
+    }
+    current = err.cause
+  }
+  return false
 }
 
 // ---------------------------------------------------------------------------
@@ -51,30 +58,37 @@ async function existingSlugs(db: Db): Promise<string[]> {
 // ---------------------------------------------------------------------------
 
 export async function createBook(db: Db, input: CreateBookInput): Promise<BookWithTags> {
-  const slugBase = toSlug(input.title)
-  const allSlugs = await existingSlugs(db)
-  const slug = uniqueSlug(slugBase, allSlugs)
-
+  const base = toSlug(input.title)
   const now = Date.now()
-  const inserted = await db
-    .insert(books)
-    .values({
-      title: input.title,
-      author: input.author,
-      genre: input.genre,
-      readDate: input.readDate,
-      rating: input.rating,
-      content: input.content ?? '',
-      slug,
-      createdAt: now,
-      updatedAt: now,
-    })
-    .returning()
 
-  const book = inserted[0]
-  await replaceBookTags(db, book.id, input.tags ?? [])
-  const tagNames = await attachTags(db, book.id)
-  return { ...book, tags: tagNames }
+  for (let i = 0; i < 100; i++) {
+    const candidate = i === 0 ? base : `${base}-${i + 1}`
+    try {
+      const inserted = await db
+        .insert(books)
+        .values({
+          title: input.title,
+          author: input.author,
+          genre: input.genre,
+          readDate: input.readDate,
+          rating: input.rating,
+          content: input.content ?? '',
+          slug: candidate,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .returning()
+
+      const book = inserted[0]
+      await replaceBookTags(db, book.id, input.tags ?? [])
+      const tagNames = await attachTags(db, book.id)
+      return { ...book, tags: tagNames }
+    } catch (e) {
+      if (isSlugUniqueViolation(e)) continue
+      throw e
+    }
+  }
+  throw new Error(`Could not generate unique slug after 100 attempts for title: ${input.title}`)
 }
 
 export async function updateBook(

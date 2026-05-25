@@ -14,7 +14,7 @@ async function setup() {
   const { client, db } = makeDb()
   // Strip Drizzle's statement-breakpoint markers and split on semicolons
   const cleaned = migration.replace(/-->\s*statement-breakpoint/g, '')
-  for (const stmt of cleaned.split(/;\s*\n/).map((s) => s.trim()).filter(Boolean)) {
+  for (const stmt of cleaned.split(/;\s*\n/).map((s: string) => s.trim()).filter(Boolean)) {
     await client.execute(stmt)
   }
   return db
@@ -36,21 +36,21 @@ describe('queries', () => {
   })
 
   it('동일 제목 두 번 → slug 충돌 해소', async () => {
-    await createBook(db, { title: '같은책', author: 'a', genre: '소설', readDate: '2026-05-01', rating: 3, tags: [] })
-    const b = await createBook(db, { title: '같은책', author: 'b', genre: '소설', readDate: '2026-05-02', rating: 4, tags: [] })
+    await createBook(db, { title: '같은책', author: 'a', genre: '소설', readDate: '2026-05-01', rating: 3, content: '', tags: [] })
+    const b = await createBook(db, { title: '같은책', author: 'b', genre: '소설', readDate: '2026-05-02', rating: 4, content: '', tags: [] })
     expect(b.slug).toBe('같은책-2')
   })
 
   it('listBooks 정렬 (최근 읽은 순)', async () => {
-    await createBook(db, { title: 'A', author: 'a', genre: '소설', readDate: '2026-01-01', rating: 3, tags: [] })
-    await createBook(db, { title: 'B', author: 'a', genre: '소설', readDate: '2026-03-01', rating: 3, tags: [] })
+    await createBook(db, { title: 'A', author: 'a', genre: '소설', readDate: '2026-01-01', rating: 3, content: '', tags: [] })
+    await createBook(db, { title: 'B', author: 'a', genre: '소설', readDate: '2026-03-01', rating: 3, content: '', tags: [] })
     const list = await listBooks(db, {})
     expect(list.map((b) => b.title)).toEqual(['B', 'A'])
   })
 
   it('searchBooks 제목·작가 매치', async () => {
-    await createBook(db, { title: '이방인', author: '카뮈', genre: '소설', readDate: '2026-05-01', rating: 5, tags: [] })
-    await createBook(db, { title: '페스트', author: '카뮈', genre: '소설', readDate: '2026-04-01', rating: 5, tags: [] })
+    await createBook(db, { title: '이방인', author: '카뮈', genre: '소설', readDate: '2026-05-01', rating: 5, content: '', tags: [] })
+    await createBook(db, { title: '페스트', author: '카뮈', genre: '소설', readDate: '2026-04-01', rating: 5, content: '', tags: [] })
     const r = await searchBooks(db, '카뮈')
     expect(r.length).toBe(2)
     const r2 = await searchBooks(db, '이방')
@@ -58,7 +58,7 @@ describe('queries', () => {
   })
 
   it('suggestTags 자동완성', async () => {
-    await createBook(db, { title: 'a', author: 'a', genre: '소설', readDate: '2026-05-01', rating: 3, tags: ['여름', '여행지에서', '재독'] })
+    await createBook(db, { title: 'a', author: 'a', genre: '소설', readDate: '2026-05-01', rating: 3, content: '', tags: ['여름', '여행지에서', '재독'] })
     const r = await suggestTags(db, '여')
     expect(r.sort()).toEqual(['여름', '여행지에서'])
   })
