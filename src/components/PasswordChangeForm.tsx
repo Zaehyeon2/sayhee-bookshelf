@@ -26,20 +26,28 @@ export function PasswordChangeForm({ forced }: { forced: boolean }) {
     e.preventDefault()
     if (!canSubmit) return
     setBusy(true)
-    const res = await fetch('/api/users/me/password', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ currentPassword, newPassword, newPasswordConfirm }),
-    })
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}))
-      toast.error(data.error ?? '비밀번호 변경에 실패했습니다')
+    try {
+      const res = await fetch('/api/users/me/password', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword, newPasswordConfirm }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        toast.error(data.error ?? '비밀번호 변경에 실패했습니다')
+        return
+      }
+      toast.success('비밀번호가 변경되었습니다')
+      // 입력 폼 클리어 — 비밀번호 평문이 메모리에 남지 않도록.
+      setCurrent('')
+      setNew('')
+      setConfirm('')
+      router.push('/')
+      router.refresh()
+    } finally {
+      // 어떤 경로든 busy를 풀어 사용자가 다시 시도할 수 있게 한다.
       setBusy(false)
-      return
     }
-    toast.success('비밀번호가 변경되었습니다')
-    router.push('/')
-    router.refresh()
   }
 
   return (

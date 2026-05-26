@@ -7,25 +7,35 @@ interface Props {
   onChange: (next: string[]) => void
 }
 
+function normalize(s: string): string {
+  return s.trim().toLocaleLowerCase()
+}
+
 export function TagInput({ value, onChange }: Props) {
   const [input, setInput] = useState('')
   const [suggestions, setSuggestions] = useState<string[]>([])
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // value를 useEffect의 의존성에 넣지 않기 위해 ref로 stale-safe하게 참조.
+  // 모든 add/remove마다 suggestions를 다시 fetch하던 중복 호출을 제거한다.
+  const valueRef = useRef(value)
+  valueRef.current = value
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (!input.trim()) {
+    const trimmed = input.trim()
+    if (!trimmed) {
       setSuggestions([])
       return
     }
     let cancelled = false
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/tags/suggest?q=${encodeURIComponent(input.trim())}`)
+        const res = await fetch(`/api/tags/suggest?q=${encodeURIComponent(trimmed)}`)
         if (cancelled || !res.ok) return
         const data = (await res.json()) as { tags?: unknown }
         const raw = Array.isArray(data.tags) ? (data.tags as string[]) : []
-        if (!cancelled) setSuggestions(raw.filter((t) => !value.includes(t)))
+        const taken = new Set(valueRef.current.map(normalize))
+        if (!cancelled) setSuggestions(raw.filter((t) => !taken.has(normalize(t))))
       } catch {
         // ignore
       }
@@ -34,11 +44,14 @@ export function TagInput({ value, onChange }: Props) {
       cancelled = true
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [input, value])
+  }, [input])
 
   function add(t: string) {
     const trimmed = t.trim()
-    if (!trimmed || value.includes(trimmed)) return
+    if (!trimmed) return
+    // 대소문자/공백 차이를 무시하고 중복 검사.
+    const existing = new Set(value.map(normalize))
+    if (existing.has(normalize(trimmed))) return
     onChange([...value, trimmed])
     setInput('')
     setSuggestions([])
@@ -73,6 +86,7 @@ export function TagInput({ value, onChange }: Props) {
         type="text"
         value={input}
         onChange={(e) => setInput(e.target.value)}
+        maxLength={30}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ',') {
             e.preventDefault()

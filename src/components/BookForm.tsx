@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useTransition } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { GENRES } from '@/lib/genres'
@@ -32,7 +32,9 @@ const labelCls = 'block text-[13px] font-semibold text-[var(--color-text-muted)]
 
 export function BookForm({ initial, mode }: Props) {
   const router = useRouter()
-  const [pending, startTransition] = useTransition()
+  // useTransition은 async 콜백을 await하지 않아 pending이 fetch 도중에 false로 돌아가서
+  // 중복 제출이 가능했다. 명시적 boolean state로 in-flight 상태를 정확히 추적한다.
+  const [submitting, setSubmitting] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
@@ -48,13 +50,15 @@ export function BookForm({ initial, mode }: Props) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    startTransition(async () => {
+    if (submitting) return
+    setSubmitting(true)
+    try {
       const editor = editorRef.current
-      if (!editor) {
+      const content = editor?.getMarkdown()
+      if (content == null) {
         toast.error('에디터가 준비되지 않았습니다. 다시 시도해주세요.')
         return
       }
-      const content = editor.getMarkdown()
       const payload = { title, author, genre, readDate, rating, content, tags }
       const url = mode === 'create' ? '/api/books' : `/api/books/${initial?.id}`
       const res = await fetch(url, {
@@ -71,22 +75,27 @@ export function BookForm({ initial, mode }: Props) {
       toast.success(mode === 'create' ? '등록되었습니다' : '수정되었습니다')
       router.push(`/books/${data.slug}`)
       router.refresh()
-    })
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   async function handleDelete() {
-    if (!initial?.id) return
+    if (!initial?.id || deleting) return
     setDeleting(true)
-    const res = await fetch(`/api/books/${initial.id}`, { method: 'DELETE' })
-    setDeleting(false)
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}))
-      toast.error(data.error || '삭제 실패')
-      return
+    try {
+      const res = await fetch(`/api/books/${initial.id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        toast.error(data.error || '삭제 실패')
+        return
+      }
+      toast.success('삭제되었습니다')
+      router.push('/books')
+      router.refresh()
+    } finally {
+      setDeleting(false)
     }
-    toast.success('삭제되었습니다')
-    router.push('/books')
-    router.refresh()
   }
 
   return (
@@ -98,6 +107,7 @@ export function BookForm({ initial, mode }: Props) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
+            maxLength={200}
             className={inputCls}
           />
         </div>
@@ -107,6 +117,7 @@ export function BookForm({ initial, mode }: Props) {
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
             required
+            maxLength={100}
             className={inputCls}
           />
         </div>
@@ -177,11 +188,11 @@ export function BookForm({ initial, mode }: Props) {
         </button>
         <button
           type="submit"
-          disabled={pending}
+          disabled={submitting}
           className="inline-flex items-center gap-2 h-12 px-6 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[15px] font-semibold hover:bg-[var(--color-toss-blue-hover)] active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
         >
-          {pending && <Spinner />}
-          {pending ? '저장 중' : mode === 'create' ? '등록' : '수정'}
+          {submitting && <Spinner />}
+          {submitting ? '저장 중' : mode === 'create' ? '등록' : '수정'}
         </button>
       </div>
     </form>

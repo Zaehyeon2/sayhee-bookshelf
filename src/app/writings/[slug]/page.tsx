@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { db } from '@/lib/db/client'
 import { getWritingBySlug } from '@/lib/db/queries'
 import { MarkdownViewer } from '@/components/MarkdownViewer'
+import { LocalDate } from '@/components/LocalDate'
 import { getCurrentUser } from '@/lib/auth'
 
 export async function generateMetadata({
@@ -31,7 +32,7 @@ export default async function WritingDetailPage({ params }: { params: Promise<{ 
       <header className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 sm:p-8 shadow-[var(--shadow-toss)]">
         <div className="flex items-start justify-between gap-3">
           <time className="text-[13px] text-[var(--color-text-weak)] font-tabular">
-            {new Date(w.createdAt).toISOString().slice(0, 10)}
+            <LocalDate ts={w.createdAt} />
           </time>
           <Link
             href={`/writings/edit/${w.id}`}

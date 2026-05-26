@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { highlightMatch } from '@/lib/highlight'
+import { LocalDate } from './LocalDate'
 import type { WritingWithTags } from '@/lib/db/queries'
 
 function bodyPreview(body: string, max = 80): string {
@@ -37,7 +38,9 @@ export function WritingCard({ writing, snippet, query }: Props) {
           : '본문이 없습니다.'}
       </p>
       <div className="mt-4 flex items-center justify-between text-[12px] text-[var(--color-text-weak)] font-tabular">
-        <time>{new Date(writing.createdAt).toISOString().slice(0, 10)}</time>
+        <time>
+          <LocalDate ts={writing.createdAt} />
+        </time>
         {writing.tags.length > 0 && (
           <span className="truncate max-w-[60%] text-right">
             #{writing.tags.slice(0, 3).join(' #')}

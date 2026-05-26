@@ -1,24 +1,32 @@
 // @vitest-environment node
 import { describe, it, expect, beforeAll, vi } from 'vitest'
 import bcrypt from 'bcryptjs'
+import fs from 'node:fs'
+import path from 'node:path'
 import { createClient } from '@libsql/client'
 import { drizzle } from 'drizzle-orm/libsql'
 import * as schema from '@/lib/db/schema'
-import migration0 from '../../drizzle/0000_yummy_goliath.sql?raw'
-import migration1 from '../../drizzle/0001_mixed_blazing_skull.sql?raw'
 
 const TEST_SECRET = 'a'.repeat(32)
 
-// Build an in-memory DB with all migrations applied
-function applyMigration(sql: string, client: ReturnType<typeof createClient>) {
-  const cleaned = sql.replace(/-->\s*statement-breakpoint/g, '')
-  return Promise.all(
-    cleaned
+// 모든 migration을 순서대로 적용한다. 신규 컬럼(token_version 등)이 추가될 때마다 본 테스트가
+// 자동으로 따라가도록 drizzle/ 디렉터리를 직접 읽는다.
+async function applyAllMigrations(client: ReturnType<typeof createClient>) {
+  const dir = path.resolve(process.cwd(), 'drizzle')
+  const files = fs
+    .readdirSync(dir)
+    .filter((f) => f.endsWith('.sql'))
+    .sort()
+  for (const file of files) {
+    const sql = fs.readFileSync(path.join(dir, file), 'utf8')
+    const cleaned = sql.replace(/-->\s*statement-breakpoint/g, '')
+    for (const stmt of cleaned
       .split(/;\s*\n/)
-      .map((s: string) => s.trim())
-      .filter(Boolean)
-      .map((s: string) => client.execute(s)),
-  )
+      .map((s) => s.trim())
+      .filter(Boolean)) {
+      await client.execute(stmt)
+    }
+  }
 }
 
 let testDb: ReturnType<typeof drizzle>
@@ -36,8 +44,7 @@ beforeAll(async () => {
   // Set up in-memory SQLite
   const client = createClient({ url: ':memory:' })
   testDb = drizzle(client, { schema })
-  await applyMigration(migration0, client)
-  await applyMigration(migration1, client)
+  await applyAllMigrations(client)
 
   // Patch the mocked module's db export to point at our in-memory DB
   const clientModule = await import('@/lib/db/client')

@@ -33,9 +33,13 @@ function applyPreference(pref: Preference) {
 
 export function ThemeToggle() {
   const [pref, setPref] = useState<Preference>('system')
+  // mount되기 전까지는 아이콘을 invisible로 둬서 'system → 실제값' 깜빡임을 막는다.
+  // SSR HTML과 mount 직후 client HTML이 동일하게 'system' 아이콘이라 hydration도 안전.
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setPref(readPreference())
+    setMounted(true)
 
     const mql = window.matchMedia('(prefers-color-scheme: dark)')
     const onOsChange = () => {
@@ -68,9 +72,12 @@ export function ThemeToggle() {
       onClick={cycle}
       aria-label={`현재 ${LABEL[pref]}. 누르면 ${LABEL[next]}로 전환됩니다.`}
       title={LABEL[pref]}
+      suppressHydrationWarning
       className="inline-flex w-11 h-11 items-center justify-center rounded-[var(--radius-toss-sm)] text-[18px] leading-none text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
     >
-      <span aria-hidden>{ICON[pref]}</span>
+      <span aria-hidden style={{ visibility: mounted ? 'visible' : 'hidden' }}>
+        {ICON[pref]}
+      </span>
     </button>
   )
 }

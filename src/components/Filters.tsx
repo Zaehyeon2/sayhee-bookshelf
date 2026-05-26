@@ -103,6 +103,9 @@ export function Filters() {
     const params = new URLSearchParams(sp.toString())
     if (value) params.set(key, value)
     else params.delete(key)
+    // 필터/정렬이 바뀌면 현재 page를 유지하지 않는다 — 다른 장르의 page 5가 비어 있는
+    // 식의 죽은 페이지를 보여주지 않도록.
+    params.delete('page')
     const qs = params.toString()
     router.push(qs ? `/books?${qs}` : '/books')
   }

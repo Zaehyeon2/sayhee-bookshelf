@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useTransition } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { TagInput } from './TagInput'
@@ -26,7 +26,9 @@ const labelCls = 'block text-[13px] font-semibold text-[var(--color-text-muted)]
 
 export function WritingForm({ initial, mode }: Props) {
   const router = useRouter()
-  const [pending, startTransition] = useTransition()
+  // BookForm과 동일한 사유로 useTransition 대신 명시적 boolean state 사용 — async 콜백이
+  // await되지 않는 transition 동작으로 인한 중복 제출 방지.
+  const [submitting, setSubmitting] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
@@ -36,13 +38,15 @@ export function WritingForm({ initial, mode }: Props) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    startTransition(async () => {
+    if (submitting) return
+    setSubmitting(true)
+    try {
       const editor = editorRef.current
-      if (!editor) {
+      const body = editor?.getMarkdown()
+      if (body == null) {
         toast.error('에디터가 준비되지 않았습니다. 다시 시도해주세요.')
         return
       }
-      const body = editor.getMarkdown()
       const payload = { title: title.trim(), body, tags }
       const url = mode === 'create' ? '/api/writings' : `/api/writings/${initial?.id}`
       const res = await fetch(url, {
@@ -59,22 +63,27 @@ export function WritingForm({ initial, mode }: Props) {
       toast.success(mode === 'create' ? '글이 등록되었습니다' : '글이 수정되었습니다')
       router.push(`/writings/${encodeURIComponent(data.slug)}`)
       router.refresh()
-    })
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   async function handleDelete() {
-    if (!initial?.id) return
+    if (!initial?.id || deleting) return
     setDeleting(true)
-    const res = await fetch(`/api/writings/${initial.id}`, { method: 'DELETE' })
-    setDeleting(false)
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}))
-      toast.error(data.error || '삭제 실패')
-      return
+    try {
+      const res = await fetch(`/api/writings/${initial.id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        toast.error(data.error || '삭제 실패')
+        return
+      }
+      toast.success('삭제되었습니다')
+      router.push('/writings')
+      router.refresh()
+    } finally {
+      setDeleting(false)
     }
-    toast.success('삭제되었습니다')
-    router.push('/writings')
-    router.refresh()
   }
 
   return (
@@ -132,11 +141,11 @@ export function WritingForm({ initial, mode }: Props) {
         </button>
         <button
           type="submit"
-          disabled={pending || title.trim().length === 0}
+          disabled={submitting || title.trim().length === 0}
           className="inline-flex items-center gap-2 h-12 px-6 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[15px] font-semibold hover:bg-[var(--color-toss-blue-hover)] active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
         >
-          {pending && <Spinner />}
-          {pending ? '저장 중' : mode === 'create' ? '등록' : '수정'}
+          {submitting && <Spinner />}
+          {submitting ? '저장 중' : mode === 'create' ? '등록' : '수정'}
         </button>
       </div>
     </form>
