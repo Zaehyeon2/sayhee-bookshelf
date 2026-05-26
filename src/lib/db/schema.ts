@@ -44,12 +44,12 @@ export const books = sqliteTable(
     updatedAt: integer('updated_at').notNull(),
   },
   (t) => ({
-    titleIdx: index('idx_books_title').on(t.title),
-    authorIdx: index('idx_books_author').on(t.author),
-    genreIdx: index('idx_books_genre').on(t.genre),
-    dateIdx: index('idx_books_date').on(t.readDate),
     authorUserIdx: index('idx_books_author_user').on(t.authorUserId),
     userSlugUnique: uniqueIndex('idx_books_user_slug').on(t.authorUserId, t.slug),
+    // composite indexes — listBooks 기본 정렬/필터를 cover
+    userDateIdx: index('idx_books_user_date').on(t.authorUserId, sql`${t.readDate} DESC`),
+    userGenreIdx: index('idx_books_user_genre').on(t.authorUserId, t.genre),
+    userRatingIdx: index('idx_books_user_rating').on(t.authorUserId, sql`${t.rating} DESC`),
     ratingCheck: check('rating_range', sql`${t.rating} BETWEEN 1 AND 5`),
   }),
 )
@@ -90,8 +90,12 @@ export const writings = sqliteTable(
   },
   (t) => ({
     authorUserIdx: index('idx_writings_author_user').on(t.authorUserId),
-    createdAtIdx: index('idx_writings_created_at').on(t.createdAt),
     userSlugUnique: uniqueIndex('idx_writings_user_slug').on(t.authorUserId, t.slug),
+    // listWritings 기본 정렬 cover
+    userCreatedIdx: index('idx_writings_user_created').on(
+      t.authorUserId,
+      sql`${t.createdAt} DESC`,
+    ),
   }),
 )
 
