@@ -1,12 +1,18 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
-import { createWriting, listWritings } from '@/lib/db/queries'
+import { createWriting, listWritings, searchWritings } from '@/lib/db/queries'
 import { CreateWritingSchema } from '@/lib/validations'
 import { requireUser, HttpError } from '@/lib/auth-helpers'
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const user = await requireUser()
+    const url = new URL(req.url)
+    const q = url.searchParams.get('q')
+    if (q && q.trim().length > 0) {
+      const results = await searchWritings(db, user.id, q.trim())
+      return NextResponse.json(results)
+    }
     const list = await listWritings(db, user.id)
     return NextResponse.json(list)
   } catch (e) {
