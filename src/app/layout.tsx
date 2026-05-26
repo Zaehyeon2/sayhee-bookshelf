@@ -4,8 +4,8 @@ import { ThemeToggle } from '@/components/ThemeToggle'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: '독후감',
-  description: '내가 읽은 책의 기록',
+  title: '세희의 서재',
+  description: '세희가 읽은 책의 기록',
 }
 
 const themeBootstrap = `(function(){try{var s=localStorage.getItem('theme');var d=s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=d?'dark':'light';}catch(e){}})();`
@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="sticky top-0 z-10 bg-[var(--color-header-bg)] backdrop-blur border-b border-[var(--color-border-subtle)]">
           <nav className="mx-auto max-w-5xl px-5 h-14 flex items-center justify-between">
             <Link href="/" className="text-[17px] font-bold text-[var(--color-text-strong)] tracking-tight">
-              📚 독후감
+              📚 세희의 서재
             </Link>
             <div className="flex items-center gap-1">
               <Link
