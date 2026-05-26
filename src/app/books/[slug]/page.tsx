@@ -14,9 +14,17 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
   return (
     <article className="space-y-6">
       <header className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 sm:p-8 shadow-[var(--shadow-toss)]">
-        <div className="flex items-center gap-2">
-          <GenreBadge genre={book.genre} />
-          <time className="text-[13px] text-[var(--color-text-weak)] font-tabular">{book.readDate}</time>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <GenreBadge genre={book.genre} />
+            <time className="text-[13px] text-[var(--color-text-weak)] font-tabular">{book.readDate}</time>
+          </div>
+          <Link
+            href={`/admin/edit/${book.id}`}
+            className="shrink-0 inline-flex items-center h-9 px-3 rounded-[var(--radius-toss-sm)] text-[13px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+          >
+            수정
+          </Link>
         </div>
         <h1 className="mt-3 text-[28px] sm:text-[32px] font-bold tracking-tight leading-tight text-[var(--color-text-strong)]">
           {book.title}

@@ -1,14 +1,16 @@
 import Link from 'next/link'
 import { GenreBadge } from './GenreBadge'
 import { RatingStars } from './RatingStars'
+import { highlightMatch } from '@/lib/highlight'
 import type { BookWithTags } from '@/lib/db/queries'
 
 interface Props {
   book: BookWithTags
   snippet?: string
+  query?: string
 }
 
-export function BookCard({ book, snippet }: Props) {
+export function BookCard({ book, snippet, query }: Props) {
   return (
     <Link
       href={`/books/${book.slug}`}
@@ -23,7 +25,7 @@ export function BookCard({ book, snippet }: Props) {
       <p className="mt-1 text-[14px] text-[var(--color-text-muted)] line-clamp-1">{book.author}</p>
       {snippet && (
         <p className="mt-2 text-[13px] text-[var(--color-text-muted)] line-clamp-2 leading-relaxed">
-          {snippet}
+          {query ? highlightMatch(snippet, query) : snippet}
         </p>
       )}
       <div className="mt-4 flex items-center justify-between">

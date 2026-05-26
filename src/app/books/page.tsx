@@ -61,7 +61,7 @@ export default async function BooksPage({ searchParams }: SP) {
                 b.author.toLowerCase().includes(q.toLowerCase())
               : true
             const snippet = q && !matchesMeta ? excerpt(b.content, q) ?? undefined : undefined
-            return <BookCard key={b.id} book={b} snippet={snippet} />
+            return <BookCard key={b.id} book={b} snippet={snippet} query={q} />
           })}
         </div>
       )}
