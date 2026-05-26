@@ -1,19 +1,39 @@
-import { sqliteTable, integer, text, primaryKey, index, check } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, integer, text, primaryKey, index, uniqueIndex, check } from 'drizzle-orm/sqlite-core'
 import { sql } from 'drizzle-orm'
 import { relations } from 'drizzle-orm'
+
+export const users = sqliteTable(
+  'users',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    username: text('username').notNull(),
+    displayName: text('display_name').notNull(),
+    passwordHash: text('password_hash').notNull(),
+    role: text('role').notNull().default('member'),  // 'admin' | 'member'
+    mustChangePassword: integer('must_change_password').notNull().default(1),
+    createdAt: integer('created_at').notNull(),
+  },
+  (t) => ({
+    usernameIdx: uniqueIndex('idx_users_username').on(t.username),
+  })
+)
 
 export const books = sqliteTable(
   'books',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
+    // ★ Task 1 시점에는 NULLABLE FK. 기존 책을 sayhee.id로 backfill한 뒤
+    //   Task 28의 NOT NULL 토글 단계에서 제약 재적용 (drizzle-kit이 table-rename).
+    authorUserId: integer('author_user_id')
+      .references(() => users.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
     author: text('author').notNull(),
     genre: text('genre').notNull(),
-    readDate: text('read_date').notNull(),         // 'YYYY-MM-DD'
+    readDate: text('read_date').notNull(),
     rating: integer('rating').notNull(),
     content: text('content').notNull().default(''),
-    slug: text('slug').notNull().unique(),
-    createdAt: integer('created_at').notNull(),    // unix ms
+    slug: text('slug').notNull(),
+    createdAt: integer('created_at').notNull(),
     updatedAt: integer('updated_at').notNull(),
   },
   (t) => ({
@@ -21,6 +41,8 @@ export const books = sqliteTable(
     authorIdx: index('idx_books_author').on(t.author),
     genreIdx: index('idx_books_genre').on(t.genre),
     dateIdx: index('idx_books_date').on(t.readDate),
+    authorUserIdx: index('idx_books_author_user').on(t.authorUserId),
+    userSlugUnique: uniqueIndex('idx_books_user_slug').on(t.authorUserId, t.slug),
     ratingCheck: check('rating_range', sql`${t.rating} BETWEEN 1 AND 5`),
   })
 )
@@ -46,7 +68,11 @@ export const bookTags = sqliteTable(
   })
 )
 
-export const booksRelations = relations(books, ({ many }) => ({
+export const usersRelations = relations(users, ({ many }) => ({
+  books: many(books),
+}))
+export const booksRelations = relations(books, ({ one, many }) => ({
+  author: one(users, { fields: [books.authorUserId], references: [users.id] }),
   bookTags: many(bookTags),
 }))
 export const tagsRelations = relations(tags, ({ many }) => ({
@@ -57,6 +83,8 @@ export const bookTagsRelations = relations(bookTags, ({ one }) => ({
   tag: one(tags, { fields: [bookTags.tagId], references: [tags.id] }),
 }))
 
+export type User = typeof users.$inferSelect
+export type NewUser = typeof users.$inferInsert
 export type Book = typeof books.$inferSelect
 export type NewBook = typeof books.$inferInsert
 export type Tag = typeof tags.$inferSelect
