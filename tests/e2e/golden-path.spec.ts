@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test('로그인 → 새 글 작성 → 목록에 노출', async ({ page }) => {
   await page.goto('/login')
+  await page.fill('input[autocomplete="username"]', process.env.E2E_USERNAME ?? "sayhee")
   await page.fill('input[type="password"]', 'changeme')  // .env.local의 평문
   await Promise.all([
     page.waitForURL('**/books/new'),

@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test'
 test('등록 → 상세 → 수정 → 삭제 모달 → 목록에서 사라짐', async ({ page }) => {
   // 로그인
   await page.goto('/login')
+  await page.fill('input[autocomplete="username"]', process.env.E2E_USERNAME ?? "sayhee")
   await page.fill('input[type="password"]', 'changeme')
   await Promise.all([
     page.waitForURL('**/books/new'),
