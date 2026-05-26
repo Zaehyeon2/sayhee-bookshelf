@@ -8,9 +8,11 @@ import { RatingStars } from '@/components/RatingStars'
 import { MarkdownViewer } from '@/components/MarkdownViewer'
 import { getCurrentUser } from '@/lib/auth'
 
-export async function generateMetadata(
-  { params }: { params: Promise<{ slug: string }> },
-): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
   const me = await getCurrentUser()
   if (!me) return {}
   const { slug } = await params
@@ -51,7 +53,9 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
             <GenreBadge genre={book.genre} />
-            <time className="text-[13px] text-[var(--color-text-weak)] font-tabular">{book.readDate}</time>
+            <time className="text-[13px] text-[var(--color-text-weak)] font-tabular">
+              {book.readDate}
+            </time>
           </div>
           <Link
             href={`/books/edit/${book.id}`}

@@ -15,14 +15,15 @@ const SIZE: Record<NonNullable<Props['size']>, string> = {
 export function RatingStars({ value, onChange, size = 'md' }: Props) {
   const editable = !!onChange
   return (
-    <div
-      className={`inline-flex font-tabular ${SIZE[size]}`}
-      aria-label={`별점 ${value}/5`}
-    >
+    <div className={`inline-flex font-tabular ${SIZE[size]}`} aria-label={`별점 ${value}/5`}>
       {[1, 2, 3, 4, 5].map((n) => {
         const filled = n <= value
         const color = filled ? 'text-[var(--color-toss-yellow)]' : 'text-[var(--color-border)]'
-        const star = <span data-filled={filled} className={color}>★</span>
+        const star = (
+          <span data-filled={filled} className={color}>
+            ★
+          </span>
+        )
         if (!editable) return <span key={n}>{star}</span>
         return (
           <button

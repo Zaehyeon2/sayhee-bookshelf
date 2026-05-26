@@ -13,7 +13,11 @@ const TEST_SECRET = 'a'.repeat(32)
 function applyMigration(sql: string, client: ReturnType<typeof createClient>) {
   const cleaned = sql.replace(/-->\s*statement-breakpoint/g, '')
   return Promise.all(
-    cleaned.split(/;\s*\n/).map((s: string) => s.trim()).filter(Boolean).map((s: string) => client.execute(s))
+    cleaned
+      .split(/;\s*\n/)
+      .map((s: string) => s.trim())
+      .filter(Boolean)
+      .map((s: string) => client.execute(s)),
   )
 }
 
@@ -98,7 +102,7 @@ describe('signSession + getSessionUser', () => {
   it('returns null for tampered token', async () => {
     const { authenticate, signSession, getSessionUser } = await import('@/lib/auth')
     const u = await authenticate('sehee', 'password123')
-    const token = (await signSession(u!)) + 'x'
+    const token = `${await signSession(u!)}x`
     expect(await getSessionUser(token)).toBeNull()
   })
 })

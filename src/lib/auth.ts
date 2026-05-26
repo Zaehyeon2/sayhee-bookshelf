@@ -7,7 +7,7 @@ import { users, type User } from '@/lib/db/schema'
 import { normalizeUsername } from '@/lib/username-normalize'
 
 const SESSION_COOKIE = 'session'
-const SESSION_TTL_SEC = 60 * 60 * 24 * 7  // 7일
+const SESSION_TTL_SEC = 60 * 60 * 24 * 7 // 7일
 const DUMMY_HASH = '$2a$10$aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
 
 export type SessionUser = {

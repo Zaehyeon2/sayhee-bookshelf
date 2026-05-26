@@ -15,7 +15,13 @@ type UserRow = {
   bookCount: number
 }
 
-export function UserAdminTable({ users, currentAdminId }: { users: UserRow[]; currentAdminId: number }) {
+export function UserAdminTable({
+  users,
+  currentAdminId,
+}: {
+  users: UserRow[]
+  currentAdminId: number
+}) {
   const router = useRouter()
   const [creating, setCreating] = useState(false)
   const [newUsername, setNewUsername] = useState('')
@@ -56,7 +62,8 @@ export function UserAdminTable({ users, currentAdminId }: { users: UserRow[]; cu
   }
 
   async function onDelete(id: number, username: string) {
-    if (!confirm(`${username}을(를) 삭제하시겠습니까? 이 사용자의 모든 책도 함께 삭제됩니다.`)) return
+    if (!confirm(`${username}을(를) 삭제하시겠습니까? 이 사용자의 모든 책도 함께 삭제됩니다.`))
+      return
     const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' })
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))
@@ -128,7 +135,9 @@ export function UserAdminTable({ users, currentAdminId }: { users: UserRow[]; cu
             </Dialog.Title>
             <form onSubmit={onCreate} className="space-y-3">
               <label className="block">
-                <span className="text-[13px] font-medium text-[var(--color-text-muted)]">아이디 (2~20자, 한글 OK)</span>
+                <span className="text-[13px] font-medium text-[var(--color-text-muted)]">
+                  아이디 (2~20자, 한글 OK)
+                </span>
                 <input
                   type="text"
                   value={newUsername}
@@ -138,7 +147,9 @@ export function UserAdminTable({ users, currentAdminId }: { users: UserRow[]; cu
                 />
               </label>
               <label className="block">
-                <span className="text-[13px] font-medium text-[var(--color-text-muted)]">표시 이름 (선택)</span>
+                <span className="text-[13px] font-medium text-[var(--color-text-muted)]">
+                  표시 이름 (선택)
+                </span>
                 <input
                   type="text"
                   value={newDisplayName}
@@ -147,7 +158,8 @@ export function UserAdminTable({ users, currentAdminId }: { users: UserRow[]; cu
                 />
               </label>
               <p className="text-[12px] text-[var(--color-text-muted)]">
-                초기 비밀번호는 환경변수 <code>DEFAULT_USER_PASSWORD</code> 값입니다. 사용자에게 따로 안내해주세요.
+                초기 비밀번호는 환경변수 <code>DEFAULT_USER_PASSWORD</code> 값입니다. 사용자에게
+                따로 안내해주세요.
               </p>
               <div className="flex justify-end gap-2 pt-2">
                 <Dialog.Close className="px-4 h-9 rounded-[var(--radius-toss-sm)] text-[13px] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] transition">

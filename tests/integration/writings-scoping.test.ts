@@ -13,7 +13,7 @@ import { createUser, createBook, createWriting } from '../factories'
 describe('writing queries — user scoping', () => {
   let db: TestDb
   beforeEach(async () => {
-    ({ db } = await makeTestDb())
+    ;({ db } = await makeTestDb())
   })
 
   it('listWritings returns only own user writings', async () => {

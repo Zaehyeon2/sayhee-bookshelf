@@ -34,7 +34,10 @@ export async function PATCH(req: Request, { params }: Params) {
     const body = await req.json().catch(() => null)
     const parsed = UpdateBookSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ error: '입력이 유효하지 않습니다', issues: parsed.error.flatten() }, { status: 400 })
+      return NextResponse.json(
+        { error: '입력이 유효하지 않습니다', issues: parsed.error.flatten() },
+        { status: 400 },
+      )
     }
     const updated = await updateBook(db, user.id, bookId, parsed.data)
     if (!updated) return NextResponse.json({ error: 'not found' }, { status: 404 })

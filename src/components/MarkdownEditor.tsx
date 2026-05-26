@@ -5,10 +5,7 @@ import dynamic from 'next/dynamic'
 import '@toast-ui/editor/dist/toastui-editor.css'
 import '@toast-ui/editor/dist/theme/toastui-editor-dark.css'
 
-const Editor = dynamic(
-  () => import('@toast-ui/react-editor').then((m) => m.Editor),
-  { ssr: false },
-)
+const Editor = dynamic(() => import('@toast-ui/react-editor').then((m) => m.Editor), { ssr: false })
 
 export interface MarkdownEditorHandle {
   getMarkdown: () => string

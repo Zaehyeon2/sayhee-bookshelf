@@ -2,16 +2,13 @@ import { test, expect } from '@playwright/test'
 
 test('로그인 → 새 글 작성 → 목록에 노출', async ({ page }) => {
   await page.goto('/login')
-  await page.fill('input[autocomplete="username"]', process.env.E2E_USERNAME ?? "sayhee")
-  await page.fill('input[type="password"]', 'changeme')  // .env.local의 평문
-  await Promise.all([
-    page.waitForURL('**/books/new'),
-    page.click('button[type="submit"]'),
-  ])
+  await page.fill('input[autocomplete="username"]', process.env.E2E_USERNAME ?? 'sayhee')
+  await page.fill('input[type="password"]', 'changeme') // .env.local의 평문
+  await Promise.all([page.waitForURL('**/books/new'), page.click('button[type="submit"]')])
 
   const inputs = page.locator('input')
-  await inputs.nth(0).fill('E2E 책 제목')   // 제목
-  await inputs.nth(1).fill('테스트 작가')   // 작가
+  await inputs.nth(0).fill('E2E 책 제목') // 제목
+  await inputs.nth(1).fill('테스트 작가') // 작가
   // 장르·날짜는 기본값 사용
   await page.click('button:has-text("등록")')
 

@@ -42,7 +42,9 @@ describe('ChangePasswordSchema', () => {
 describe('CreateUserSchema', () => {
   it('accepts valid username', () => {
     expect(CreateUserSchema.safeParse({ username: '세희' }).success).toBe(true)
-    expect(CreateUserSchema.safeParse({ username: 'sehee', displayName: '세희' }).success).toBe(true)
+    expect(CreateUserSchema.safeParse({ username: 'sehee', displayName: '세희' }).success).toBe(
+      true,
+    )
   })
   it('rejects forbidden chars', () => {
     expect(CreateUserSchema.safeParse({ username: 'a/b' }).success).toBe(false)

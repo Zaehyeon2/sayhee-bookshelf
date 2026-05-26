@@ -4,7 +4,9 @@ export default function NotFound() {
   return (
     <div className="mx-auto max-w-md text-center py-20">
       <div className="rounded-[var(--radius-toss-lg)] bg-[var(--color-surface)] p-10 shadow-[var(--shadow-toss)]">
-        <div className="text-[56px] font-bold text-[var(--color-toss-blue)] font-tabular leading-none">404</div>
+        <div className="text-[56px] font-bold text-[var(--color-toss-blue)] font-tabular leading-none">
+          404
+        </div>
         <p className="mt-3 text-[15px] text-[var(--color-text-muted)]">그런 책이 없어요.</p>
         <Link
           href="/books"

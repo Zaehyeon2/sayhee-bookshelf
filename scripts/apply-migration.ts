@@ -19,7 +19,10 @@ async function main() {
   const fullPath = path.resolve(process.cwd(), migrationFile)
   const sql = fs.readFileSync(fullPath, 'utf8')
   const cleaned = sql.replace(/-->\s*statement-breakpoint/g, '')
-  const stmts = cleaned.split(/;\s*\n/).map((s) => s.trim()).filter(Boolean)
+  const stmts = cleaned
+    .split(/;\s*\n/)
+    .map((s) => s.trim())
+    .filter(Boolean)
 
   console.log(`Applying ${stmts.length} statements from ${path.basename(fullPath)}...`)
   let applied = 0

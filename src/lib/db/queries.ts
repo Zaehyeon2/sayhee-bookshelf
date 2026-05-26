@@ -62,10 +62,7 @@ function isSlugUniqueViolation(e: unknown): boolean {
     if (seen.has(current as object)) break
     seen.add(current as object)
     const err = current as { code?: string; message?: string; cause?: unknown }
-    if (
-      err.code === 'SQLITE_CONSTRAINT' &&
-      err.message?.includes('idx_books_user_slug')
-    ) {
+    if (err.code === 'SQLITE_CONSTRAINT' && err.message?.includes('idx_books_user_slug')) {
       return true
     }
     current = err.cause
@@ -225,15 +222,16 @@ export async function listBooks(
       .from(books)
       .innerJoin(bookTags, joinCondition!)
       .where(and(...conditions))
-      .orderBy(
-        filters.sort === 'rating' ? desc(books.rating) : desc(books.readDate),
-      )
+      .orderBy(filters.sort === 'rating' ? desc(books.rating) : desc(books.readDate))
       .$dynamic()
     if (filters.limit !== undefined) q = q.limit(filters.limit)
     if (filters.offset !== undefined) q = q.offset(filters.offset)
     const rows = await q
 
-    const tagMap = await attachTagsBatch(db, rows.map((r) => r.book.id))
+    const tagMap = await attachTagsBatch(
+      db,
+      rows.map((r) => r.book.id),
+    )
     return rows.map((r) => ({ ...r.book, tags: tagMap.get(r.book.id) ?? [] }))
   }
 
@@ -241,15 +239,16 @@ export async function listBooks(
     .select()
     .from(books)
     .where(and(...conditions))
-    .orderBy(
-      filters.sort === 'rating' ? desc(books.rating) : desc(books.readDate),
-    )
+    .orderBy(filters.sort === 'rating' ? desc(books.rating) : desc(books.readDate))
     .$dynamic()
   if (filters.limit !== undefined) q = q.limit(filters.limit)
   if (filters.offset !== undefined) q = q.offset(filters.offset)
   const rows = await q
 
-  const tagMap = await attachTagsBatch(db, rows.map((r) => r.id))
+  const tagMap = await attachTagsBatch(
+    db,
+    rows.map((r) => r.id),
+  )
   return rows.map((r) => ({ ...r, tags: tagMap.get(r.id) ?? [] }))
 }
 
@@ -277,15 +276,14 @@ export async function searchBooks(
       desc(books.readDate),
     )
 
-  const tagMap = await attachTagsBatch(db, rows.map((r) => r.id))
+  const tagMap = await attachTagsBatch(
+    db,
+    rows.map((r) => r.id),
+  )
   return rows.map((r) => ({ ...r, tags: tagMap.get(r.id) ?? [] }))
 }
 
-export async function suggestTags(
-  db: Db,
-  authorUserId: number,
-  q: string,
-): Promise<string[]> {
+export async function suggestTags(db: Db, authorUserId: number, q: string): Promise<string[]> {
   const pattern = `${q}%`
   // 본인 풀(책 + 글)의 태그 합집합에서 자동완성
   const rows = await db.all(sql`
@@ -359,11 +357,7 @@ async function attachWritingTagsBatch(
   return map
 }
 
-async function replaceWritingTags(
-  db: Db,
-  writingId: number,
-  tagNames: string[],
-): Promise<void> {
+async function replaceWritingTags(db: Db, writingId: number, tagNames: string[]): Promise<void> {
   await db.delete(writingTags).where(eq(writingTags.writingId, writingId))
   for (const name of tagNames) {
     const tagId = await getOrCreateTag(db, name)
@@ -378,10 +372,7 @@ function isWritingSlugUniqueViolation(e: unknown): boolean {
     if (seen.has(current as object)) break
     seen.add(current as object)
     const err = current as { code?: string; message?: string; cause?: unknown }
-    if (
-      err.code === 'SQLITE_CONSTRAINT' &&
-      err.message?.includes('idx_writings_user_slug')
-    ) {
+    if (err.code === 'SQLITE_CONSTRAINT' && err.message?.includes('idx_writings_user_slug')) {
       return true
     }
     current = err.cause
@@ -456,11 +447,7 @@ export async function updateWriting(
   return { ...writing, tags: tagNames }
 }
 
-export async function deleteWriting(
-  db: Db,
-  authorUserId: number,
-  id: number,
-): Promise<boolean> {
+export async function deleteWriting(db: Db, authorUserId: number, id: number): Promise<boolean> {
   const result = await db
     .delete(writings)
     .where(and(eq(writings.id, id), eq(writings.authorUserId, authorUserId)))
@@ -515,7 +502,10 @@ export async function listWritings(
   if (opts.offset !== undefined) q = q.offset(opts.offset)
   const rows = await q
 
-  const tagMap = await attachWritingTagsBatch(db, rows.map((r) => r.id))
+  const tagMap = await attachWritingTagsBatch(
+    db,
+    rows.map((r) => r.id),
+  )
   return rows.map((r) => ({ ...r, tags: tagMap.get(r.id) ?? [] }))
 }
 

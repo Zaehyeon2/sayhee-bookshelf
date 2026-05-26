@@ -10,7 +10,9 @@ interface Props {
 export function EmptyState({ emoji, title, description, action }: Props) {
   return (
     <div className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-10 sm:p-12 text-center shadow-[var(--shadow-toss)]">
-      <div className="text-[40px] leading-none" aria-hidden>{emoji}</div>
+      <div className="text-[40px] leading-none" aria-hidden>
+        {emoji}
+      </div>
       <p className="mt-4 text-[16px] font-semibold text-[var(--color-text-strong)]">{title}</p>
       {description && (
         <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">{description}</p>

@@ -34,7 +34,9 @@ export default async function WritingsPage({ searchParams }: SP) {
   return (
     <div className="space-y-6">
       <div className="flex items-baseline justify-between">
-        <h1 className="text-[28px] font-bold tracking-tight text-[var(--color-text-strong)]">글방</h1>
+        <h1 className="text-[28px] font-bold tracking-tight text-[var(--color-text-strong)]">
+          글방
+        </h1>
         <div className="flex items-center gap-3">
           <span className="text-[13px] text-[var(--color-text-weak)] font-tabular">{total}편</span>
           <Link

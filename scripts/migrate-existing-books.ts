@@ -23,16 +23,14 @@ async function main() {
   }
 
   // 1) 사용자 존재 확인. 없으면 INSERT.
-  let owner = (
-    await db.select().from(users).where(eq(users.username, username)).limit(1)
-  )[0]
+  let owner = (await db.select().from(users).where(eq(users.username, username)).limit(1))[0]
   if (!owner) {
     const [inserted] = await db
       .insert(users)
       .values({
         username,
         displayName: usernameRaw.trim(),
-        passwordHash,        // 해시 그대로 저장 (bcrypt 재실행 X)
+        passwordHash, // 해시 그대로 저장 (bcrypt 재실행 X)
         role: 'member',
         mustChangePassword: 0,
         createdAt: Date.now(),
@@ -45,25 +43,16 @@ async function main() {
   }
 
   // 2) author_user_id가 NULL인 책 backfill.
-  const orphans = await db
-    .select({ id: books.id })
-    .from(books)
-    .where(isNull(books.authorUserId))
+  const orphans = await db.select({ id: books.id }).from(books).where(isNull(books.authorUserId))
   if (orphans.length === 0) {
     console.log('All books already have an author_user_id; nothing to backfill.')
     return
   }
-  await db
-    .update(books)
-    .set({ authorUserId: owner.id })
-    .where(isNull(books.authorUserId))
+  await db.update(books).set({ authorUserId: owner.id }).where(isNull(books.authorUserId))
   console.log(`Backfilled ${orphans.length} books with author_user_id=${owner.id}`)
 
   // 3) 검증.
-  const remaining = await db
-    .select({ id: books.id })
-    .from(books)
-    .where(isNull(books.authorUserId))
+  const remaining = await db.select({ id: books.id }).from(books).where(isNull(books.authorUserId))
   if (remaining.length > 0) {
     throw new Error(`Backfill incomplete: ${remaining.length} books still NULL`)
   }

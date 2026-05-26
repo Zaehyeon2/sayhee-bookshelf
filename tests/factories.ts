@@ -13,7 +13,7 @@ export async function createUser(
     password?: string
   },
 ) {
-  const hash = await bcrypt.hash(opts.password ?? 'password1234', 4)  // low cost for tests
+  const hash = await bcrypt.hash(opts.password ?? 'password1234', 4) // low cost for tests
   const [u] = await db
     .insert(users)
     .values({

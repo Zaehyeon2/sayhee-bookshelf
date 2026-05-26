@@ -1,18 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import {
-  listBooks,
-  listWritings,
-  countBooks,
-  countWritings,
-  getUserStats,
-} from '@/lib/db/queries'
+import { listBooks, listWritings, countBooks, countWritings, getUserStats } from '@/lib/db/queries'
 import { makeTestDb, type TestDb } from '../setup-db'
 import { createUser, createBook, createWriting } from '../factories'
 
 describe('pagination and stats', () => {
   let db: TestDb
   beforeEach(async () => {
-    ({ db } = await makeTestDb())
+    ;({ db } = await makeTestDb())
   })
 
   it('listBooks respects limit and offset', async () => {

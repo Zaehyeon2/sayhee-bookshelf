@@ -29,7 +29,7 @@ function LoginForm() {
     }
     const data = await res.json().catch(() => ({}))
     const next = sp.get('next')
-    const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : '/'
+    const safeNext = next?.startsWith('/') && !next.startsWith('//') ? next : '/'
     const dest = data.mustChangePassword ? '/settings/password' : safeNext
     router.push(dest)
     router.refresh()
@@ -52,7 +52,6 @@ function LoginForm() {
             onChange={(e) => setUsername(e.target.value)}
             placeholder="아이디"
             autoComplete="username"
-            autoFocus
             required
             className="w-full h-12 px-4 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition"
           />

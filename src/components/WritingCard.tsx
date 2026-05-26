@@ -7,7 +7,7 @@ function bodyPreview(body: string, max = 80): string {
     .replace(/[*_`~>]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
-  return stripped.length > max ? stripped.slice(0, max) + '…' : stripped
+  return stripped.length > max ? `${stripped.slice(0, max)}…` : stripped
 }
 
 export function WritingCard({ writing }: { writing: WritingWithTags }) {

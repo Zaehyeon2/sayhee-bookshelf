@@ -27,7 +27,10 @@ export async function makeTestDb(): Promise<{ db: TestDb; client: Client }> {
   for (const file of files) {
     const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8')
     const cleaned = sql.replace(/-->\s*statement-breakpoint/g, '')
-    for (const stmt of cleaned.split(/;\s*\n/).map((s) => s.trim()).filter(Boolean)) {
+    for (const stmt of cleaned
+      .split(/;\s*\n/)
+      .map((s) => s.trim())
+      .filter(Boolean)) {
       await client.execute(stmt)
     }
   }

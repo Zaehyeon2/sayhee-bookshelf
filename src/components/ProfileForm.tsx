@@ -9,7 +9,8 @@ export function ProfileForm({ initialDisplayName }: { initialDisplayName: string
   const [displayName, setName] = useState(initialDisplayName)
   const [busy, setBusy] = useState(false)
   const trimmed = displayName.trim()
-  const canSubmit = !busy && trimmed.length > 0 && trimmed.length <= 30 && trimmed !== initialDisplayName
+  const canSubmit =
+    !busy && trimmed.length > 0 && trimmed.length <= 30 && trimmed !== initialDisplayName
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()

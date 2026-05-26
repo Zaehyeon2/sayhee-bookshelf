@@ -39,14 +39,17 @@ export function Pagination({ currentPage, totalPages, basePath, preservedQuery }
   const atLast = currentPage >= totalPages
 
   return (
-    <nav
-      aria-label="페이지네이션"
-      className="mt-8 flex items-center justify-center gap-2"
-    >
+    <nav aria-label="페이지네이션" className="mt-8 flex items-center justify-center gap-2">
       {atFirst ? (
-        <span className={disabledCls} aria-disabled>← 이전</span>
+        <span className={disabledCls} aria-disabled>
+          ← 이전
+        </span>
       ) : (
-        <Link href={buildHref(basePath, prevPage, preservedQuery)} className={linkCls} aria-label="이전 페이지">
+        <Link
+          href={buildHref(basePath, prevPage, preservedQuery)}
+          className={linkCls}
+          aria-label="이전 페이지"
+        >
           ← 이전
         </Link>
       )}
@@ -56,9 +59,15 @@ export function Pagination({ currentPage, totalPages, basePath, preservedQuery }
         <span>{totalPages}</span>
       </span>
       {atLast ? (
-        <span className={disabledCls} aria-disabled>다음 →</span>
+        <span className={disabledCls} aria-disabled>
+          다음 →
+        </span>
       ) : (
-        <Link href={buildHref(basePath, nextPage, preservedQuery)} className={linkCls} aria-label="다음 페이지">
+        <Link
+          href={buildHref(basePath, nextPage, preservedQuery)}
+          className={linkCls}
+          aria-label="다음 페이지"
+        >
           다음 →
         </Link>
       )}

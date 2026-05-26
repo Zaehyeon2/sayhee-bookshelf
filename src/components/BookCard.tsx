@@ -30,7 +30,9 @@ export function BookCard({ book, snippet, query }: Props) {
       )}
       <div className="mt-4 flex items-center justify-between">
         <RatingStars value={book.rating} size="sm" />
-        <time className="text-[12px] text-[var(--color-text-weak)] font-tabular">{book.readDate}</time>
+        <time className="text-[12px] text-[var(--color-text-weak)] font-tabular">
+          {book.readDate}
+        </time>
       </div>
       {book.tags.length > 0 && (
         <ul className="mt-3 flex flex-wrap gap-1.5">

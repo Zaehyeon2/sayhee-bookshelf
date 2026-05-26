@@ -6,9 +6,11 @@ import { getWritingBySlug } from '@/lib/db/queries'
 import { MarkdownViewer } from '@/components/MarkdownViewer'
 import { getCurrentUser } from '@/lib/auth'
 
-export async function generateMetadata(
-  { params }: { params: Promise<{ slug: string }> },
-): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
   const me = await getCurrentUser()
   if (!me) return {}
   const { slug } = await params
@@ -17,9 +19,7 @@ export async function generateMetadata(
   return { title: w.title }
 }
 
-export default async function WritingDetailPage(
-  { params }: { params: Promise<{ slug: string }> },
-) {
+export default async function WritingDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const me = await getCurrentUser()
   const { slug } = await params
   if (!me) redirect(`/login?next=/writings/${slug}`)

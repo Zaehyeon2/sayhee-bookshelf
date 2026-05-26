@@ -45,9 +45,7 @@ export default async function HomePage() {
         <h1 className="text-[32px] font-bold tracking-tight text-[var(--color-text-strong)] leading-tight">
           {me.displayName}님의 서재
         </h1>
-        <p className="mt-2 text-[15px] text-[var(--color-text-muted)]">
-          책과 글을 한 곳에서.
-        </p>
+        <p className="mt-2 text-[15px] text-[var(--color-text-muted)]">책과 글을 한 곳에서.</p>
       </section>
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -95,7 +93,9 @@ export default async function HomePage() {
           />
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-            {recentBooks.map((b) => <BookCard key={b.id} book={b} />)}
+            {recentBooks.map((b) => (
+              <BookCard key={b.id} book={b} />
+            ))}
           </div>
         )}
       </section>
@@ -121,7 +121,9 @@ export default async function HomePage() {
           />
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-            {recentWritings.map((w) => <WritingCard key={w.id} writing={w} />)}
+            {recentWritings.map((w) => (
+              <WritingCard key={w.id} writing={w} />
+            ))}
           </div>
         )}
       </section>
@@ -155,7 +157,9 @@ function EntryCard({
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-[32px] leading-none" aria-hidden>{emoji}</span>
+            <span className="text-[32px] leading-none" aria-hidden>
+              {emoji}
+            </span>
             <span className="text-[18px] font-bold text-[var(--color-text-strong)] group-hover:text-[var(--color-toss-blue)] transition">
               {label}
             </span>

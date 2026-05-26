@@ -1,5 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { listBooks, getBookBySlug, createBook as queryCreateBook, updateBook, deleteBook, searchBooks } from '@/lib/db/queries'
+import {
+  listBooks,
+  getBookBySlug,
+  createBook as queryCreateBook,
+  updateBook,
+  deleteBook,
+  searchBooks,
+} from '@/lib/db/queries'
 import { makeTestDb, type TestDb } from '../setup-db'
 import { createUser, createBook } from '../factories'
 
@@ -7,7 +14,7 @@ describe('book queries — user scoping (data isolation)', () => {
   let db: TestDb
 
   beforeEach(async () => {
-    ({ db } = await makeTestDb())
+    ;({ db } = await makeTestDb())
   })
 
   it('listBooks returns only own user books', async () => {
@@ -36,12 +43,22 @@ describe('book queries — user scoping (data isolation)', () => {
     const a = await createUser(db, { username: 'alice' })
     const b = await createUser(db, { username: 'bob' })
     const aBook = await queryCreateBook(db, a.id, {
-      title: '데미안', author: '헤세', genre: '소설',
-      readDate: '2025-01-01', rating: 5, content: '', tags: [],
+      title: '데미안',
+      author: '헤세',
+      genre: '소설',
+      readDate: '2025-01-01',
+      rating: 5,
+      content: '',
+      tags: [],
     })
     const bBook = await queryCreateBook(db, b.id, {
-      title: '데미안', author: '헤세', genre: '소설',
-      readDate: '2025-01-01', rating: 5, content: '', tags: [],
+      title: '데미안',
+      author: '헤세',
+      genre: '소설',
+      readDate: '2025-01-01',
+      rating: 5,
+      content: '',
+      tags: [],
     })
     expect(aBook.slug).toBe(bBook.slug)
     expect(aBook.authorUserId).not.toBe(bBook.authorUserId)

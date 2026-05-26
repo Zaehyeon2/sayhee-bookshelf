@@ -1,4 +1,12 @@
-import { sqliteTable, integer, text, primaryKey, index, uniqueIndex, check } from 'drizzle-orm/sqlite-core'
+import {
+  sqliteTable,
+  integer,
+  text,
+  primaryKey,
+  index,
+  uniqueIndex,
+  check,
+} from 'drizzle-orm/sqlite-core'
 import { sql } from 'drizzle-orm'
 import { relations } from 'drizzle-orm'
 
@@ -9,13 +17,13 @@ export const users = sqliteTable(
     username: text('username').notNull(),
     displayName: text('display_name').notNull(),
     passwordHash: text('password_hash').notNull(),
-    role: text('role').notNull().default('member'),  // 'admin' | 'member'
+    role: text('role').notNull().default('member'), // 'admin' | 'member'
     mustChangePassword: integer('must_change_password').notNull().default(1),
     createdAt: integer('created_at').notNull(),
   },
   (t) => ({
     usernameIdx: uniqueIndex('idx_users_username').on(t.username),
-  })
+  }),
 )
 
 export const books = sqliteTable(
@@ -43,7 +51,7 @@ export const books = sqliteTable(
     authorUserIdx: index('idx_books_author_user').on(t.authorUserId),
     userSlugUnique: uniqueIndex('idx_books_user_slug').on(t.authorUserId, t.slug),
     ratingCheck: check('rating_range', sql`${t.rating} BETWEEN 1 AND 5`),
-  })
+  }),
 )
 
 export const tags = sqliteTable('tags', {
@@ -64,7 +72,7 @@ export const bookTags = sqliteTable(
   (t) => ({
     pk: primaryKey({ columns: [t.bookId, t.tagId] }),
     tagIdx: index('idx_book_tags_tag').on(t.tagId),
-  })
+  }),
 )
 
 export const writings = sqliteTable(
@@ -84,7 +92,7 @@ export const writings = sqliteTable(
     authorUserIdx: index('idx_writings_author_user').on(t.authorUserId),
     createdAtIdx: index('idx_writings_created_at').on(t.createdAt),
     userSlugUnique: uniqueIndex('idx_writings_user_slug').on(t.authorUserId, t.slug),
-  })
+  }),
 )
 
 export const writingTags = sqliteTable(
@@ -100,7 +108,7 @@ export const writingTags = sqliteTable(
   (t) => ({
     pk: primaryKey({ columns: [t.writingId, t.tagId] }),
     tagIdx: index('idx_writing_tags_tag').on(t.tagId),
-  })
+  }),
 )
 
 export const usersRelations = relations(users, ({ many }) => ({

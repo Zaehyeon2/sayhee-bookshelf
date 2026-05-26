@@ -15,8 +15,12 @@ export function PasswordChangeForm({ forced }: { forced: boolean }) {
     newPassword.length > 0 && newPasswordConfirm.length > 0 && newPassword !== newPasswordConfirm
   const tooShort = newPassword.length > 0 && newPassword.length < 8
   const canSubmit =
-    !busy && !mismatch && !tooShort &&
-    currentPassword.length > 0 && newPassword.length >= 8 && newPasswordConfirm.length > 0
+    !busy &&
+    !mismatch &&
+    !tooShort &&
+    currentPassword.length > 0 &&
+    newPassword.length >= 8 &&
+    newPasswordConfirm.length > 0
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -46,7 +50,9 @@ export function PasswordChangeForm({ forced }: { forced: boolean }) {
         </p>
       )}
       <label className="block">
-        <span className="text-[13px] font-medium text-[var(--color-text-muted)]">현재 비밀번호</span>
+        <span className="text-[13px] font-medium text-[var(--color-text-muted)]">
+          현재 비밀번호
+        </span>
         <input
           type="password"
           value={currentPassword}
@@ -70,7 +76,9 @@ export function PasswordChangeForm({ forced }: { forced: boolean }) {
         {tooShort && <p className="mt-1 text-[12px] text-[var(--color-danger)]">최소 8자 이상</p>}
       </label>
       <label className="block">
-        <span className="text-[13px] font-medium text-[var(--color-text-muted)]">새 비밀번호 확인</span>
+        <span className="text-[13px] font-medium text-[var(--color-text-muted)]">
+          새 비밀번호 확인
+        </span>
         <input
           type="password"
           value={newPasswordConfirm}
@@ -79,7 +87,11 @@ export function PasswordChangeForm({ forced }: { forced: boolean }) {
           autoComplete="new-password"
           className="mt-1 w-full h-11 px-3 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition"
         />
-        {mismatch && <p className="mt-1 text-[12px] text-[var(--color-danger)]">비밀번호가 일치하지 않습니다</p>}
+        {mismatch && (
+          <p className="mt-1 text-[12px] text-[var(--color-danger)]">
+            비밀번호가 일치하지 않습니다
+          </p>
+        )}
       </label>
       <button
         type="submit"

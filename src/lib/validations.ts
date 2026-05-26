@@ -14,9 +14,7 @@ export const CreateBookSchema = z.object({
   tags: z
     .array(z.string())
     .default([])
-    .transform((arr) =>
-      Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0)))
-    ),
+    .transform((arr) => Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0)))),
 })
 
 export type CreateBookInput = z.infer<typeof CreateBookSchema>
@@ -31,9 +29,7 @@ export const UpdateBookSchema = z.object({
   content: z.string().optional(),
   tags: z
     .array(z.string())
-    .transform((arr) =>
-      Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0)))
-    )
+    .transform((arr) => Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))))
     .optional(),
 })
 
@@ -70,9 +66,7 @@ export const CreateWritingSchema = z.object({
   tags: z
     .array(z.string())
     .default([])
-    .transform((arr) =>
-      Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0)))
-    ),
+    .transform((arr) => Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0)))),
 })
 
 export type CreateWritingInput = z.infer<typeof CreateWritingSchema>
@@ -82,9 +76,7 @@ export const UpdateWritingSchema = z.object({
   body: z.string().max(50000).optional(),
   tags: z
     .array(z.string())
-    .transform((arr) =>
-      Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0)))
-    )
+    .transform((arr) => Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))))
     .optional(),
 })
 

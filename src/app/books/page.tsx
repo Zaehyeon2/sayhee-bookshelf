@@ -41,7 +41,7 @@ export default async function BooksPage({ searchParams }: SP) {
   if (!me) redirect('/login?next=/books')
   const sp = await searchParams
   const page = parsePage(sp.page)
-  const isSearch = !!(sp.q && sp.q.trim())
+  const isSearch = !!sp.q?.trim()
 
   let books
   let totalPages = 1
@@ -64,11 +64,13 @@ export default async function BooksPage({ searchParams }: SP) {
     totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
   }
 
-  const title =
-    sp.q ? `"${sp.q}" 검색 결과`
-    : sp.genre ? `장르 · ${sp.genre}`
-    : sp.tag ? `태그 · ${sp.tag}`
-    : '전체 책'
+  const title = sp.q
+    ? `"${sp.q}" 검색 결과`
+    : sp.genre
+      ? `장르 · ${sp.genre}`
+      : sp.tag
+        ? `태그 · ${sp.tag}`
+        : '전체 책'
 
   return (
     <div className="space-y-6">
@@ -79,7 +81,9 @@ export default async function BooksPage({ searchParams }: SP) {
       <div className="flex items-baseline justify-between">
         <h2 className="text-[22px] font-bold text-[var(--color-text-strong)]">{title}</h2>
         <div className="flex items-center gap-3">
-          <span className="text-[13px] text-[var(--color-text-weak)] font-tabular">{books.length}권</span>
+          <span className="text-[13px] text-[var(--color-text-weak)] font-tabular">
+            {books.length}권
+          </span>
           <Link
             href="/books/new"
             className="inline-flex items-center h-9 px-3 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[13px] font-semibold hover:bg-[var(--color-toss-blue-hover)] active:scale-[0.97] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
@@ -112,7 +116,7 @@ export default async function BooksPage({ searchParams }: SP) {
                 ? b.title.toLowerCase().includes(q.toLowerCase()) ||
                   b.author.toLowerCase().includes(q.toLowerCase())
                 : true
-              const snippet = q && !matchesMeta ? excerpt(b.content, q) ?? undefined : undefined
+              const snippet = q && !matchesMeta ? (excerpt(b.content, q) ?? undefined) : undefined
               return <BookCard key={b.id} book={b} snippet={snippet} query={q} />
             })}
           </div>

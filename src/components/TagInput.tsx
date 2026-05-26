@@ -23,7 +23,7 @@ export function TagInput({ value, onChange }: Props) {
       try {
         const res = await fetch(`/api/tags/suggest?q=${encodeURIComponent(input.trim())}`)
         if (cancelled || !res.ok) return
-        const data = await res.json() as { tags?: unknown }
+        const data = (await res.json()) as { tags?: unknown }
         const raw = Array.isArray(data.tags) ? (data.tags as string[]) : []
         if (!cancelled) setSuggestions(raw.filter((t) => !value.includes(t)))
       } catch {

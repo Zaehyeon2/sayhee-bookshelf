@@ -22,15 +22,15 @@ describe('isValidUsername', () => {
   it('accepts 2~20 chars (Korean OK)', () => {
     expect(isValidUsername('세희')).toBe(true)
     expect(isValidUsername('sehee_2')).toBe(true)
-    expect(isValidUsername('ab')).toBe(true)            // exactly 2
-    expect(isValidUsername('a'.repeat(20))).toBe(true)  // exactly 20
+    expect(isValidUsername('ab')).toBe(true) // exactly 2
+    expect(isValidUsername('a'.repeat(20))).toBe(true) // exactly 20
   })
   it('rejects too short / too long', () => {
     expect(isValidUsername('a')).toBe(false)
     expect(isValidUsername('a'.repeat(21))).toBe(false)
   })
   it('rejects forbidden chars', () => {
-    expect(isValidUsername('a b')).toBe(false)   // space
+    expect(isValidUsername('a b')).toBe(false) // space
     expect(isValidUsername('a/b')).toBe(false)
     expect(isValidUsername('a?b')).toBe(false)
     expect(isValidUsername('a#b')).toBe(false)

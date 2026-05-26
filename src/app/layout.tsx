@@ -36,7 +36,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-screen">
         <header className="sticky top-0 z-10 bg-[var(--color-header-bg)] backdrop-blur border-b border-[var(--color-border-subtle)]">
           <nav className="mx-auto max-w-5xl px-5 h-14 flex items-center justify-between">
-            <Link href="/" className="text-[17px] font-bold text-[var(--color-text-strong)] tracking-tight rounded-[var(--radius-toss-sm)] px-2 py-1 -mx-2 -my-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50">
+            <Link
+              href="/"
+              className="text-[17px] font-bold text-[var(--color-text-strong)] tracking-tight rounded-[var(--radius-toss-sm)] px-2 py-1 -mx-2 -my-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+            >
               📚 {siteTitle}
             </Link>
             <div className="flex items-center gap-1">
@@ -82,13 +85,34 @@ function UserMenu({ displayName, role }: { displayName: string; role: 'admin' | 
         {displayName} ▾
       </summary>
       <div className="absolute right-0 mt-1 w-48 rounded-[var(--radius-toss)] bg-[var(--color-surface)] shadow-[var(--shadow-toss)] border border-[var(--color-border-subtle)] py-1 text-[14px]">
-        <Link href="/settings/profile" className="block px-4 py-2 hover:bg-[var(--color-surface-2)]">프로필 변경</Link>
-        <Link href="/settings/password" className="block px-4 py-2 hover:bg-[var(--color-surface-2)]">비밀번호 변경</Link>
+        <Link
+          href="/settings/profile"
+          className="block px-4 py-2 hover:bg-[var(--color-surface-2)]"
+        >
+          프로필 변경
+        </Link>
+        <Link
+          href="/settings/password"
+          className="block px-4 py-2 hover:bg-[var(--color-surface-2)]"
+        >
+          비밀번호 변경
+        </Link>
         {role === 'admin' && (
-          <Link href="/admin/users" className="block px-4 py-2 hover:bg-[var(--color-surface-2)]">사용자 관리</Link>
+          <Link href="/admin/users" className="block px-4 py-2 hover:bg-[var(--color-surface-2)]">
+            사용자 관리
+          </Link>
         )}
-        <form action="/api/logout" method="POST" className="border-t border-[var(--color-border-subtle)] mt-1 pt-1">
-          <button type="submit" className="w-full text-left px-4 py-2 hover:bg-[var(--color-surface-2)]">로그아웃</button>
+        <form
+          action="/api/logout"
+          method="POST"
+          className="border-t border-[var(--color-border-subtle)] mt-1 pt-1"
+        >
+          <button
+            type="submit"
+            className="w-full text-left px-4 py-2 hover:bg-[var(--color-surface-2)]"
+          >
+            로그아웃
+          </button>
         </form>
       </div>
     </details>

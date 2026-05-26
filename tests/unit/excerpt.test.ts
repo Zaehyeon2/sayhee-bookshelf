@@ -11,7 +11,7 @@ describe('excerpt', () => {
   })
 
   it('긴 본문에서 매치 부근만 잘라서 ellipsis 추가', () => {
-    const long = '서론. '.repeat(50) + '여기서 에피쿠로스를 만난다. ' + '결론. '.repeat(50)
+    const long = `${'서론. '.repeat(50)}여기서 에피쿠로스를 만난다. ${'결론. '.repeat(50)}`
     const out = excerpt(long, '에피쿠로스', 60)
     expect(out).toBeTruthy()
     expect(out!.startsWith('…')).toBe(true)

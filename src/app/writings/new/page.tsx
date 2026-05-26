@@ -9,7 +9,9 @@ export default async function NewWritingPage() {
   if (!me) redirect('/login?next=/writings/new')
   return (
     <div className="space-y-6">
-      <h1 className="text-[28px] font-bold tracking-tight text-[var(--color-text-strong)]">새 글</h1>
+      <h1 className="text-[28px] font-bold tracking-tight text-[var(--color-text-strong)]">
+        새 글
+      </h1>
       <WritingForm mode="create" />
     </div>
   )

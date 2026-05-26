@@ -8,7 +8,10 @@ import type { User } from '@/lib/db/schema'
 
 /** API route helper — returns Response on failure, user on success */
 export class HttpError extends Error {
-  constructor(public status: number, public bodyJson: object) {
+  constructor(
+    public status: number,
+    public bodyJson: object,
+  ) {
     super(`HTTP ${status}`)
   }
   toResponse(): Response {

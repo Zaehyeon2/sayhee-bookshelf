@@ -39,7 +39,9 @@ export function BookForm({ initial, mode }: Props) {
   const [title, setTitle] = useState(initial?.title ?? '')
   const [author, setAuthor] = useState(initial?.author ?? '')
   const [genre, setGenre] = useState(initial?.genre ?? GENRES[0])
-  const [readDate, setReadDate] = useState(initial?.readDate ?? new Date().toISOString().slice(0, 10))
+  const [readDate, setReadDate] = useState(
+    initial?.readDate ?? new Date().toISOString().slice(0, 10),
+  )
   const [rating, setRating] = useState(initial?.rating ?? 3)
   const [tags, setTags] = useState<string[]>(initial?.tags ?? [])
   const editorRef = useRef<MarkdownEditorHandle>(null)
@@ -92,22 +94,42 @@ export function BookForm({ initial, mode }: Props) {
       <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-toss)] space-y-5">
         <div>
           <label className={labelCls}>제목</label>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} required className={inputCls} />
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+            className={inputCls}
+          />
         </div>
         <div>
           <label className={labelCls}>작가</label>
-          <input value={author} onChange={(e) => setAuthor(e.target.value)} required className={inputCls} />
+          <input
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            required
+            className={inputCls}
+          />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelCls}>장르</label>
             <select value={genre} onChange={(e) => setGenre(e.target.value)} className={inputCls}>
-              {GENRES.map((g) => <option key={g} value={g}>{g}</option>)}
+              {GENRES.map((g) => (
+                <option key={g} value={g}>
+                  {g}
+                </option>
+              ))}
             </select>
           </div>
           <div>
             <label className={labelCls}>읽은 날짜</label>
-            <input type="date" value={readDate} onChange={(e) => setReadDate(e.target.value)} required className={inputCls} />
+            <input
+              type="date"
+              value={readDate}
+              onChange={(e) => setReadDate(e.target.value)}
+              required
+              className={inputCls}
+            />
           </div>
         </div>
         <div>
