@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { db } from '@/lib/db/client'
-import { listBooks, listWritings } from '@/lib/db/queries'
+import { listBooks, listWritings, getUserStats } from '@/lib/db/queries'
 import { BookCard } from '@/components/BookCard'
 import { WritingCard } from '@/components/WritingCard'
 import { EmptyState } from '@/components/EmptyState'
@@ -28,24 +28,16 @@ export default async function HomePage() {
     )
   }
 
-  const [books, writings] = await Promise.all([
-    listBooks(db, me.id, { sort: 'date' }),
-    listWritings(db, me.id),
+  const thisYear = new Date().getFullYear()
+  const [stats, recentBooks, recentWritings] = await Promise.all([
+    getUserStats(db, me.id, thisYear),
+    listBooks(db, me.id, { sort: 'date', limit: 6 }),
+    listWritings(db, me.id, { limit: 6 }),
   ])
 
-  const recentBooks = books.slice(0, 6)
-  const recentWritings = writings.slice(0, 6)
-
-  const totalBooks = books.length
-  const totalWritings = writings.length
-  const thisYear = new Date().getFullYear()
-  const yearBooks = books.filter((b) => b.readDate.startsWith(String(thisYear))).length
-  const yearWritings = writings.filter(
-    (w) => new Date(w.createdAt).getFullYear() === thisYear,
-  ).length
-  const yearActivity = yearBooks + yearWritings
-  const avgRating =
-    totalBooks > 0 ? books.reduce((s, b) => s + b.rating, 0) / totalBooks : 0
+  const totalBooks = stats.booksTotal
+  const totalWritings = stats.writingsTotal
+  const avgRating = stats.avgRating
 
   return (
     <div className="space-y-12">
@@ -65,6 +57,10 @@ export default async function HomePage() {
           label="책장"
           count={totalBooks}
           unit="권"
+          metrics={[
+            `${thisYear}년 ${stats.booksThisYear}권`,
+            totalBooks > 0 ? `평균 ★${avgRating.toFixed(1)}` : null,
+          ]}
           subAction={{ href: '/books/new', label: '새 책' }}
         />
         <EntryCard
@@ -73,18 +69,8 @@ export default async function HomePage() {
           label="글방"
           count={totalWritings}
           unit="편"
+          metrics={[`${thisYear}년 ${stats.writingsThisYear}편`]}
           subAction={{ href: '/writings/new', label: '새 글' }}
-        />
-      </section>
-
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="총 권수" value={`${totalBooks}`} suffix="권" />
-        <StatCard label="총 글" value={`${totalWritings}`} suffix="편" />
-        <StatCard label={`${thisYear}년 활동`} value={`${yearActivity}`} suffix="개" />
-        <StatCard
-          label="평균 별점"
-          value={totalBooks > 0 ? avgRating.toFixed(1) : '—'}
-          suffix={totalBooks > 0 ? '/5' : ''}
         />
       </section>
 
@@ -143,28 +129,13 @@ export default async function HomePage() {
   )
 }
 
-function StatCard({ label, value, suffix }: { label: string; value: string; suffix: string }) {
-  return (
-    <div className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-4 sm:p-5 shadow-[var(--shadow-toss)]">
-      <div className="text-[12px] font-medium text-[var(--color-text-weak)]">{label}</div>
-      <div className="mt-1 flex items-baseline gap-1">
-        <span className="text-[20px] sm:text-[28px] font-bold text-[var(--color-text-strong)] font-tabular leading-none">
-          {value}
-        </span>
-        {suffix && (
-          <span className="text-[13px] font-medium text-[var(--color-text-muted)]">{suffix}</span>
-        )}
-      </div>
-    </div>
-  )
-}
-
 function EntryCard({
   href,
   emoji,
   label,
   count,
   unit,
+  metrics,
   subAction,
 }: {
   href: string
@@ -172,8 +143,10 @@ function EntryCard({
   label: string
   count: number
   unit: string
+  metrics: (string | null)[]
   subAction: { href: string; label: string }
 }) {
+  const visibleMetrics = metrics.filter((m): m is string => !!m)
   return (
     <div className="group relative rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] transition">
       <Link
@@ -187,11 +160,18 @@ function EntryCard({
               {label}
             </span>
           </div>
-          <span className="text-[15px] font-medium text-[var(--color-text-muted)] font-tabular">
-            {count}
-            <span className="ml-0.5 text-[12px] text-[var(--color-text-weak)]">{unit}</span>
+          <span className="flex items-baseline gap-1">
+            <span className="text-[24px] sm:text-[28px] font-bold text-[var(--color-text-strong)] font-tabular leading-none">
+              {count}
+            </span>
+            <span className="text-[13px] font-medium text-[var(--color-text-muted)]">{unit}</span>
           </span>
         </div>
+        {visibleMetrics.length > 0 && (
+          <div className="mt-3 text-[13px] text-[var(--color-text-muted)] font-tabular">
+            {visibleMetrics.join(' · ')}
+          </div>
+        )}
       </Link>
       <Link
         href={subAction.href}
