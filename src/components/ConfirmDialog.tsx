@@ -1,6 +1,7 @@
 'use client'
 
 import * as Dialog from '@radix-ui/react-dialog'
+import { Spinner } from './Spinner'
 
 interface Props {
   open: boolean
@@ -59,9 +60,10 @@ export function ConfirmDialog({
               type="button"
               onClick={onConfirm}
               disabled={loading}
-              className={`h-11 px-5 rounded-[var(--radius-toss-sm)] text-[14px] font-semibold text-white ${confirmBg} active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100 transition focus-visible:outline-none focus-visible:ring-2 ${confirmRing}`}
+              className={`inline-flex items-center gap-2 h-11 px-5 rounded-[var(--radius-toss-sm)] text-[14px] font-semibold text-white ${confirmBg} active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100 transition focus-visible:outline-none focus-visible:ring-2 ${confirmRing}`}
             >
-              {loading ? '처리 중…' : confirmLabel}
+              {loading && <Spinner />}
+              {loading ? '처리 중' : confirmLabel}
             </button>
           </div>
         </Dialog.Content>

@@ -8,6 +8,7 @@ import { RatingStars } from './RatingStars'
 import { TagInput } from './TagInput'
 import { MarkdownEditor, type MarkdownEditorHandle } from './MarkdownEditor'
 import { ConfirmDialog } from './ConfirmDialog'
+import { Spinner } from './Spinner'
 
 export interface BookFormValues {
   title: string
@@ -155,9 +156,10 @@ export function BookForm({ initial, mode }: Props) {
         <button
           type="submit"
           disabled={pending}
-          className="h-12 px-6 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[15px] font-semibold hover:bg-[var(--color-toss-blue-hover)] active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+          className="inline-flex items-center gap-2 h-12 px-6 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[15px] font-semibold hover:bg-[var(--color-toss-blue-hover)] active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
         >
-          {pending ? '저장 중…' : mode === 'create' ? '등록' : '수정'}
+          {pending && <Spinner />}
+          {pending ? '저장 중' : mode === 'create' ? '등록' : '수정'}
         </button>
       </div>
     </form>
