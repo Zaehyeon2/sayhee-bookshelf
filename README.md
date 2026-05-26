@@ -1,6 +1,6 @@
-# 세희의 서재
+# 누구의 서재
 
-1인용 독후감/독서 기록 사이트. 토스 스타일 디자인 시스템 + 다크모드 + 본문 검색.
+멀티유저 독후감/독서 기록 사이트. 각자 본인 서재만 보이는 *완전 비공개 멀티테넌트* 모델. 사이트 제목은 로그인 상태에 따라 동적으로 바뀝니다 (비로그인 "누구의 서재" / 로그인 "{displayName}의 서재"). 토스 스타일 디자인 시스템 + 다크모드 + 본문 검색.
 
 **Tech**: Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 (CSS-first) · Drizzle ORM · libsql/Turso · Pretendard · Radix Dialog · sonner
 
@@ -12,7 +12,9 @@
 - **삭제 모달** — Radix Dialog 기반 focus-trap·Esc·backdrop 모달
 - **토스트 피드백** — sonner (등록/수정/삭제 알림)
 - **다크모드** — 시스템/라이트/다크 3-state 수동 토글, OS 자동 추종, 0-FOUC inline 부트스트랩
-- **인증** — bcrypt + HS256 JWT 쿠키 (읽기는 공개, 쓰기/수정/삭제는 관리자만)
+- **인증** — bcrypt + HS256 JWT 쿠키 + Next.js middleware (보호 경로 redirect, mcp 강제 변경)
+- **권한** — 본인 책만 읽기/쓰기/수정/삭제. admin은 사용자 관리(`/admin/users`)만 추가로 가능
+- **사용자 관리** — admin이 신규 멤버 생성, 기본 비밀번호로 첫 로그인 → 강제 변경, 비번 reset 지원
 - **접근성** — focus-visible ring 일관성, 44×44 탭 타겟, `prefers-reduced-motion` 대응, 시각/스크린리더 친화
 - **모바일** — iOS 줌 방지 (인풋 16px), 가로 스크롤 chip + PC 마우스 드래그, 안전 영역 padding
 - **스켈레톤 로딩** — 홈/목록/상세 3개 라우트에 토스 톤 placeholder
@@ -22,16 +24,36 @@
 ```bash
 pnpm install
 cp .env.example .env.local
-# .env.local에 ADMIN_PASSWORD_HASH, AUTH_SECRET 채우기:
-node -e "console.log(require('bcryptjs').hashSync('내비밀번호', 10))"
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-
-# ⚠️ bcrypt 해시($2b$10$…)의 모든 $는 .env.local에 \$ 로 escape 필수
-#    예: ADMIN_PASSWORD_HASH=\$2b\$10\$abcdef…
+# .env.local에 채우기:
+#   AUTH_SECRET             — 32자 이상 무작위 키
+#   INITIAL_ADMIN_USERNAME  — admin 로그인 ID (예: hammer_turtle)
+#   INITIAL_ADMIN_PASSWORD  — admin 초기 비밀번호 (8자 이상, 평문)
+#   DEFAULT_USER_PASSWORD   — 신규 멤버 초기 비밀번호 (8자 이상)
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"  # AUTH_SECRET용
 
 pnpm exec dotenv -e .env.local -- drizzle-kit push   # 로컬 SQLite 마이그레이션
+pnpm exec dotenv -e .env.local -- pnpm run seed:admin  # 첫 admin 계정 생성
 pnpm dev
 ```
+
+### 기존 책 데이터 마이그레이션 (운영 중인 사이트만)
+
+이전에 단일 admin으로 운영되던 책 데이터가 있다면, `sayhee` 같은 member 계정을 만들어서 한 번에 옮길 수 있습니다.
+
+```bash
+# .env.local에 추가:
+#   LEGACY_OWNER_USERNAME=sayhee
+#   LEGACY_OWNER_PASSWORD_HASH=\$2a\$12\$...  (bcrypt 해시, $ 모두 \$ escape)
+
+pnpm exec dotenv -e .env.local -- pnpm run migrate:existing-books
+```
+
+마이그레이션 후 schema의 `author_user_id`를 NOT NULL로 토글 (drizzle-kit이 table-rename으로 처리).
+
+### 사용자 추가 / 비번 reset
+
+admin으로 로그인 → 우측 메뉴 → "사용자 관리" → "신규 사용자" 또는 "비번 reset".
+새/reset된 사용자는 `DEFAULT_USER_PASSWORD`로 첫 로그인 후 강제 변경됩니다.
 
 ## 테스트
 

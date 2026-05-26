@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "seed:admin": "tsx scripts/seed-admin.ts"
+    "seed:admin": "tsx scripts/seed-admin.ts",
+    "migrate:existing-books": "tsx scripts/migrate-existing-books.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.3",
