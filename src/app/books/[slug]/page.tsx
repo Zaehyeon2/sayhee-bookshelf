@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { db } from '@/lib/db/client'
@@ -6,12 +6,15 @@ import { getBookBySlug } from '@/lib/db/queries'
 import { GenreBadge } from '@/components/GenreBadge'
 import { RatingStars } from '@/components/RatingStars'
 import { MarkdownViewer } from '@/components/MarkdownViewer'
+import { getCurrentUser } from '@/lib/auth'
 
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> },
 ): Promise<Metadata> {
+  const me = await getCurrentUser()
+  if (!me) return {}
   const { slug } = await params
-  const book = await getBookBySlug(db, decodeURIComponent(slug))
+  const book = await getBookBySlug(db, me.id, decodeURIComponent(slug))
   if (!book) return { title: '책을 찾을 수 없어요' }
   const pageTitle = `${book.title} · ${book.author}`
   const description = `${book.author}의 ${book.genre} — 별점 ${book.rating}/5`
@@ -33,8 +36,13 @@ export async function generateMetadata(
 }
 
 export default async function BookDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const me = await getCurrentUser()
+  if (!me) {
+    const { slug } = await params
+    redirect(`/login?next=/books/${slug}`)
+  }
   const { slug } = await params
-  const book = await getBookBySlug(db, decodeURIComponent(slug))
+  const book = await getBookBySlug(db, me.id, decodeURIComponent(slug))
   if (!book) notFound()
 
   return (
@@ -46,7 +54,7 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
             <time className="text-[13px] text-[var(--color-text-weak)] font-tabular">{book.readDate}</time>
           </div>
           <Link
-            href={`/admin/edit/${book.id}`}
+            href={`/books/edit/${book.id}`}
             className="shrink-0 inline-flex items-center h-9 px-3 rounded-[var(--radius-toss-sm)] text-[13px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
           >
             수정

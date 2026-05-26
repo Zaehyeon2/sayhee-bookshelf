@@ -5,7 +5,7 @@ test('등록 → 상세 → 수정 → 삭제 모달 → 목록에서 사라짐'
   await page.goto('/login')
   await page.fill('input[type="password"]', 'changeme')
   await Promise.all([
-    page.waitForURL('**/admin/new'),
+    page.waitForURL('**/books/new'),
     page.click('button[type="submit"]'),
   ])
 

@@ -4,11 +4,33 @@ import { listBooks, listGenresWithCounts } from '@/lib/db/queries'
 import { GENRES } from '@/lib/genres'
 import { BookCard } from '@/components/BookCard'
 import { EmptyState } from '@/components/EmptyState'
+import { getCurrentUser } from '@/lib/auth'
 
 export default async function HomePage() {
+  const me = await getCurrentUser()
+
+  if (!me) {
+    return (
+      <div className="mx-auto max-w-xl text-center space-y-6 py-16">
+        <h1 className="text-[32px] font-bold tracking-tight text-[var(--color-text-strong)]">
+          누구의 서재
+        </h1>
+        <p className="text-[15px] text-[var(--color-text-muted)]">
+          나만의 독서 기록을 시작해보세요.
+        </p>
+        <Link
+          href="/login"
+          className="inline-block px-6 h-11 leading-[44px] rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[15px] font-medium"
+        >
+          로그인
+        </Link>
+      </div>
+    )
+  }
+
   const [all, genreCounts] = await Promise.all([
-    listBooks(db, { sort: 'date' }),
-    listGenresWithCounts(db),
+    listBooks(db, me.id, { sort: 'date' }),
+    listGenresWithCounts(db, me.id),
   ])
   const recent = all.slice(0, 6)
   const countMap = new Map(genreCounts.map((g) => [g.genre, g.count]))
@@ -71,7 +93,7 @@ export default async function HomePage() {
             emoji="📭"
             title="아직 등록된 책이 없어요"
             description="첫 독후감을 남겨보세요"
-            action={{ href: '/admin/new', label: '새 독후감' }}
+            action={{ href: '/books/new', label: '새 독후감' }}
           />
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">

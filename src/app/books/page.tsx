@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
 import { db } from '@/lib/db/client'
 import { listBooks, searchBooks } from '@/lib/db/queries'
 import { BookCard } from '@/components/BookCard'
@@ -6,6 +7,7 @@ import { SearchBox } from '@/components/SearchBox'
 import { Filters } from '@/components/Filters'
 import { excerpt } from '@/lib/excerpt'
 import { EmptyState } from '@/components/EmptyState'
+import { getCurrentUser } from '@/lib/auth'
 
 function parseYear(value: string | undefined): number | undefined {
   if (!value) return undefined
@@ -18,12 +20,14 @@ interface SP {
 }
 
 export default async function BooksPage({ searchParams }: SP) {
+  const me = await getCurrentUser()
+  if (!me) redirect('/login?next=/books')
   const sp = await searchParams
   let books
   if (sp.q && sp.q.trim()) {
-    books = await searchBooks(db, sp.q.trim())
+    books = await searchBooks(db, me.id, sp.q.trim())
   } else {
-    books = await listBooks(db, {
+    books = await listBooks(db, me.id, {
       genre: sp.genre,
       tag: sp.tag,
       year: parseYear(sp.year),
@@ -59,15 +63,13 @@ export default async function BooksPage({ searchParams }: SP) {
             emoji="📭"
             title="아직 책이 없어요"
             description="첫 독후감을 남겨보세요"
-            action={{ href: '/admin/new', label: '새 독후감' }}
+            action={{ href: '/books/new', label: '새 독후감' }}
           />
         )
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           {books.map((b) => {
             const q = sp.q?.trim()
-            // Show a body snippet only when title/author didn't already match —
-            // otherwise the snippet would be noise next to a self-explanatory hit.
             const matchesMeta = q
               ? b.title.toLowerCase().includes(q.toLowerCase()) ||
                 b.author.toLowerCase().includes(q.toLowerCase())
