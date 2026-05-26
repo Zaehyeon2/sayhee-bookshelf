@@ -57,6 +57,31 @@ describe('queries', () => {
     expect(r2.length).toBe(1)
   })
 
+  it('searchBooks 본문 매치', async () => {
+    await createBook(db, {
+      title: '데미안', author: '헤세', genre: '소설', readDate: '2026-05-01', rating: 5,
+      content: '새는 알을 깨고 나온다. 알은 세계다.', tags: [],
+    })
+    const r = await searchBooks(db, '알을 깨고')
+    expect(r.length).toBe(1)
+    expect(r[0].title).toBe('데미안')
+  })
+
+  it('searchBooks 가중치 — 제목 매치가 본문-only 매치보다 위', async () => {
+    // 본문에만 "에피쿠로스"가 등장하는 책
+    await createBook(db, {
+      title: '서양철학사', author: '러셀', genre: '인문/철학', readDate: '2026-05-01', rating: 4,
+      content: '여기서 에피쿠로스는 쾌락주의를 주창했다.', tags: [],
+    })
+    // 제목에 "에피쿠로스"가 직접 들어간 책 (더 최신 readDate)
+    await createBook(db, {
+      title: '에피쿠로스 입문', author: '저자', genre: '인문/철학', readDate: '2026-04-01', rating: 5,
+      content: '', tags: [],
+    })
+    const r = await searchBooks(db, '에피쿠로스')
+    expect(r.map((b) => b.title)).toEqual(['에피쿠로스 입문', '서양철학사'])
+  })
+
   it('suggestTags 자동완성', async () => {
     await createBook(db, { title: 'a', author: 'a', genre: '소설', readDate: '2026-05-01', rating: 3, content: '', tags: ['여름', '여행지에서', '재독'] })
     const r = await suggestTags(db, '여')

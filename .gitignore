@@ -60,6 +60,7 @@ Thumbs.db
 # Tool-generated working dirs (not part of the source tree)
 .superpowers/
 .omc/
+.claude/
 
 # TypeScript
 *.tsbuildinfo

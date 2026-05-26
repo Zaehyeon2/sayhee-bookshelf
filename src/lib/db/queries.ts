@@ -227,9 +227,16 @@ export async function searchBooks(db: Db, q: string): Promise<BookWithTags[]> {
     .select()
     .from(books)
     .where(
-      sql`${books.title} LIKE ${pattern} OR ${books.author} LIKE ${pattern}`,
+      sql`${books.title} LIKE ${pattern} OR ${books.author} LIKE ${pattern} OR ${books.content} LIKE ${pattern}`,
     )
-    .orderBy(desc(books.readDate))
+    .orderBy(
+      sql`CASE
+        WHEN ${books.title} LIKE ${pattern} THEN 1
+        WHEN ${books.author} LIKE ${pattern} THEN 2
+        ELSE 3
+      END`,
+      desc(books.readDate),
+    )
 
   const tagMap = await attachTagsBatch(db, rows.map((r) => r.id))
   return rows.map((r) => ({ ...r, tags: tagMap.get(r.id) ?? [] }))

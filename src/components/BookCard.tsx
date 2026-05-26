@@ -3,7 +3,12 @@ import { GenreBadge } from './GenreBadge'
 import { RatingStars } from './RatingStars'
 import type { BookWithTags } from '@/lib/db/queries'
 
-export function BookCard({ book }: { book: BookWithTags }) {
+interface Props {
+  book: BookWithTags
+  snippet?: string
+}
+
+export function BookCard({ book, snippet }: Props) {
   return (
     <Link
       href={`/books/${book.slug}`}
@@ -16,6 +21,11 @@ export function BookCard({ book }: { book: BookWithTags }) {
         <GenreBadge genre={book.genre} />
       </div>
       <p className="mt-1 text-[14px] text-[var(--color-text-muted)] line-clamp-1">{book.author}</p>
+      {snippet && (
+        <p className="mt-2 text-[13px] text-[var(--color-text-muted)] line-clamp-2 leading-relaxed">
+          {snippet}
+        </p>
+      )}
       <div className="mt-4 flex items-center justify-between">
         <RatingStars value={book.rating} size="sm" />
         <time className="text-[12px] text-[var(--color-text-weak)] font-tabular">{book.readDate}</time>

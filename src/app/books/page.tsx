@@ -4,6 +4,7 @@ import { listBooks, searchBooks } from '@/lib/db/queries'
 import { BookCard } from '@/components/BookCard'
 import { SearchBox } from '@/components/SearchBox'
 import { Filters } from '@/components/Filters'
+import { excerpt } from '@/lib/excerpt'
 
 function parseYear(value: string | undefined): number | undefined {
   if (!value) return undefined
@@ -51,7 +52,17 @@ export default async function BooksPage({ searchParams }: SP) {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-          {books.map((b) => <BookCard key={b.id} book={b} />)}
+          {books.map((b) => {
+            const q = sp.q?.trim()
+            // Show a body snippet only when title/author didn't already match —
+            // otherwise the snippet would be noise next to a self-explanatory hit.
+            const matchesMeta = q
+              ? b.title.toLowerCase().includes(q.toLowerCase()) ||
+                b.author.toLowerCase().includes(q.toLowerCase())
+              : true
+            const snippet = q && !matchesMeta ? excerpt(b.content, q) ?? undefined : undefined
+            return <BookCard key={b.id} book={b} snippet={snippet} />
+          })}
         </div>
       )}
     </div>
