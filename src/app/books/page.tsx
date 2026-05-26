@@ -2,13 +2,16 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db/client'
-import { listBooks, searchBooks } from '@/lib/db/queries'
+import { countBooks, listBooks, searchBooks } from '@/lib/db/queries'
 import { BookCard } from '@/components/BookCard'
 import { SearchBox } from '@/components/SearchBox'
 import { Filters } from '@/components/Filters'
+import { Pagination } from '@/components/Pagination'
 import { excerpt } from '@/lib/excerpt'
 import { EmptyState } from '@/components/EmptyState'
 import { getCurrentUser } from '@/lib/auth'
+
+const PAGE_SIZE = 24
 
 function parseYear(value: string | undefined): number | undefined {
   if (!value) return undefined
@@ -16,24 +19,49 @@ function parseYear(value: string | undefined): number | undefined {
   return Number.isFinite(n) ? n : undefined
 }
 
+function parsePage(value: string | undefined): number {
+  if (!value) return 1
+  const n = Number(value)
+  return Number.isFinite(n) && n >= 1 ? Math.floor(n) : 1
+}
+
 interface SP {
-  searchParams: Promise<{ genre?: string; tag?: string; year?: string; q?: string; sort?: string }>
+  searchParams: Promise<{
+    genre?: string
+    tag?: string
+    year?: string
+    q?: string
+    sort?: string
+    page?: string
+  }>
 }
 
 export default async function BooksPage({ searchParams }: SP) {
   const me = await getCurrentUser()
   if (!me) redirect('/login?next=/books')
   const sp = await searchParams
+  const page = parsePage(sp.page)
+  const isSearch = !!(sp.q && sp.q.trim())
+
   let books
-  if (sp.q && sp.q.trim()) {
-    books = await searchBooks(db, me.id, sp.q.trim())
+  let totalPages = 1
+
+  if (isSearch) {
+    // 검색 결과는 페이지네이션 없이 전체 (별도 구현 필요 시 추후)
+    books = await searchBooks(db, me.id, sp.q!.trim())
   } else {
-    books = await listBooks(db, me.id, {
+    const filters = {
       genre: sp.genre,
       tag: sp.tag,
       year: parseYear(sp.year),
-      sort: sp.sort === 'rating' ? 'rating' : 'date',
-    })
+      sort: sp.sort === 'rating' ? ('rating' as const) : ('date' as const),
+    }
+    const [list, total] = await Promise.all([
+      listBooks(db, me.id, { ...filters, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE }),
+      countBooks(db, me.id),
+    ])
+    books = list
+    totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
   }
 
   const title =
@@ -76,17 +104,32 @@ export default async function BooksPage({ searchParams }: SP) {
           />
         )
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-          {books.map((b) => {
-            const q = sp.q?.trim()
-            const matchesMeta = q
-              ? b.title.toLowerCase().includes(q.toLowerCase()) ||
-                b.author.toLowerCase().includes(q.toLowerCase())
-              : true
-            const snippet = q && !matchesMeta ? excerpt(b.content, q) ?? undefined : undefined
-            return <BookCard key={b.id} book={b} snippet={snippet} query={q} />
-          })}
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {books.map((b) => {
+              const q = sp.q?.trim()
+              const matchesMeta = q
+                ? b.title.toLowerCase().includes(q.toLowerCase()) ||
+                  b.author.toLowerCase().includes(q.toLowerCase())
+                : true
+              const snippet = q && !matchesMeta ? excerpt(b.content, q) ?? undefined : undefined
+              return <BookCard key={b.id} book={b} snippet={snippet} query={q} />
+            })}
+          </div>
+          {!isSearch && (
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              basePath="/books"
+              preservedQuery={{
+                genre: sp.genre,
+                tag: sp.tag,
+                year: sp.year,
+                sort: sp.sort,
+              }}
+            />
+          )}
+        </>
       )}
     </div>
   )
