@@ -35,7 +35,7 @@ export function SearchBox() {
       />
       <button
         type="submit"
-        className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 px-4 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[14px] font-semibold hover:bg-[var(--color-toss-blue-hover)] active:scale-[0.97] transition"
+        className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 px-4 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[14px] font-semibold hover:bg-[var(--color-toss-blue-hover)] active:scale-[0.97] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
       >
         검색
       </button>

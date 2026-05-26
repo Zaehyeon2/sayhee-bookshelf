@@ -49,7 +49,7 @@ export default async function HomePage() {
                 key={g}
                 href={`/books?genre=${encodeURIComponent(g)}`}
                 className={
-                  'group rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] active:scale-[0.99] transition ' +
+                  'group rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] active:scale-[0.99] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50 ' +
                   (count === 0 ? 'opacity-60' : '')
                 }
               >

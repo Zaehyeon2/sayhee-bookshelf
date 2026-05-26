@@ -61,7 +61,7 @@ export function TagInput({ value, onChange }: Props) {
                 type="button"
                 onClick={() => remove(t)}
                 aria-label={`${t} 제거`}
-                className="text-[var(--color-text-weak)] hover:text-[var(--color-text-strong)] inline-flex items-center justify-center w-6 h-6 -mr-1 leading-none text-[16px]"
+                className="text-[var(--color-text-weak)] hover:text-[var(--color-text-strong)] inline-flex items-center justify-center w-6 h-6 -mr-1 leading-none text-[16px] rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
               >
                 ×
               </button>
@@ -91,7 +91,7 @@ export function TagInput({ value, onChange }: Props) {
               <button
                 type="button"
                 onClick={() => add(s)}
-                className="block w-full px-4 py-2 text-left text-[14px] text-[var(--color-text-strong)] hover:bg-[var(--color-surface-2)] transition"
+                className="block w-full px-4 py-2 text-left text-[14px] text-[var(--color-text-strong)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:bg-[var(--color-surface-2)]"
               >
                 #{s}
               </button>

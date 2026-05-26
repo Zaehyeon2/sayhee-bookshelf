@@ -129,7 +129,7 @@ export function Filters() {
       <select
         value={currentSort}
         onChange={(e) => setParam('sort', e.target.value === 'date' ? null : e.target.value)}
-        className="shrink-0 h-9 pl-3 pr-8 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] text-[var(--color-text-strong)] focus:border-[var(--color-toss-blue)] outline-none"
+        className="shrink-0 h-9 pl-3 pr-8 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] text-[var(--color-text-strong)] focus:outline-none focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15"
       >
         <option value="date">최근 순</option>
         <option value="rating">별점 순</option>

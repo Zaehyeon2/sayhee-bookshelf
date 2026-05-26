@@ -30,7 +30,7 @@ export function RatingStars({ value, onChange, size = 'md' }: Props) {
             type="button"
             onClick={() => onChange?.(n)}
             aria-label={`${n}점`}
-            className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] leading-none hover:scale-110 active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/30 rounded-sm"
+            className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] leading-none hover:scale-110 active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50 rounded-sm"
           >
             {star}
           </button>
