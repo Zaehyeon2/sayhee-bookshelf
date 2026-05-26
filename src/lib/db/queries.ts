@@ -9,10 +9,6 @@ export type BookWithTags = typeof books.$inferSelect & { tags: string[] }
 
 type Db = LibSQLDatabase<typeof schema>
 
-// ---------------------------------------------------------------------------
-// Internal helpers
-// ---------------------------------------------------------------------------
-
 async function attachTags(db: Db, bookId: number): Promise<string[]> {
   const rows = await db
     .select({ name: tags.name })
@@ -54,8 +50,6 @@ async function replaceBookTags(db: Db, bookId: number, tagNames: string[]): Prom
 }
 
 function isSlugUniqueViolation(e: unknown): boolean {
-  // Walk the error cause chain — drizzle wraps LibsqlError in a generic Error.
-  // WeakSet guards against circular .cause references.
   const seen = new WeakSet<object>()
   let current: unknown = e
   while (current != null && typeof current === 'object') {
@@ -64,7 +58,7 @@ function isSlugUniqueViolation(e: unknown): boolean {
     const err = current as { code?: string; message?: string; cause?: unknown }
     if (
       err.code === 'SQLITE_CONSTRAINT' &&
-      err.message?.includes('UNIQUE constraint failed: books.slug')
+      err.message?.includes('idx_books_user_slug')
     ) {
       return true
     }
@@ -73,21 +67,21 @@ function isSlugUniqueViolation(e: unknown): boolean {
   return false
 }
 
-// ---------------------------------------------------------------------------
-// CRUD
-// ---------------------------------------------------------------------------
-
-export async function createBook(db: Db, input: CreateBookInput): Promise<BookWithTags> {
+export async function createBook(
+  db: Db,
+  authorUserId: number,
+  input: CreateBookInput,
+): Promise<BookWithTags> {
   const base = toSlug(input.title)
   const now = Date.now()
 
-  // suffix counter starts at -2 (i=1 → `${base}-2`) by convention; first attempt has no suffix.
   for (let i = 0; i < 100; i++) {
     const candidate = i === 0 ? base : `${base}-${i + 1}`
     try {
       const inserted = await db
         .insert(books)
         .values({
+          authorUserId,
           title: input.title,
           author: input.author,
           genre: input.genre,
@@ -114,10 +108,15 @@ export async function createBook(db: Db, input: CreateBookInput): Promise<BookWi
 
 export async function updateBook(
   db: Db,
+  authorUserId: number,
   id: number,
   input: UpdateBookInput,
 ): Promise<BookWithTags | null> {
-  const existing = await db.select().from(books).where(eq(books.id, id)).limit(1)
+  const existing = await db
+    .select()
+    .from(books)
+    .where(and(eq(books.id, id), eq(books.authorUserId, authorUserId)))
+    .limit(1)
   if (existing.length === 0) return null
 
   const now = Date.now()
@@ -132,7 +131,7 @@ export async function updateBook(
       ...(input.content !== undefined && { content: input.content }),
       updatedAt: now,
     })
-    .where(eq(books.id, id))
+    .where(and(eq(books.id, id), eq(books.authorUserId, authorUserId)))
     .returning()
 
   const book = updated[0]
@@ -143,25 +142,40 @@ export async function updateBook(
   return { ...book, tags: tagNames }
 }
 
-export async function deleteBook(db: Db, id: number): Promise<boolean> {
-  const result = await db.delete(books).where(eq(books.id, id)).returning({ id: books.id })
+export async function deleteBook(db: Db, authorUserId: number, id: number): Promise<boolean> {
+  const result = await db
+    .delete(books)
+    .where(and(eq(books.id, id), eq(books.authorUserId, authorUserId)))
+    .returning({ id: books.id })
   return result.length > 0
 }
 
-// ---------------------------------------------------------------------------
-// Reads
-// ---------------------------------------------------------------------------
-
-export async function getBookBySlug(db: Db, slug: string): Promise<BookWithTags | null> {
-  const rows = await db.select().from(books).where(eq(books.slug, slug)).limit(1)
+export async function getBookBySlug(
+  db: Db,
+  authorUserId: number,
+  slug: string,
+): Promise<BookWithTags | null> {
+  const rows = await db
+    .select()
+    .from(books)
+    .where(and(eq(books.slug, slug), eq(books.authorUserId, authorUserId)))
+    .limit(1)
   if (rows.length === 0) return null
   const book = rows[0]
   const tagNames = await attachTags(db, book.id)
   return { ...book, tags: tagNames }
 }
 
-export async function getBookById(db: Db, id: number): Promise<BookWithTags | null> {
-  const rows = await db.select().from(books).where(eq(books.id, id)).limit(1)
+export async function getBookById(
+  db: Db,
+  authorUserId: number,
+  id: number,
+): Promise<BookWithTags | null> {
+  const rows = await db
+    .select()
+    .from(books)
+    .where(and(eq(books.id, id), eq(books.authorUserId, authorUserId)))
+    .limit(1)
   if (rows.length === 0) return null
   const book = rows[0]
   const tagNames = await attachTags(db, book.id)
@@ -170,9 +184,10 @@ export async function getBookById(db: Db, id: number): Promise<BookWithTags | nu
 
 export async function listBooks(
   db: Db,
+  authorUserId: number,
   filters: { genre?: string; tag?: string; year?: number; sort?: 'date' | 'rating' },
 ): Promise<BookWithTags[]> {
-  const conditions = []
+  const conditions = [eq(books.authorUserId, authorUserId)]
 
   if (filters.genre) {
     conditions.push(eq(books.genre, filters.genre))
@@ -182,7 +197,6 @@ export async function listBooks(
   }
 
   if (filters.tag) {
-    // Need inner join to filter by tag — query books that have the given tag
     const tagRows = await db
       .select({ id: tags.id })
       .from(tags)
@@ -192,13 +206,12 @@ export async function listBooks(
     const tagId = tagRows[0].id
 
     const joinCondition = and(eq(bookTags.bookId, books.id), eq(bookTags.tagId, tagId))
-    const whereCondition = conditions.length > 0 ? and(...conditions) : undefined
 
     const rows = await db
       .select({ book: books })
       .from(books)
       .innerJoin(bookTags, joinCondition!)
-      .where(whereCondition)
+      .where(and(...conditions))
       .orderBy(
         filters.sort === 'rating' ? desc(books.rating) : desc(books.readDate),
       )
@@ -207,12 +220,10 @@ export async function listBooks(
     return rows.map((r) => ({ ...r.book, tags: tagMap.get(r.book.id) ?? [] }))
   }
 
-  // No tag filter — simple query
-  const whereCondition = conditions.length > 0 ? and(...conditions) : undefined
   const rows = await db
     .select()
     .from(books)
-    .where(whereCondition)
+    .where(and(...conditions))
     .orderBy(
       filters.sort === 'rating' ? desc(books.rating) : desc(books.readDate),
     )
@@ -221,13 +232,20 @@ export async function listBooks(
   return rows.map((r) => ({ ...r, tags: tagMap.get(r.id) ?? [] }))
 }
 
-export async function searchBooks(db: Db, q: string): Promise<BookWithTags[]> {
+export async function searchBooks(
+  db: Db,
+  authorUserId: number,
+  q: string,
+): Promise<BookWithTags[]> {
   const pattern = `%${q}%`
   const rows = await db
     .select()
     .from(books)
     .where(
-      sql`${books.title} LIKE ${pattern} OR ${books.author} LIKE ${pattern} OR ${books.content} LIKE ${pattern}`,
+      and(
+        eq(books.authorUserId, authorUserId),
+        sql`(${books.title} LIKE ${pattern} OR ${books.author} LIKE ${pattern} OR ${books.content} LIKE ${pattern})`,
+      ),
     )
     .orderBy(
       sql`CASE
@@ -242,12 +260,19 @@ export async function searchBooks(db: Db, q: string): Promise<BookWithTags[]> {
   return rows.map((r) => ({ ...r, tags: tagMap.get(r.id) ?? [] }))
 }
 
-export async function suggestTags(db: Db, q: string): Promise<string[]> {
+export async function suggestTags(
+  db: Db,
+  authorUserId: number,
+  q: string,
+): Promise<string[]> {
   const pattern = `${q}%`
+  // 본인 책의 태그 풀에서만 자동완성
   const rows = await db
-    .select({ name: tags.name })
+    .selectDistinct({ name: tags.name })
     .from(tags)
-    .where(like(tags.name, pattern))
+    .innerJoin(bookTags, eq(bookTags.tagId, tags.id))
+    .innerJoin(books, eq(books.id, bookTags.bookId))
+    .where(and(eq(books.authorUserId, authorUserId), like(tags.name, pattern)))
     .limit(8)
   return rows.map((r) => r.name)
 }
@@ -258,6 +283,7 @@ export async function listTagsForBook(db: Db, bookId: number): Promise<string[]>
 
 export async function listGenresWithCounts(
   db: Db,
+  authorUserId: number,
 ): Promise<{ genre: string; count: number }[]> {
   const rows = await db
     .select({
@@ -265,6 +291,7 @@ export async function listGenresWithCounts(
       count: sql<number>`COUNT(*)`,
     })
     .from(books)
+    .where(eq(books.authorUserId, authorUserId))
     .groupBy(books.genre)
     .orderBy(desc(sql`COUNT(*)`))
   return rows.map((r) => ({ genre: r.genre, count: Number(r.count) }))
