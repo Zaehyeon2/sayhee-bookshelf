@@ -13,8 +13,23 @@ const pretendard = localFont({
 })
 
 export const metadata: Metadata = {
-  title: '세희의 서재',
+  title: {
+    default: '세희의 서재',
+    template: '%s · 세희의 서재',
+  },
   description: '세희가 읽은 책의 기록',
+  openGraph: {
+    title: '세희의 서재',
+    description: '세희가 읽은 책의 기록',
+    type: 'website',
+    locale: 'ko_KR',
+    siteName: '세희의 서재',
+  },
+  twitter: {
+    card: 'summary',
+    title: '세희의 서재',
+    description: '세희가 읽은 책의 기록',
+  },
 }
 
 const themeBootstrap = `(function(){try{var s=localStorage.getItem('theme');var d=s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=d?'dark':'light';}catch(e){}})();`
