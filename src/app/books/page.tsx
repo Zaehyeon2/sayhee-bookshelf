@@ -64,7 +64,7 @@ export default async function BooksPage({ searchParams }: SP) {
     }
     const [list, count] = await Promise.all([
       listBooks(db, me.id, { ...filters, limit: PAGE_SIZE, offset }),
-      countBooks(db, me.id),
+      countBooks(db, me.id, { genre: filters.genre, tag: filters.tag, year: filters.year }),
     ])
     books = list
     total = count

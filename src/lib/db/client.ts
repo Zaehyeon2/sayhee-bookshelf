@@ -10,9 +10,10 @@ const libsql = createClient({
   authToken: process.env.TURSO_TOKEN || undefined,
 })
 
-// SQLite ignores foreign keys by default. Turso (server) enables them, but local
-// file: URLs don't — explicitly turn them on so ON DELETE CASCADE works.
-// Fire-and-forget; libsql serializes statements on a single client.
-libsql.execute('PRAGMA foreign_keys = ON').catch(() => {})
+// SQLite ignores foreign keys by default. Turso (server)는 enable 상태지만 local file: URL은
+// 아니므로 명시적으로 켠다. Module load 시점에 한 번 실행되고, libsql client는 statement를
+// 직렬화하므로 이후 쿼리는 PRAGMA 적용 이후 실행된다. 이 await을 module top-level에서 수행해
+// import 시점에 보장한다.
+await libsql.execute('PRAGMA foreign_keys = ON')
 
 export const db = drizzle(libsql, { schema })

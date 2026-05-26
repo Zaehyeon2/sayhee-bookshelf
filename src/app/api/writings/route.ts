@@ -1,20 +1,41 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
-import { createWriting, listWritings, searchWritings } from '@/lib/db/queries'
-import { CreateWritingSchema } from '@/lib/validations'
+import {
+  countSearchWritings,
+  countWritings,
+  createWriting,
+  listWritings,
+  searchWritings,
+} from '@/lib/db/queries'
+import { CreateWritingSchema, ListWritingsQuerySchema } from '@/lib/validations'
 import { requireUser, HttpError } from '@/lib/auth-helpers'
+
+const PAGE_SIZE = 24
 
 export async function GET(req: Request) {
   try {
     const user = await requireUser()
     const url = new URL(req.url)
-    const q = url.searchParams.get('q')
-    if (q && q.trim().length > 0) {
-      const results = await searchWritings(db, user.id, q.trim())
-      return NextResponse.json(results)
+    const parsed = ListWritingsQuerySchema.safeParse(Object.fromEntries(url.searchParams))
+    if (!parsed.success) {
+      return NextResponse.json({ error: '잘못된 쿼리 파라미터' }, { status: 400 })
     }
-    const list = await listWritings(db, user.id)
-    return NextResponse.json(list)
+    const { q, page } = parsed.data
+    const currentPage = page ?? 1
+    const offset = (currentPage - 1) * PAGE_SIZE
+
+    if (q && q.trim().length > 0) {
+      const [results, total] = await Promise.all([
+        searchWritings(db, user.id, q.trim(), { limit: PAGE_SIZE, offset }),
+        countSearchWritings(db, user.id, q.trim()),
+      ])
+      return NextResponse.json({ results, total, page: currentPage, pageSize: PAGE_SIZE })
+    }
+    const [list, total] = await Promise.all([
+      listWritings(db, user.id, { limit: PAGE_SIZE, offset }),
+      countWritings(db, user.id),
+    ])
+    return NextResponse.json({ results: list, total, page: currentPage, pageSize: PAGE_SIZE })
   } catch (e) {
     if (e instanceof HttpError) return e.toResponse()
     throw e
