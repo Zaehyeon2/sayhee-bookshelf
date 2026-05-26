@@ -256,9 +256,10 @@ export async function searchBooks(
   db: Db,
   authorUserId: number,
   q: string,
+  opts: { limit?: number; offset?: number } = {},
 ): Promise<BookWithTags[]> {
   const pattern = `%${q}%`
-  const rows = await db
+  let query = db
     .select()
     .from(books)
     .where(
@@ -275,12 +276,30 @@ export async function searchBooks(
       END`,
       desc(books.readDate),
     )
+    .$dynamic()
+  if (opts.limit !== undefined) query = query.limit(opts.limit)
+  if (opts.offset !== undefined) query = query.offset(opts.offset)
+  const rows = await query
 
   const tagMap = await attachTagsBatch(
     db,
     rows.map((r) => r.id),
   )
   return rows.map((r) => ({ ...r, tags: tagMap.get(r.id) ?? [] }))
+}
+
+export async function countSearchBooks(db: Db, authorUserId: number, q: string): Promise<number> {
+  const pattern = `%${q}%`
+  const rows = await db
+    .select({ n: sql<number>`COUNT(*)` })
+    .from(books)
+    .where(
+      and(
+        eq(books.authorUserId, authorUserId),
+        sql`(${books.title} LIKE ${pattern} OR ${books.author} LIKE ${pattern} OR ${books.content} LIKE ${pattern})`,
+      ),
+    )
+  return Number(rows[0]?.n ?? 0)
 }
 
 export async function suggestTags(db: Db, authorUserId: number, q: string): Promise<string[]> {
@@ -511,6 +530,56 @@ export async function listWritings(
 
 export async function listTagsForWriting(db: Db, writingId: number): Promise<string[]> {
   return attachWritingTags(db, writingId)
+}
+
+export async function searchWritings(
+  db: Db,
+  authorUserId: number,
+  q: string,
+  opts: { limit?: number; offset?: number } = {},
+): Promise<WritingWithTags[]> {
+  const pattern = `%${q}%`
+  let query = db
+    .select()
+    .from(writings)
+    .where(
+      and(
+        eq(writings.authorUserId, authorUserId),
+        sql`(${writings.title} LIKE ${pattern} OR ${writings.body} LIKE ${pattern})`,
+      ),
+    )
+    .orderBy(
+      sql`CASE WHEN ${writings.title} LIKE ${pattern} THEN 1 ELSE 2 END`,
+      desc(writings.createdAt),
+    )
+    .$dynamic()
+  if (opts.limit !== undefined) query = query.limit(opts.limit)
+  if (opts.offset !== undefined) query = query.offset(opts.offset)
+  const rows = await query
+
+  const tagMap = await attachWritingTagsBatch(
+    db,
+    rows.map((r) => r.id),
+  )
+  return rows.map((r) => ({ ...r, tags: tagMap.get(r.id) ?? [] }))
+}
+
+export async function countSearchWritings(
+  db: Db,
+  authorUserId: number,
+  q: string,
+): Promise<number> {
+  const pattern = `%${q}%`
+  const rows = await db
+    .select({ n: sql<number>`COUNT(*)` })
+    .from(writings)
+    .where(
+      and(
+        eq(writings.authorUserId, authorUserId),
+        sql`(${writings.title} LIKE ${pattern} OR ${writings.body} LIKE ${pattern})`,
+      ),
+    )
+  return Number(rows[0]?.n ?? 0)
 }
 
 // ─── stats ─────────────────────────────────────────────────────────────────

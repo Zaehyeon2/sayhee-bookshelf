@@ -3,7 +3,12 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 
-export function SearchBox() {
+interface Props {
+  basePath?: string
+  placeholder?: string
+}
+
+export function SearchBox({ basePath = '/books', placeholder = '제목·작가·본문 검색' }: Props) {
   const router = useRouter()
   const sp = useSearchParams()
   const [q, setQ] = useState(sp.get('q') ?? '')
@@ -14,8 +19,10 @@ export function SearchBox() {
     const trimmed = q.trim()
     if (trimmed) params.set('q', trimmed)
     else params.delete('q')
+    // 검색어 변경 시 page는 1로 리셋
+    params.delete('page')
     const qs = params.toString()
-    router.push(qs ? `/books?${qs}` : '/books')
+    router.push(qs ? `${basePath}?${qs}` : basePath)
   }
 
   return (
@@ -30,7 +37,7 @@ export function SearchBox() {
         type="search"
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="제목·작가·본문 검색"
+        placeholder={placeholder}
         className="w-full h-12 pl-11 pr-24 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition"
       />
       <button
