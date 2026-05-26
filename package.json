@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "biome check .",
+    "format": "biome check . --write",
+    "format:unsafe": "biome check . --write --unsafe",
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
@@ -28,6 +30,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.4.15",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
@@ -39,8 +42,6 @@
     "@vitejs/plugin-react": "^6.0.2",
     "dotenv-cli": "^11.0.0",
     "drizzle-kit": "^0.31.10",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.6",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4",
     "tsx": "^4.22.3",
