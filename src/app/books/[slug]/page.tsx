@@ -1,10 +1,36 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { db } from '@/lib/db/client'
 import { getBookBySlug } from '@/lib/db/queries'
 import { GenreBadge } from '@/components/GenreBadge'
 import { RatingStars } from '@/components/RatingStars'
 import { MarkdownViewer } from '@/components/MarkdownViewer'
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ slug: string }> },
+): Promise<Metadata> {
+  const { slug } = await params
+  const book = await getBookBySlug(db, decodeURIComponent(slug))
+  if (!book) return { title: '책을 찾을 수 없어요' }
+  const pageTitle = `${book.title} · ${book.author}`
+  const description = `${book.author}의 ${book.genre} — 별점 ${book.rating}/5`
+  return {
+    title: pageTitle,
+    description,
+    openGraph: {
+      title: pageTitle,
+      description,
+      type: 'article',
+      locale: 'ko_KR',
+    },
+    twitter: {
+      card: 'summary',
+      title: pageTitle,
+      description,
+    },
+  }
+}
 
 export default async function BookDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
