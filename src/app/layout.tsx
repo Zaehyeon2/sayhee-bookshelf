@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -7,10 +8,13 @@ export const metadata: Metadata = {
   description: '내가 읽은 책의 기록',
 }
 
+const themeBootstrap = `(function(){try{var s=localStorage.getItem('theme');var d=s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=d?'dark':'light';}catch(e){}})();`
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko">
+    <html lang="ko" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
@@ -36,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               >
                 관리
               </Link>
+              <ThemeToggle />
             </div>
           </nav>
         </header>
