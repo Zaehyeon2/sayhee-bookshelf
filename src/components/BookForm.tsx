@@ -118,11 +118,8 @@ export function BookForm({ initial, mode }: Props) {
         </div>
       </section>
 
-      <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-toss)]">
-        <label className={labelCls}>본문</label>
-        <div className="rounded-[var(--radius-toss-sm)] border border-[var(--color-border)] overflow-hidden">
-          <MarkdownEditor ref={editorRef} initialValue={initial?.content ?? ''} />
-        </div>
+      <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-2 shadow-[var(--shadow-toss)] overflow-hidden">
+        <MarkdownEditor ref={editorRef} initialValue={initial?.content ?? ''} />
       </section>
 
       <div className="flex flex-wrap items-center gap-3">
