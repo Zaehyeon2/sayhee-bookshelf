@@ -7,6 +7,7 @@ import { GENRES } from '@/lib/genres'
 import { RatingStars } from './RatingStars'
 import { TagInput } from './TagInput'
 import { MarkdownEditor, type MarkdownEditorHandle } from './MarkdownEditor'
+import { ConfirmDialog } from './ConfirmDialog'
 
 export interface BookFormValues {
   title: string
@@ -124,27 +125,7 @@ export function BookForm({ initial, mode }: Props) {
 
       <div className="flex flex-wrap items-center gap-3">
         {mode === 'edit' && initial?.id && (
-          confirmingDelete ? (
-            <div className="flex items-center gap-2 mr-auto">
-              <span className="text-[13px] text-[var(--color-text-muted)]">정말 삭제할까요?</span>
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={deleting}
-                className="h-10 px-4 rounded-[var(--radius-toss-sm)] bg-[var(--color-danger)] text-white text-[13px] font-semibold hover:opacity-90 active:scale-[0.97] disabled:opacity-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-danger)]/50"
-              >
-                {deleting ? '삭제 중…' : '삭제'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmingDelete(false)}
-                disabled={deleting}
-                className="h-10 px-3 rounded-[var(--radius-toss-sm)] text-[13px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
-              >
-                되돌리기
-              </button>
-            </div>
-          ) : (
+          <>
             <button
               type="button"
               onClick={() => setConfirmingDelete(true)}
@@ -152,7 +133,17 @@ export function BookForm({ initial, mode }: Props) {
             >
               삭제
             </button>
-          )
+            <ConfirmDialog
+              open={confirmingDelete}
+              onOpenChange={(open) => !deleting && setConfirmingDelete(open)}
+              title="이 독후감을 삭제할까요?"
+              description={`'${title || '제목 없음'}' 기록이 영구적으로 사라집니다. 되돌릴 수 없어요.`}
+              confirmLabel="삭제"
+              onConfirm={handleDelete}
+              danger
+              loading={deleting}
+            />
+          </>
         )}
         <button
           type="button"
