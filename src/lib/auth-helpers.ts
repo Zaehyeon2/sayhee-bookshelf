@@ -19,9 +19,21 @@ export class HttpError extends Error {
   }
 }
 
-export async function requireUser(): Promise<User> {
+interface RequireUserOpts {
+  /**
+   * mustChangePassword=1인 사용자도 허용. 기본은 false — 비밀번호 변경 전에는 모든 endpoint를
+   * 차단해서 default password 상태로 mutation을 수행하지 못하게 한다.
+   * 비밀번호 변경 endpoint 자체에서만 true로 설정해야 한다.
+   */
+  allowMustChangePassword?: boolean
+}
+
+export async function requireUser(opts: RequireUserOpts = {}): Promise<User> {
   const u = await getCurrentUser()
   if (!u) throw new HttpError(401, { error: '로그인이 필요합니다' })
+  if (!opts.allowMustChangePassword && u.mustChangePassword === 1) {
+    throw new HttpError(403, { error: '먼저 비밀번호를 변경해주세요' })
+  }
   return u
 }
 

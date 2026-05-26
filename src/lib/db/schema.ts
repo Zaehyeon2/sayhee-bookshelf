@@ -19,6 +19,8 @@ export const users = sqliteTable(
     passwordHash: text('password_hash').notNull(),
     role: text('role').notNull().default('member'), // 'admin' | 'member'
     mustChangePassword: integer('must_change_password').notNull().default(1),
+    // 비밀번호 변경/관리자 리셋 때마다 1씩 증가. JWT의 tv 클레임과 매칭되지 않으면 세션 무효화.
+    tokenVersion: integer('token_version').notNull().default(0),
     createdAt: integer('created_at').notNull(),
   },
   (t) => ({

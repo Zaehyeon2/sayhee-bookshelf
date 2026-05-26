@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db/client'
 import { users } from '@/lib/db/schema'
@@ -10,7 +10,7 @@ import { signSession, SESSION } from '@/lib/auth'
 
 export async function POST(req: Request) {
   try {
-    const user = await requireUser()
+    const user = await requireUser({ allowMustChangePassword: true })
     const body = await req.json().catch(() => null)
     const parsed = ChangePasswordSchema.safeParse(body)
     if (!parsed.success) {
@@ -24,12 +24,30 @@ export async function POST(req: Request) {
     if (!ok) {
       return NextResponse.json({ error: '현재 비밀번호가 올바르지 않습니다' }, { status: 400 })
     }
+    if (newPassword === currentPassword) {
+      return NextResponse.json(
+        { error: '새 비밀번호는 현재 비밀번호와 달라야 합니다' },
+        { status: 400 },
+      )
+    }
     const newHash = await bcrypt.hash(newPassword, 10)
-    await db
+    // tokenVersion을 증가시키면 이전에 발급된 모든 JWT가 무효화된다.
+    const [updated] = await db
       .update(users)
-      .set({ passwordHash: newHash, mustChangePassword: 0 })
+      .set({
+        passwordHash: newHash,
+        mustChangePassword: 0,
+        tokenVersion: sql`${users.tokenVersion} + 1`,
+      })
       .where(eq(users.id, user.id))
-    const newUser = { ...user, passwordHash: newHash, mustChangePassword: 0 }
+      .returning({ tokenVersion: users.tokenVersion })
+
+    const newUser = {
+      ...user,
+      passwordHash: newHash,
+      mustChangePassword: 0,
+      tokenVersion: updated?.tokenVersion ?? user.tokenVersion + 1,
+    }
     const token = await signSession(newUser)
     const store = await cookies()
     store.set(SESSION.name, token, {

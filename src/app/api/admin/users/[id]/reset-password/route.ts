@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db/client'
 import { users } from '@/lib/db/schema'
@@ -9,7 +9,7 @@ type Params = { params: Promise<{ id: string }> }
 
 export async function POST(_req: Request, { params }: Params) {
   try {
-    await requireAdmin()
+    const admin = await requireAdmin()
     const { id } = await params
     const userId = Number(id)
     if (!Number.isInteger(userId) || userId <= 0) {
@@ -23,14 +23,22 @@ export async function POST(_req: Request, { params }: Params) {
       )
     }
     const hash = await bcrypt.hash(defaultPw, 10)
+    // tokenVersion을 증가시켜 대상 사용자의 모든 기존 세션을 즉시 무효화한다.
     const result = await db
       .update(users)
-      .set({ passwordHash: hash, mustChangePassword: 1 })
+      .set({
+        passwordHash: hash,
+        mustChangePassword: 1,
+        tokenVersion: sql`${users.tokenVersion} + 1`,
+      })
       .where(eq(users.id, userId))
-      .returning({ id: users.id })
+      .returning({ id: users.id, username: users.username })
     if (result.length === 0) {
       return NextResponse.json({ error: 'not found' }, { status: 404 })
     }
+    console.warn(
+      `[audit] admin id=${admin.id} reset password for user id=${userId} username=${result[0].username}`,
+    )
     return NextResponse.json({ ok: true })
   } catch (e) {
     if (e instanceof HttpError) return e.toResponse()
