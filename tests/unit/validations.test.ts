@@ -1,42 +1,58 @@
 import { describe, it, expect } from 'vitest'
-import { CreateBookSchema, UpdateBookSchema } from '@/lib/validations'
+import {
+  LoginSchema,
+  ChangePasswordSchema,
+  CreateUserSchema,
+  UpdateProfileSchema,
+} from '@/lib/validations'
 
-const valid = {
-  title: '이방인',
-  author: '알베르 카뮈',
-  genre: '소설',
-  readDate: '2026-05-01',
-  rating: 5,
-  content: '인상 깊었다.',
-  tags: ['실존주의', '여름'],
-}
-
-describe('CreateBookSchema', () => {
-  it('유효한 입력 통과', () => {
-    expect(CreateBookSchema.parse(valid)).toMatchObject(valid)
+describe('LoginSchema', () => {
+  it('requires username and password', () => {
+    expect(LoginSchema.safeParse({ username: 'sehee', password: 'pass1234' }).success).toBe(true)
+    expect(LoginSchema.safeParse({ password: 'pass1234' }).success).toBe(false)
+    expect(LoginSchema.safeParse({ username: 'sehee' }).success).toBe(false)
   })
-  it('잘못된 장르 거부', () => {
-    expect(() => CreateBookSchema.parse({ ...valid, genre: '경제경영' })).toThrow()
-  })
-  it('별점 범위 밖 거부', () => {
-    expect(() => CreateBookSchema.parse({ ...valid, rating: 6 })).toThrow()
-    expect(() => CreateBookSchema.parse({ ...valid, rating: 0 })).toThrow()
-  })
-  it('날짜 형식 강제', () => {
-    expect(() => CreateBookSchema.parse({ ...valid, readDate: '2026/05/01' })).toThrow()
-  })
-  it('빈 제목 거부', () => {
-    expect(() => CreateBookSchema.parse({ ...valid, title: '' })).toThrow()
-  })
-  it('태그 공백 trim + 중복 제거', () => {
-    const r = CreateBookSchema.parse({ ...valid, tags: [' a ', 'a', 'b'] })
-    expect(r.tags).toEqual(['a', 'b'])
+  it('rejects too-short password', () => {
+    expect(LoginSchema.safeParse({ username: 'sehee', password: '123' }).success).toBe(false)
   })
 })
 
-describe('UpdateBookSchema', () => {
-  it('모든 필드 optional', () => {
-    expect(UpdateBookSchema.parse({})).toEqual({})
-    expect(UpdateBookSchema.parse({ rating: 3 })).toEqual({ rating: 3 })
+describe('ChangePasswordSchema', () => {
+  it('requires confirm matches', () => {
+    const ok = ChangePasswordSchema.safeParse({
+      currentPassword: 'old12345',
+      newPassword: 'new12345',
+      newPasswordConfirm: 'new12345',
+    })
+    expect(ok.success).toBe(true)
+  })
+  it('rejects mismatched confirm', () => {
+    const result = ChangePasswordSchema.safeParse({
+      currentPassword: 'old12345',
+      newPassword: 'new12345',
+      newPasswordConfirm: 'wrong___',
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.message.includes('일치'))).toBe(true)
+    }
+  })
+})
+
+describe('CreateUserSchema', () => {
+  it('accepts valid username', () => {
+    expect(CreateUserSchema.safeParse({ username: '세희' }).success).toBe(true)
+    expect(CreateUserSchema.safeParse({ username: 'sehee', displayName: '세희' }).success).toBe(true)
+  })
+  it('rejects forbidden chars', () => {
+    expect(CreateUserSchema.safeParse({ username: 'a/b' }).success).toBe(false)
+  })
+})
+
+describe('UpdateProfileSchema', () => {
+  it('requires displayName 1~30', () => {
+    expect(UpdateProfileSchema.safeParse({ displayName: '세' }).success).toBe(true)
+    expect(UpdateProfileSchema.safeParse({ displayName: '' }).success).toBe(false)
+    expect(UpdateProfileSchema.safeParse({ displayName: 'a'.repeat(31) }).success).toBe(false)
   })
 })

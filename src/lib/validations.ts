@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { GENRES } from './genres'
+import { isValidUsername } from './username-normalize'
 
 const dateRe = /^\d{4}-\d{2}-\d{2}$/
 
@@ -39,5 +40,26 @@ export const UpdateBookSchema = z.object({
 export type UpdateBookInput = z.infer<typeof UpdateBookSchema>
 
 export const LoginSchema = z.object({
-  password: z.string().min(1),
+  username: z.string().trim().min(2).max(20),
+  password: z.string().min(8),
+})
+
+export const ChangePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1),
+    newPassword: z.string().min(8),
+    newPasswordConfirm: z.string().min(8),
+  })
+  .refine((d) => d.newPassword === d.newPasswordConfirm, {
+    message: '새 비밀번호가 일치하지 않습니다',
+    path: ['newPasswordConfirm'],
+  })
+
+export const CreateUserSchema = z.object({
+  username: z.string().trim().refine(isValidUsername, '아이디는 2~20자, 공백·/·?·#·@·& 금지'),
+  displayName: z.string().trim().min(1).max(30).optional(),
+})
+
+export const UpdateProfileSchema = z.object({
+  displayName: z.string().trim().min(1).max(30),
 })
