@@ -33,36 +33,42 @@ function applyPreference(pref: Preference) {
 
 export function ThemeToggle() {
   const [pref, setPref] = useState<Preference>('system')
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
     setPref(readPreference())
+
     const mql = window.matchMedia('(prefers-color-scheme: dark)')
-    const handler = () => {
-      if (readPreference() === 'system') applyPreference('system')
+    const onOsChange = () => {
+      if (readPreference() === 'system') {
+        applyPreference('system')
+        setPref('system')
+      }
     }
-    mql.addEventListener('change', handler)
-    return () => mql.removeEventListener('change', handler)
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'theme') setPref(readPreference())
+    }
+    mql.addEventListener('change', onOsChange)
+    window.addEventListener('storage', onStorage)
+    return () => {
+      mql.removeEventListener('change', onOsChange)
+      window.removeEventListener('storage', onStorage)
+    }
   }, [])
 
+  const next = ORDER[(ORDER.indexOf(pref) + 1) % ORDER.length]
+
   function cycle() {
-    const next = ORDER[(ORDER.indexOf(pref) + 1) % ORDER.length]
     setPref(next)
     applyPreference(next)
-  }
-
-  if (!mounted) {
-    return <span className="inline-block w-11 h-11" aria-hidden />
   }
 
   return (
     <button
       type="button"
       onClick={cycle}
-      aria-label={`테마: ${LABEL[pref]}. 탭하면 변경됩니다.`}
+      aria-label={`현재 ${LABEL[pref]}. 누르면 ${LABEL[next]}로 전환됩니다.`}
       title={LABEL[pref]}
-      className="inline-flex w-11 h-11 items-center justify-center rounded-[var(--radius-toss-sm)] text-[18px] leading-none text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/30"
+      className="inline-flex w-11 h-11 items-center justify-center rounded-[var(--radius-toss-sm)] text-[18px] leading-none text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
     >
       <span aria-hidden>{ICON[pref]}</span>
     </button>
