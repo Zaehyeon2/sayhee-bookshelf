@@ -56,7 +56,7 @@ export function BookForm({ initial, mode }: Props) {
       const payload = { title, author, genre, readDate, rating, content, tags }
       const url = mode === 'create' ? '/api/books' : `/api/books/${initial?.id}`
       const res = await fetch(url, {
-        method: mode === 'create' ? 'POST' : 'PUT',
+        method: mode === 'create' ? 'POST' : 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
