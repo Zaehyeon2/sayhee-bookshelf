@@ -22,9 +22,8 @@ export const books = sqliteTable(
   'books',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
-    // ★ Task 1 시점에는 NULLABLE FK. 기존 책을 sayhee.id로 backfill한 뒤
-    //   Task 28의 NOT NULL 토글 단계에서 제약 재적용 (drizzle-kit이 table-rename).
     authorUserId: integer('author_user_id')
+      .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
     author: text('author').notNull(),

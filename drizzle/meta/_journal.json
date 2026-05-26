@@ -15,6 +15,13 @@
       "when": 1779810194153,
       "tag": "0001_mixed_blazing_skull",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1779814463271,
+      "tag": "0002_special_puppet_master",
+      "breakpoints": true
     }
   ]
 }
