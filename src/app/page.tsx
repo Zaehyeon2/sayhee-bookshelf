@@ -3,6 +3,7 @@ import { db } from '@/lib/db/client'
 import { listBooks, listGenresWithCounts } from '@/lib/db/queries'
 import { GENRES } from '@/lib/genres'
 import { BookCard } from '@/components/BookCard'
+import { EmptyState } from '@/components/EmptyState'
 
 export default async function HomePage() {
   const [all, genreCounts] = await Promise.all([
@@ -66,7 +67,12 @@ export default async function HomePage() {
       <section>
         <h2 className="mb-4 text-[20px] font-bold text-[var(--color-text-strong)]">최근 읽은 책</h2>
         {recent.length === 0 ? (
-          <p className="text-[14px] text-[var(--color-text-weak)]">아직 등록된 책이 없습니다.</p>
+          <EmptyState
+            emoji="📭"
+            title="아직 등록된 책이 없어요"
+            description="첫 독후감을 남겨보세요"
+            action={{ href: '/admin/new', label: '새 독후감' }}
+          />
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             {recent.map((b) => <BookCard key={b.id} book={b} />)}

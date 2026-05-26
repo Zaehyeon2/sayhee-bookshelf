@@ -5,6 +5,7 @@ import { BookCard } from '@/components/BookCard'
 import { SearchBox } from '@/components/SearchBox'
 import { Filters } from '@/components/Filters'
 import { excerpt } from '@/lib/excerpt'
+import { EmptyState } from '@/components/EmptyState'
 
 function parseYear(value: string | undefined): number | undefined {
   if (!value) return undefined
@@ -47,9 +48,20 @@ export default async function BooksPage({ searchParams }: SP) {
         <span className="text-[13px] text-[var(--color-text-weak)] font-tabular">{books.length}권</span>
       </div>
       {books.length === 0 ? (
-        <div className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-10 text-center shadow-[var(--shadow-toss)]">
-          <p className="text-[14px] text-[var(--color-text-weak)]">결과가 없습니다.</p>
-        </div>
+        sp.q ? (
+          <EmptyState
+            emoji="🔍"
+            title="찾는 책이 없어요"
+            description={`'${sp.q}' 와 일치하는 결과가 없습니다`}
+          />
+        ) : (
+          <EmptyState
+            emoji="📭"
+            title="아직 책이 없어요"
+            description="첫 독후감을 남겨보세요"
+            action={{ href: '/admin/new', label: '새 독후감' }}
+          />
+        )
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           {books.map((b) => {
