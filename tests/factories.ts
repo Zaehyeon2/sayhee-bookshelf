@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs'
-import { users, books } from '@/lib/db/schema'
+import { users, books, writings } from '@/lib/db/schema'
 import { normalizeUsername } from '@/lib/username-normalize'
 import type { TestDb } from './setup-db'
 
@@ -49,4 +49,23 @@ export async function createBook(
     })
     .returning()
   return b
+}
+
+export async function createWriting(
+  db: TestDb,
+  authorUserId: number,
+  overrides: Partial<typeof writings.$inferInsert> = {},
+) {
+  const [w] = await db
+    .insert(writings)
+    .values({
+      authorUserId,
+      title: overrides.title ?? '테스트 글',
+      body: overrides.body ?? '',
+      slug: overrides.slug ?? `writing-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    })
+    .returning()
+  return w
 }
