@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db/client'
-import { countBooks, listBooks, searchBooks } from '@/lib/db/queries'
+import { countBooks, countSearchBooks, listBooks, searchBooks } from '@/lib/db/queries'
 import { BookCard } from '@/components/BookCard'
 import { SearchBox } from '@/components/SearchBox'
 import { Filters } from '@/components/Filters'
@@ -41,14 +41,20 @@ export default async function BooksPage({ searchParams }: SP) {
   if (!me) redirect('/login?next=/books')
   const sp = await searchParams
   const page = parsePage(sp.page)
-  const isSearch = !!sp.q?.trim()
+  const q = sp.q?.trim() ?? ''
+  const isSearch = q.length > 0
+  const offset = (page - 1) * PAGE_SIZE
 
   let books
-  let totalPages = 1
+  let total: number
 
   if (isSearch) {
-    // 검색 결과는 페이지네이션 없이 전체 (별도 구현 필요 시 추후)
-    books = await searchBooks(db, me.id, sp.q!.trim())
+    const [list, count] = await Promise.all([
+      searchBooks(db, me.id, q, { limit: PAGE_SIZE, offset }),
+      countSearchBooks(db, me.id, q),
+    ])
+    books = list
+    total = count
   } else {
     const filters = {
       genre: sp.genre,
@@ -56,13 +62,14 @@ export default async function BooksPage({ searchParams }: SP) {
       year: parseYear(sp.year),
       sort: sp.sort === 'rating' ? ('rating' as const) : ('date' as const),
     }
-    const [list, total] = await Promise.all([
-      listBooks(db, me.id, { ...filters, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE }),
+    const [list, count] = await Promise.all([
+      listBooks(db, me.id, { ...filters, limit: PAGE_SIZE, offset }),
       countBooks(db, me.id),
     ])
     books = list
-    totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+    total = count
   }
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   const title = sp.q
     ? `"${sp.q}" 검색 결과`
@@ -81,9 +88,7 @@ export default async function BooksPage({ searchParams }: SP) {
       <div className="flex items-baseline justify-between">
         <h2 className="text-[22px] font-bold text-[var(--color-text-strong)]">{title}</h2>
         <div className="flex items-center gap-3">
-          <span className="text-[13px] text-[var(--color-text-weak)] font-tabular">
-            {books.length}권
-          </span>
+          <span className="text-[13px] text-[var(--color-text-weak)] font-tabular">{total}권</span>
           <Link
             href="/books/new"
             className="inline-flex items-center h-9 px-3 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[13px] font-semibold hover:bg-[var(--color-toss-blue-hover)] active:scale-[0.97] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
@@ -93,11 +98,11 @@ export default async function BooksPage({ searchParams }: SP) {
         </div>
       </div>
       {books.length === 0 ? (
-        sp.q ? (
+        isSearch ? (
           <EmptyState
             emoji="🔍"
             title="찾는 책이 없어요"
-            description={`'${sp.q}' 와 일치하는 결과가 없습니다`}
+            description={`'${q}' 와 일치하는 결과가 없습니다`}
           />
         ) : (
           <EmptyState
@@ -111,28 +116,29 @@ export default async function BooksPage({ searchParams }: SP) {
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             {books.map((b) => {
-              const q = sp.q?.trim()
-              const matchesMeta = q
+              const matchesMeta = isSearch
                 ? b.title.toLowerCase().includes(q.toLowerCase()) ||
                   b.author.toLowerCase().includes(q.toLowerCase())
                 : true
-              const snippet = q && !matchesMeta ? (excerpt(b.content, q) ?? undefined) : undefined
-              return <BookCard key={b.id} book={b} snippet={snippet} query={q} />
+              const snippet =
+                isSearch && !matchesMeta ? (excerpt(b.content, q) ?? undefined) : undefined
+              return (
+                <BookCard key={b.id} book={b} snippet={snippet} query={isSearch ? q : undefined} />
+              )
             })}
           </div>
-          {!isSearch && (
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              basePath="/books"
-              preservedQuery={{
-                genre: sp.genre,
-                tag: sp.tag,
-                year: sp.year,
-                sort: sp.sort,
-              }}
-            />
-          )}
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            basePath="/books"
+            preservedQuery={{
+              genre: sp.genre,
+              tag: sp.tag,
+              year: sp.year,
+              sort: sp.sort,
+              q: isSearch ? q : undefined,
+            }}
+          />
         </>
       )}
     </div>
