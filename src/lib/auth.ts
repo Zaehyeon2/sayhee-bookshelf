@@ -41,7 +41,7 @@ export async function signSession(user: User): Promise<string> {
     role: user.role as 'admin' | 'member',
     mcp: (user.mustChangePassword ? 1 : 0) as 0 | 1,
   }
-  return new SignJWT({ ...payload })
+  return new SignJWT(payload as unknown as Record<string, unknown>)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(`${SESSION_TTL_SEC}s`)
