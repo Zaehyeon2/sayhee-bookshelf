@@ -1,7 +1,16 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import localFont from 'next/font/local'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import './globals.css'
+
+const pretendard = localFont({
+  src: '../../public/fonts/PretendardVariable.woff2',
+  weight: '45 920',
+  display: 'swap',
+  variable: '--font-pretendard',
+  preload: true,
+})
 
 export const metadata: Metadata = {
   title: '세희의 서재',
@@ -12,14 +21,9 @@ const themeBootstrap = `(function(){try{var s=localStorage.getItem('theme');var 
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko" suppressHydrationWarning>
+    <html lang="ko" className={pretendard.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
-        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
-        />
       </head>
       <body className="min-h-screen">
         <header className="sticky top-0 z-10 bg-[var(--color-header-bg)] backdrop-blur border-b border-[var(--color-border-subtle)]">
