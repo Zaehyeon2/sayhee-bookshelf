@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { GENRES } from '@/lib/genres'
 
@@ -28,11 +29,75 @@ function ChipButton({
   )
 }
 
+const DRAG_THRESHOLD = 4
+
+/**
+ * Click-and-drag horizontal scrolling for desktop mice. Touch swipes still
+ * use the native overflow-x behaviour from .scroll-x-touch. The click event
+ * is intercepted at the capture phase: if the mouse moved past the
+ * threshold during the down→up window, we treat the gesture as a drag and
+ * cancel the click so chip buttons don't navigate.
+ */
+function useDragScroll<T extends HTMLElement>(ref: React.RefObject<T | null>) {
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    let down = false
+    let dragged = false
+    let startX = 0
+    let startScroll = 0
+
+    const onMouseDown = (e: MouseEvent) => {
+      if (e.button !== 0) return
+      down = true
+      dragged = false
+      startX = e.pageX
+      startScroll = el.scrollLeft
+      el.style.cursor = 'grabbing'
+      el.style.userSelect = 'none'
+    }
+    const onMouseMove = (e: MouseEvent) => {
+      if (!down) return
+      const delta = e.pageX - startX
+      if (Math.abs(delta) > DRAG_THRESHOLD) dragged = true
+      el.scrollLeft = startScroll - delta
+    }
+    const stop = () => {
+      down = false
+      el.style.cursor = ''
+      el.style.userSelect = ''
+    }
+    const onClick = (e: MouseEvent) => {
+      if (dragged) {
+        e.preventDefault()
+        e.stopPropagation()
+        dragged = false
+      }
+    }
+
+    el.addEventListener('mousedown', onMouseDown)
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', stop)
+    el.addEventListener('mouseleave', stop)
+    el.addEventListener('click', onClick, true)
+    return () => {
+      el.removeEventListener('mousedown', onMouseDown)
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', stop)
+      el.removeEventListener('mouseleave', stop)
+      el.removeEventListener('click', onClick, true)
+    }
+  }, [ref])
+}
+
 export function Filters() {
   const router = useRouter()
   const sp = useSearchParams()
   const currentGenre = sp.get('genre') ?? ''
   const currentSort = sp.get('sort') ?? 'date'
+  const scrollRef = useRef<HTMLDivElement>(null)
+  useDragScroll(scrollRef)
 
   function setParam(key: string, value: string | null) {
     const params = new URLSearchParams(sp.toString())
@@ -44,7 +109,7 @@ export function Filters() {
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex-1 -mx-1 scroll-x-touch">
+      <div ref={scrollRef} className="flex-1 -mx-1 scroll-x-touch cursor-grab">
         <div className="flex gap-2 px-1 pb-1">
           <ChipButton
             label="전체"
