@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { GENRES } from '@/lib/genres'
 import { RatingStars } from './RatingStars'
 import { TagInput } from './TagInput'
@@ -30,7 +31,8 @@ const labelCls = 'block text-[13px] font-semibold text-[var(--color-text-muted)]
 export function BookForm({ initial, mode }: Props) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
-  const [error, setError] = useState<string | null>(null)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const [title, setTitle] = useState(initial?.title ?? '')
   const [author, setAuthor] = useState(initial?.author ?? '')
@@ -42,11 +44,10 @@ export function BookForm({ initial, mode }: Props) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    setError(null)
     startTransition(async () => {
       const editor = editorRef.current
       if (!editor) {
-        setError('에디터가 준비되지 않았습니다. 다시 시도해주세요.')
+        toast.error('에디터가 준비되지 않았습니다. 다시 시도해주세요.')
         return
       }
       const content = editor.getMarkdown()
@@ -59,13 +60,29 @@ export function BookForm({ initial, mode }: Props) {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        setError(data.error || '저장 실패')
+        toast.error(data.error || '저장 실패')
         return
       }
       const data = await res.json()
+      toast.success(mode === 'create' ? '등록되었습니다' : '수정되었습니다')
       router.push(`/books/${data.slug}`)
       router.refresh()
     })
+  }
+
+  async function handleDelete() {
+    if (!initial?.id) return
+    setDeleting(true)
+    const res = await fetch(`/api/books/${initial.id}`, { method: 'DELETE' })
+    setDeleting(false)
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      toast.error(data.error || '삭제 실패')
+      return
+    }
+    toast.success('삭제되었습니다')
+    router.push('/books')
+    router.refresh()
   }
 
   return (
@@ -108,11 +125,38 @@ export function BookForm({ initial, mode }: Props) {
         </div>
       </section>
 
-      {error && (
-        <p className="text-[14px] text-[var(--color-danger)] font-medium">{error}</p>
-      )}
-
-      <div className="flex items-center justify-end gap-3">
+      <div className="flex flex-wrap items-center gap-3">
+        {mode === 'edit' && initial?.id && (
+          confirmingDelete ? (
+            <div className="flex items-center gap-2 mr-auto">
+              <span className="text-[13px] text-[var(--color-text-muted)]">정말 삭제할까요?</span>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="h-10 px-4 rounded-[var(--radius-toss-sm)] bg-[var(--color-danger)] text-white text-[13px] font-semibold hover:opacity-90 active:scale-[0.97] disabled:opacity-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-danger)]/50"
+              >
+                {deleting ? '삭제 중…' : '삭제'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmingDelete(false)}
+                disabled={deleting}
+                className="h-10 px-3 rounded-[var(--radius-toss-sm)] text-[13px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+              >
+                되돌리기
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmingDelete(true)}
+              className="mr-auto h-12 px-5 rounded-[var(--radius-toss-sm)] text-[14px] font-semibold text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-danger)]/50"
+            >
+              삭제
+            </button>
+          )
+        )}
         <button
           type="button"
           onClick={() => router.back()}

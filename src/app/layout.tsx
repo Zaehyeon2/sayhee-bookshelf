@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import localFont from 'next/font/local'
+import { Toaster } from 'sonner'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import './globals.css'
 
@@ -64,6 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </nav>
         </header>
         <main className="mx-auto max-w-5xl px-5 py-8">{children}</main>
+        <Toaster theme="system" position="top-center" richColors closeButton />
       </body>
     </html>
   )
