@@ -1,11 +1,17 @@
 import { eq, like, desc, and, sql, inArray } from 'drizzle-orm'
 import type { LibSQLDatabase } from 'drizzle-orm/libsql'
-import { books, tags, bookTags } from './schema'
+import { books, tags, bookTags, writings, writingTags } from './schema'
 import type * as schema from './schema'
 import { toSlug } from '@/lib/slug'
-import type { CreateBookInput, UpdateBookInput } from '@/lib/validations'
+import type {
+  CreateBookInput,
+  UpdateBookInput,
+  CreateWritingInput,
+  UpdateWritingInput,
+} from '@/lib/validations'
 
 export type BookWithTags = typeof books.$inferSelect & { tags: string[] }
+export type WritingWithTags = typeof writings.$inferSelect & { tags: string[] }
 
 type Db = LibSQLDatabase<typeof schema>
 
@@ -266,15 +272,26 @@ export async function suggestTags(
   q: string,
 ): Promise<string[]> {
   const pattern = `${q}%`
-  // 본인 책의 태그 풀에서만 자동완성
-  const rows = await db
-    .selectDistinct({ name: tags.name })
-    .from(tags)
-    .innerJoin(bookTags, eq(bookTags.tagId, tags.id))
-    .innerJoin(books, eq(books.id, bookTags.bookId))
-    .where(and(eq(books.authorUserId, authorUserId), like(tags.name, pattern)))
-    .limit(8)
-  return rows.map((r) => r.name)
+  // 본인 풀(책 + 글)의 태그 합집합에서 자동완성
+  const rows = await db.all(sql`
+    SELECT DISTINCT t.name
+    FROM ${tags} t
+    WHERE t.name LIKE ${pattern}
+      AND (
+        EXISTS (
+          SELECT 1 FROM ${bookTags} bt
+          INNER JOIN ${books} b ON b.id = bt.book_id
+          WHERE bt.tag_id = t.id AND b.author_user_id = ${authorUserId}
+        )
+        OR EXISTS (
+          SELECT 1 FROM ${writingTags} wt
+          INNER JOIN ${writings} w ON w.id = wt.writing_id
+          WHERE wt.tag_id = t.id AND w.author_user_id = ${authorUserId}
+        )
+      )
+    LIMIT 8
+  `)
+  return (rows as { name: string }[]).map((r) => r.name)
 }
 
 export async function listTagsForBook(db: Db, bookId: number): Promise<string[]> {
@@ -295,4 +312,193 @@ export async function listGenresWithCounts(
     .groupBy(books.genre)
     .orderBy(desc(sql`COUNT(*)`))
   return rows.map((r) => ({ genre: r.genre, count: Number(r.count) }))
+}
+
+// ─── writings ──────────────────────────────────────────────────────────────
+
+async function attachWritingTags(db: Db, writingId: number): Promise<string[]> {
+  const rows = await db
+    .select({ name: tags.name })
+    .from(writingTags)
+    .innerJoin(tags, eq(writingTags.tagId, tags.id))
+    .where(eq(writingTags.writingId, writingId))
+  return rows.map((r) => r.name)
+}
+
+async function attachWritingTagsBatch(
+  db: Db,
+  writingIds: number[],
+): Promise<Map<number, string[]>> {
+  if (writingIds.length === 0) return new Map()
+  const rows = await db
+    .select({ writingId: writingTags.writingId, name: tags.name })
+    .from(writingTags)
+    .innerJoin(tags, eq(writingTags.tagId, tags.id))
+    .where(inArray(writingTags.writingId, writingIds))
+  const map = new Map<number, string[]>()
+  for (const r of rows) {
+    const existing = map.get(r.writingId) ?? []
+    existing.push(r.name)
+    map.set(r.writingId, existing)
+  }
+  return map
+}
+
+async function replaceWritingTags(
+  db: Db,
+  writingId: number,
+  tagNames: string[],
+): Promise<void> {
+  await db.delete(writingTags).where(eq(writingTags.writingId, writingId))
+  for (const name of tagNames) {
+    const tagId = await getOrCreateTag(db, name)
+    await db.insert(writingTags).values({ writingId, tagId })
+  }
+}
+
+function isWritingSlugUniqueViolation(e: unknown): boolean {
+  const seen = new WeakSet<object>()
+  let current: unknown = e
+  while (current != null && typeof current === 'object') {
+    if (seen.has(current as object)) break
+    seen.add(current as object)
+    const err = current as { code?: string; message?: string; cause?: unknown }
+    if (
+      err.code === 'SQLITE_CONSTRAINT' &&
+      err.message?.includes('idx_writings_user_slug')
+    ) {
+      return true
+    }
+    current = err.cause
+  }
+  return false
+}
+
+export async function createWriting(
+  db: Db,
+  authorUserId: number,
+  input: CreateWritingInput,
+): Promise<WritingWithTags> {
+  const base = toSlug(input.title)
+  const now = Date.now()
+
+  for (let i = 0; i < 100; i++) {
+    const candidate = i === 0 ? base : `${base}-${i + 1}`
+    try {
+      const inserted = await db
+        .insert(writings)
+        .values({
+          authorUserId,
+          title: input.title,
+          body: input.body ?? '',
+          slug: candidate,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .returning()
+
+      const writing = inserted[0]
+      await replaceWritingTags(db, writing.id, input.tags ?? [])
+      const tagNames = await attachWritingTags(db, writing.id)
+      return { ...writing, tags: tagNames }
+    } catch (e) {
+      if (isWritingSlugUniqueViolation(e)) continue
+      throw e
+    }
+  }
+  throw new Error(`Could not generate unique slug after 100 attempts for title: ${input.title}`)
+}
+
+export async function updateWriting(
+  db: Db,
+  authorUserId: number,
+  id: number,
+  input: UpdateWritingInput,
+): Promise<WritingWithTags | null> {
+  const existing = await db
+    .select()
+    .from(writings)
+    .where(and(eq(writings.id, id), eq(writings.authorUserId, authorUserId)))
+    .limit(1)
+  if (existing.length === 0) return null
+
+  const now = Date.now()
+  const updated = await db
+    .update(writings)
+    .set({
+      ...(input.title !== undefined && { title: input.title }),
+      ...(input.body !== undefined && { body: input.body }),
+      updatedAt: now,
+    })
+    .where(and(eq(writings.id, id), eq(writings.authorUserId, authorUserId)))
+    .returning()
+
+  const writing = updated[0]
+  if (input.tags !== undefined) {
+    await replaceWritingTags(db, id, input.tags)
+  }
+  const tagNames = await attachWritingTags(db, id)
+  return { ...writing, tags: tagNames }
+}
+
+export async function deleteWriting(
+  db: Db,
+  authorUserId: number,
+  id: number,
+): Promise<boolean> {
+  const result = await db
+    .delete(writings)
+    .where(and(eq(writings.id, id), eq(writings.authorUserId, authorUserId)))
+    .returning({ id: writings.id })
+  return result.length > 0
+}
+
+export async function getWritingBySlug(
+  db: Db,
+  authorUserId: number,
+  slug: string,
+): Promise<WritingWithTags | null> {
+  const rows = await db
+    .select()
+    .from(writings)
+    .where(and(eq(writings.slug, slug), eq(writings.authorUserId, authorUserId)))
+    .limit(1)
+  if (rows.length === 0) return null
+  const writing = rows[0]
+  const tagNames = await attachWritingTags(db, writing.id)
+  return { ...writing, tags: tagNames }
+}
+
+export async function getWritingById(
+  db: Db,
+  authorUserId: number,
+  id: number,
+): Promise<WritingWithTags | null> {
+  const rows = await db
+    .select()
+    .from(writings)
+    .where(and(eq(writings.id, id), eq(writings.authorUserId, authorUserId)))
+    .limit(1)
+  if (rows.length === 0) return null
+  const writing = rows[0]
+  const tagNames = await attachWritingTags(db, writing.id)
+  return { ...writing, tags: tagNames }
+}
+
+export async function listWritings(
+  db: Db,
+  authorUserId: number,
+): Promise<WritingWithTags[]> {
+  const rows = await db
+    .select()
+    .from(writings)
+    .where(eq(writings.authorUserId, authorUserId))
+    .orderBy(desc(writings.createdAt))
+
+  const tagMap = await attachWritingTagsBatch(db, rows.map((r) => r.id))
+  return rows.map((r) => ({ ...r, tags: tagMap.get(r.id) ?? [] }))
+}
+
+export async function listTagsForWriting(db: Db, writingId: number): Promise<string[]> {
+  return attachWritingTags(db, writingId)
 }
