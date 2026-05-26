@@ -63,3 +63,29 @@ export const CreateUserSchema = z.object({
 export const UpdateProfileSchema = z.object({
   displayName: z.string().trim().min(1).max(30),
 })
+
+export const CreateWritingSchema = z.object({
+  title: z.string().trim().min(1, '제목을 입력하세요').max(200),
+  body: z.string().max(50000).default(''),
+  tags: z
+    .array(z.string())
+    .default([])
+    .transform((arr) =>
+      Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0)))
+    ),
+})
+
+export type CreateWritingInput = z.infer<typeof CreateWritingSchema>
+
+export const UpdateWritingSchema = z.object({
+  title: z.string().trim().min(1, '제목을 입력하세요').max(200).optional(),
+  body: z.string().max(50000).optional(),
+  tags: z
+    .array(z.string())
+    .transform((arr) =>
+      Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0)))
+    )
+    .optional(),
+})
+
+export type UpdateWritingInput = z.infer<typeof UpdateWritingSchema>
