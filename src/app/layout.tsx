@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import localFont from 'next/font/local'
+import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from 'sonner'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { getCurrentUser } from '@/lib/auth'
@@ -73,6 +74,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </header>
         <main className="mx-auto max-w-5xl px-5 py-8">{children}</main>
         <Toaster theme="system" position="top-center" richColors closeButton />
+        <Analytics />
       </body>
     </html>
   )
