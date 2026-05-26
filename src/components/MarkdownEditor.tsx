@@ -50,6 +50,13 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, Props>(({ initial
       initialEditType="wysiwyg"
       useCommandShortcut
       theme={theme}
+      toolbarItems={[
+        ['heading', 'bold', 'italic', 'strike'],
+        ['hr', 'quote'],
+        ['ul', 'ol', 'task', 'indent', 'outdent'],
+        ['table', 'link'],
+        ['code', 'codeblock'],
+      ]}
     />
   )
 })
