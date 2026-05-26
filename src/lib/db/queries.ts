@@ -191,7 +191,14 @@ export async function getBookById(
 export async function listBooks(
   db: Db,
   authorUserId: number,
-  filters: { genre?: string; tag?: string; year?: number; sort?: 'date' | 'rating' },
+  filters: {
+    genre?: string
+    tag?: string
+    year?: number
+    sort?: 'date' | 'rating'
+    limit?: number
+    offset?: number
+  },
 ): Promise<BookWithTags[]> {
   const conditions = [eq(books.authorUserId, authorUserId)]
 
@@ -213,7 +220,7 @@ export async function listBooks(
 
     const joinCondition = and(eq(bookTags.bookId, books.id), eq(bookTags.tagId, tagId))
 
-    const rows = await db
+    let q = db
       .select({ book: books })
       .from(books)
       .innerJoin(bookTags, joinCondition!)
@@ -221,18 +228,26 @@ export async function listBooks(
       .orderBy(
         filters.sort === 'rating' ? desc(books.rating) : desc(books.readDate),
       )
+      .$dynamic()
+    if (filters.limit !== undefined) q = q.limit(filters.limit)
+    if (filters.offset !== undefined) q = q.offset(filters.offset)
+    const rows = await q
 
     const tagMap = await attachTagsBatch(db, rows.map((r) => r.book.id))
     return rows.map((r) => ({ ...r.book, tags: tagMap.get(r.book.id) ?? [] }))
   }
 
-  const rows = await db
+  let q = db
     .select()
     .from(books)
     .where(and(...conditions))
     .orderBy(
       filters.sort === 'rating' ? desc(books.rating) : desc(books.readDate),
     )
+    .$dynamic()
+  if (filters.limit !== undefined) q = q.limit(filters.limit)
+  if (filters.offset !== undefined) q = q.offset(filters.offset)
+  const rows = await q
 
   const tagMap = await attachTagsBatch(db, rows.map((r) => r.id))
   return rows.map((r) => ({ ...r, tags: tagMap.get(r.id) ?? [] }))
@@ -488,12 +503,17 @@ export async function getWritingById(
 export async function listWritings(
   db: Db,
   authorUserId: number,
+  opts: { limit?: number; offset?: number } = {},
 ): Promise<WritingWithTags[]> {
-  const rows = await db
+  let q = db
     .select()
     .from(writings)
     .where(eq(writings.authorUserId, authorUserId))
     .orderBy(desc(writings.createdAt))
+    .$dynamic()
+  if (opts.limit !== undefined) q = q.limit(opts.limit)
+  if (opts.offset !== undefined) q = q.offset(opts.offset)
+  const rows = await q
 
   const tagMap = await attachWritingTagsBatch(db, rows.map((r) => r.id))
   return rows.map((r) => ({ ...r, tags: tagMap.get(r.id) ?? [] }))
@@ -501,4 +521,67 @@ export async function listWritings(
 
 export async function listTagsForWriting(db: Db, writingId: number): Promise<string[]> {
   return attachWritingTags(db, writingId)
+}
+
+// ─── stats ─────────────────────────────────────────────────────────────────
+
+export interface UserStats {
+  booksTotal: number
+  booksThisYear: number
+  avgRating: number // 0 when no books
+  writingsTotal: number
+  writingsThisYear: number
+}
+
+/**
+ * 모든 사용자 통계를 단일 쿼리로 계산. 책/글 row를 가져오지 않고 인덱스 위에서 COUNT/AVG만 수행.
+ */
+export async function getUserStats(
+  db: Db,
+  authorUserId: number,
+  year: number = new Date().getFullYear(),
+): Promise<UserStats> {
+  const yearPrefix = `${year}-%`
+  const yearStr = String(year)
+
+  const rows = await db.all(sql`
+    SELECT
+      (SELECT COUNT(*) FROM ${books} WHERE ${books.authorUserId} = ${authorUserId}) AS books_total,
+      (SELECT COUNT(*) FROM ${books}
+         WHERE ${books.authorUserId} = ${authorUserId}
+           AND ${books.readDate} LIKE ${yearPrefix}) AS books_year,
+      (SELECT AVG(${books.rating}) FROM ${books}
+         WHERE ${books.authorUserId} = ${authorUserId}) AS avg_rating,
+      (SELECT COUNT(*) FROM ${writings}
+         WHERE ${writings.authorUserId} = ${authorUserId}) AS writings_total,
+      (SELECT COUNT(*) FROM ${writings}
+         WHERE ${writings.authorUserId} = ${authorUserId}
+           AND strftime('%Y', ${writings.createdAt} / 1000, 'unixepoch') = ${yearStr}) AS writings_year
+  `)
+
+  const r = (rows as Array<Record<string, number | null>>)[0] ?? {}
+  return {
+    booksTotal: Number(r.books_total ?? 0),
+    booksThisYear: Number(r.books_year ?? 0),
+    avgRating: Number(r.avg_rating ?? 0),
+    writingsTotal: Number(r.writings_total ?? 0),
+    writingsThisYear: Number(r.writings_year ?? 0),
+  }
+}
+
+/** 사용자의 책/글 총 개수 (페이지네이션용). 인덱스만 사용. */
+export async function countBooks(db: Db, authorUserId: number): Promise<number> {
+  const rows = await db
+    .select({ n: sql<number>`COUNT(*)` })
+    .from(books)
+    .where(eq(books.authorUserId, authorUserId))
+  return Number(rows[0]?.n ?? 0)
+}
+
+export async function countWritings(db: Db, authorUserId: number): Promise<number> {
+  const rows = await db
+    .select({ n: sql<number>`COUNT(*)` })
+    .from(writings)
+    .where(eq(writings.authorUserId, authorUserId))
+  return Number(rows[0]?.n ?? 0)
 }

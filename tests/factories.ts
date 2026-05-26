@@ -33,6 +33,7 @@ export async function createBook(
   authorUserId: number,
   overrides: Partial<typeof books.$inferInsert> = {},
 ) {
+  const now = Date.now()
   const [b] = await db
     .insert(books)
     .values({
@@ -43,9 +44,9 @@ export async function createBook(
       readDate: overrides.readDate ?? '2025-01-01',
       rating: overrides.rating ?? 4,
       content: overrides.content ?? '',
-      slug: overrides.slug ?? `test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      slug: overrides.slug ?? `test-${now}-${Math.random().toString(36).slice(2, 6)}`,
+      createdAt: overrides.createdAt ?? now,
+      updatedAt: overrides.updatedAt ?? now,
     })
     .returning()
   return b
@@ -56,15 +57,16 @@ export async function createWriting(
   authorUserId: number,
   overrides: Partial<typeof writings.$inferInsert> = {},
 ) {
+  const now = Date.now()
   const [w] = await db
     .insert(writings)
     .values({
       authorUserId,
       title: overrides.title ?? '테스트 글',
       body: overrides.body ?? '',
-      slug: overrides.slug ?? `writing-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      slug: overrides.slug ?? `writing-${now}-${Math.random().toString(36).slice(2, 6)}`,
+      createdAt: overrides.createdAt ?? now,
+      updatedAt: overrides.updatedAt ?? now,
     })
     .returning()
   return w
