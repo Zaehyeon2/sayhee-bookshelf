@@ -46,13 +46,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     href="/books"
                     className="px-3 h-11 inline-flex items-center text-[14px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
                   >
-                    목록
+                    📚 책장
                   </Link>
                   <Link
-                    href="/books/new"
+                    href="/writings"
                     className="px-3 h-11 inline-flex items-center text-[14px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
                   >
-                    새 책
+                    ✏️ 글방
                   </Link>
                   <UserMenu displayName={me.displayName} role={me.role as 'admin' | 'member'} />
                 </>

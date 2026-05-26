@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db/client'
 import { listBooks, searchBooks } from '@/lib/db/queries'
@@ -49,7 +50,15 @@ export default async function BooksPage({ searchParams }: SP) {
       </Suspense>
       <div className="flex items-baseline justify-between">
         <h2 className="text-[22px] font-bold text-[var(--color-text-strong)]">{title}</h2>
-        <span className="text-[13px] text-[var(--color-text-weak)] font-tabular">{books.length}권</span>
+        <div className="flex items-center gap-3">
+          <span className="text-[13px] text-[var(--color-text-weak)] font-tabular">{books.length}권</span>
+          <Link
+            href="/books/new"
+            className="inline-flex items-center h-9 px-3 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[13px] font-semibold hover:bg-[var(--color-toss-blue-hover)] active:scale-[0.97] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+          >
+            새 책
+          </Link>
+        </div>
       </div>
       {books.length === 0 ? (
         sp.q ? (
