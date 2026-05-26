@@ -18,7 +18,7 @@ function ChipButton({
       type="button"
       onClick={onClick}
       className={
-        'shrink-0 h-9 px-4 rounded-full text-[13px] font-semibold transition active:scale-[0.97] ' +
+        'shrink-0 h-9 px-4 rounded-full text-[13px] font-semibold transition active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50 ' +
         (active
           ? 'bg-[var(--color-toss-blue)] text-white'
           : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)]')
@@ -109,8 +109,8 @@ export function Filters() {
 
   return (
     <div className="flex items-center gap-3">
-      <div ref={scrollRef} className="flex-1 -mx-1 scroll-x-touch cursor-grab">
-        <div className="flex gap-2 px-1 pb-1">
+      <div ref={scrollRef} className="flex-1 -mx-1 -my-1.5 scroll-x-touch cursor-grab">
+        <div className="flex gap-2 px-1 py-1.5">
           <ChipButton
             label="전체"
             active={currentGenre === ''}
