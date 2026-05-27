@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { BOOK_GENRES } from './genres'
+import { BOOK_GENRES, MOVIE_GENRES } from './genres'
 import { isValidUsername } from './username-normalize'
 
 const dateRe = /^\d{4}-\d{2}-\d{2}$/
@@ -62,6 +62,68 @@ export const UpdateBookSchema = z
   .strict()
 
 export type UpdateBookInput = z.infer<typeof UpdateBookSchema>
+
+export const CreateMovieSchema = z
+  .object({
+    title: z.string().trim().min(1, '제목을 입력하세요').max(200),
+    director: z.string().trim().min(1, '감독을 입력하세요').max(100),
+    genre: z.enum(MOVIE_GENRES),
+    watchedDate: z.string().regex(dateRe, '날짜 형식은 YYYY-MM-DD'),
+    rating: z.number().int().min(1).max(10),
+    content: z.string().max(MAX_CONTENT_LEN, '본문이 너무 깁니다').default(''),
+    tags: tagsArraySchema
+      .default([])
+      .transform((arr) =>
+        Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))),
+      ),
+    oneLineReview: z
+      .string()
+      .trim()
+      .max(150, '한줄평은 150자 이내로 입력해주세요')
+      .optional()
+      .transform((v) => (v && v.length > 0 ? v : null)),
+    isPublic: z.coerce.boolean().optional().default(true),
+  })
+  .strict()
+
+export type CreateMovieInput = z.infer<typeof CreateMovieSchema>
+
+export const UpdateMovieSchema = z
+  .object({
+    title: z.string().trim().min(1, '제목을 입력하세요').max(200).optional(),
+    director: z.string().trim().min(1, '감독을 입력하세요').max(100).optional(),
+    genre: z.enum(MOVIE_GENRES).optional(),
+    watchedDate: z.string().regex(dateRe, '날짜 형식은 YYYY-MM-DD').optional(),
+    rating: z.number().int().min(1).max(10).optional(),
+    content: z.string().max(MAX_CONTENT_LEN, '본문이 너무 깁니다').optional(),
+    tags: tagsArraySchema
+      .transform((arr) => Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))))
+      .optional(),
+    oneLineReview: z
+      .string()
+      .trim()
+      .max(150, '한줄평은 150자 이내로 입력해주세요')
+      .optional()
+      .transform((v) => (v === undefined ? undefined : v.length > 0 ? v : null)),
+    isPublic: z.coerce.boolean().optional(),
+  })
+  .strict()
+
+export type UpdateMovieInput = z.infer<typeof UpdateMovieSchema>
+
+export const ListMoviesQuerySchema = z.object({
+  q: z.string().max(MAX_SEARCH_Q).optional(),
+  genre: z.enum(MOVIE_GENRES).optional(),
+  tag: z.string().max(MAX_TAG_LEN).optional(),
+  year: z.coerce.number().int().min(1900).max(2100).optional(),
+  sort: z.enum(['date', 'rating']).optional(),
+  page: z.coerce.number().int().min(1).max(10_000).optional(),
+})
+
+export const FeedQuerySchema = z.object({
+  type: z.enum(['book', 'movie']).default('book'),
+  page: z.coerce.number().int().min(1).max(10_000).optional(),
+})
 
 export const LoginSchema = z
   .object({
