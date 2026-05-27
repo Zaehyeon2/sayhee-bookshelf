@@ -96,4 +96,11 @@ describe('book queries — user scoping (data isolation)', () => {
     const aResults = await searchBooks(db, a.id, 'unique-keyword')
     expect(aResults.map((x) => x.title)).toEqual(['unique-keyword-A'])
   })
+
+  it('factory creates books with is_public=1 by default after migration', async () => {
+    const a = await createUser(db, { username: 'alice' })
+    const aBook = await createBook(db, a.id, { title: 'default-public' })
+    // factory는 override가 없으면 schema default(1)을 받음
+    expect(aBook.isPublic).toBe(1)
+  })
 })
