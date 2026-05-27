@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { db } from '@/lib/db/client'
-import { listBooks, listWritings, getUserStats } from '@/lib/db/queries'
-import { BookCard } from '@/components/BookCard'
+import { listRecentPublicBooks, listWritings, getUserStats } from '@/lib/db/queries'
+import { PublicReviewCard } from '@/components/PublicReviewCard'
 import { WritingCard } from '@/components/WritingCard'
 import { EmptyState } from '@/components/EmptyState'
 import { getCurrentUser } from '@/lib/auth'
@@ -29,9 +29,9 @@ export default async function HomePage() {
   }
 
   const thisYear = new Date().getFullYear()
-  const [stats, recentBooks, recentWritings] = await Promise.all([
+  const [stats, recentPublicBooks, recentWritings] = await Promise.all([
     getUserStats(db, me.id, thisYear),
-    listBooks(db, me.id, { sort: 'date', limit: 6 }),
+    listRecentPublicBooks(db, { limit: 6 }),
     listWritings(db, me.id, { limit: 6 }),
   ])
 
@@ -74,27 +74,27 @@ export default async function HomePage() {
 
       <section>
         <div className="mb-4 flex items-baseline justify-between">
-          <h2 className="text-[20px] font-bold text-[var(--color-text-strong)]">최근 읽은 책</h2>
-          {recentBooks.length > 0 && (
+          <h2 className="text-[20px] font-bold text-[var(--color-text-strong)]">모두의 서재</h2>
+          {recentPublicBooks.length > 0 && (
             <Link
-              href="/books"
+              href="/feed"
               className="text-[13px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-toss-blue)] transition"
             >
               전체 보기 →
             </Link>
           )}
         </div>
-        {recentBooks.length === 0 ? (
+        {recentPublicBooks.length === 0 ? (
           <EmptyState
             emoji="📭"
-            title="아직 등록된 책이 없어요"
-            description="첫 독후감을 남겨보세요"
-            action={{ href: '/books/new', label: '새 독후감' }}
+            title="아직 공개된 책이 없어요"
+            description="내 책을 공개하면 모두의 서재에 올라와요"
+            action={{ href: '/books', label: '내 책장으로 가기' }}
           />
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-            {recentBooks.map((b) => (
-              <BookCard key={b.id} book={b} />
+            {recentPublicBooks.map((b) => (
+              <PublicReviewCard key={b.id} item={b} />
             ))}
           </div>
         )}
