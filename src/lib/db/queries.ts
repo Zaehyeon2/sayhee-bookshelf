@@ -12,6 +12,7 @@ import {
   isSlugUniqueViolation,
   isWritingSlugUniqueViolation,
 } from './queries/shared'
+import type { Db, Tx, BookWithTags, WritingWithTags } from './queries/shared'
 export * from './queries/shared'
 
 async function attachTags(db: Db, bookId: number): Promise<string[]> {
