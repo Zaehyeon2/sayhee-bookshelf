@@ -27,6 +27,13 @@ export const CreateBookSchema = z
       .transform((arr) =>
         Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))),
       ),
+    oneLineReview: z
+      .string()
+      .trim()
+      .max(150, '한줄평은 150자 이내로 입력해주세요')
+      .optional()
+      .transform((v) => (v && v.length > 0 ? v : null)),
+    isPublic: z.coerce.boolean().optional().default(true),
   })
   .strict()
 
@@ -44,6 +51,13 @@ export const UpdateBookSchema = z
     tags: tagsArraySchema
       .transform((arr) => Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))))
       .optional(),
+    oneLineReview: z
+      .string()
+      .trim()
+      .max(150, '한줄평은 150자 이내로 입력해주세요')
+      .optional()
+      .transform((v) => (v && v.length > 0 ? v : null)),
+    isPublic: z.coerce.boolean().optional(),
   })
   .strict()
 
