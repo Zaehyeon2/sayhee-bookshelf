@@ -2,11 +2,13 @@ import Link from 'next/link'
 import { db } from '@/lib/db/client'
 import {
   listRecentPublicBooks,
+  listRecentPublicMovies,
   listWritings,
   getUserStats,
   getUserMovieStats,
 } from '@/lib/db/queries'
 import { PublicReviewCard } from '@/components/PublicReviewCard'
+import { PublicMovieCard } from '@/components/PublicMovieCard'
 import { WritingCard } from '@/components/WritingCard'
 import { EmptyState } from '@/components/EmptyState'
 import { getCurrentUser } from '@/lib/auth'
@@ -34,12 +36,14 @@ export default async function HomePage() {
   }
 
   const thisYear = new Date().getFullYear()
-  const [stats, movieStats, recentPublicBooks, recentWritings] = await Promise.all([
-    getUserStats(db, me.id, thisYear),
-    getUserMovieStats(db, me.id, thisYear),
-    listRecentPublicBooks(db, { limit: 6 }),
-    listWritings(db, me.id, { limit: 6 }),
-  ])
+  const [stats, movieStats, recentPublicBooks, recentPublicMovies, recentWritings] =
+    await Promise.all([
+      getUserStats(db, me.id, thisYear),
+      getUserMovieStats(db, me.id, thisYear),
+      listRecentPublicBooks(db, { limit: 6 }),
+      listRecentPublicMovies(db, { limit: 6 }),
+      listWritings(db, me.id, { limit: 6 }),
+    ])
 
   const totalBooks = stats.booksTotal
   const totalWritings = stats.writingsTotal
@@ -115,6 +119,34 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             {recentPublicBooks.map((b) => (
               <PublicReviewCard key={b.id} item={b} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <div className="mb-4 flex items-baseline justify-between">
+          <h2 className="text-[20px] font-bold text-[var(--color-text-strong)]">모두의 영화관</h2>
+          {recentPublicMovies.length > 0 && (
+            <Link
+              href="/feed?type=movie"
+              className="text-[13px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-toss-blue)] transition"
+            >
+              전체 보기 →
+            </Link>
+          )}
+        </div>
+        {recentPublicMovies.length === 0 ? (
+          <EmptyState
+            emoji="🎬"
+            title="아직 공개된 영화가 없어요"
+            description="내 영화를 공개하면 모두의 영화관에 올라와요"
+            action={{ href: '/movies', label: '내 영화관으로 가기' }}
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {recentPublicMovies.map((m) => (
+              <PublicMovieCard key={m.id} item={m} />
             ))}
           </div>
         )}
