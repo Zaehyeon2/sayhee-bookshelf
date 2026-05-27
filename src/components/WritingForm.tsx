@@ -107,7 +107,7 @@ export function WritingForm({ initial, mode }: Props) {
       </section>
 
       <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-2 shadow-[var(--shadow-toss)] overflow-hidden">
-        <MarkdownEditor ref={editorRef} initialValue={initial?.body ?? ''} />
+        <MarkdownEditor ref={editorRef} initialValue={initial?.body ?? ''} maxLength={50_000} />
       </section>
 
       <div className="flex flex-wrap items-center gap-3">
