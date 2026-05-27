@@ -1,4 +1,4 @@
-import { sql, eq, and, gte, lt, count, avg } from 'drizzle-orm'
+import { sql } from 'drizzle-orm'
 import { books, writings, movies } from '../schema'
 import type { Db } from './shared'
 
@@ -62,33 +62,23 @@ export async function getUserMovieStats(
   userId: number,
   year: number,
 ): Promise<UserMovieStats> {
-  const yearStart = new Date(`${year}-01-01T00:00:00Z`).getTime()
-  const yearEnd = new Date(`${year + 1}-01-01T00:00:00Z`).getTime()
+  const yearPrefix = `${year}-%`
 
-  const [totalRow] = await db
-    .select({ c: count() })
-    .from(movies)
-    .where(eq(movies.authorUserId, userId))
+  const rows = await db.all(sql`
+    SELECT
+      (SELECT COUNT(*) FROM ${movies} WHERE ${movies.authorUserId} = ${userId}) AS movies_total,
+      (SELECT COUNT(*) FROM ${movies}
+         WHERE ${movies.authorUserId} = ${userId}
+           AND ${movies.watchedDate} LIKE ${yearPrefix}) AS movies_year,
+      (SELECT AVG(${movies.rating}) FROM ${movies}
+         WHERE ${movies.authorUserId} = ${userId}) AS avg_rating
+  `)
 
-  const [thisYearRow] = await db
-    .select({ c: count() })
-    .from(movies)
-    .where(
-      and(
-        eq(movies.authorUserId, userId),
-        gte(movies.createdAt, yearStart),
-        lt(movies.createdAt, yearEnd),
-      ),
-    )
-
-  const [avgRow] = await db
-    .select({ a: avg(movies.rating) })
-    .from(movies)
-    .where(eq(movies.authorUserId, userId))
-
+  const r = (rows as Array<Record<string, number | null>>)[0] ?? {}
   return {
-    moviesTotal: Number(totalRow.c),
-    moviesThisYear: Number(thisYearRow.c),
-    avgMovieRating: avgRow.a !== null ? Number(avgRow.a) : null,
+    moviesTotal: Number(r.movies_total ?? 0),
+    moviesThisYear: Number(r.movies_year ?? 0),
+    avgMovieRating:
+      r.avg_rating !== null && r.avg_rating !== undefined ? Number(r.avg_rating) : null,
   }
 }

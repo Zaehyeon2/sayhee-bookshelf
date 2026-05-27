@@ -95,15 +95,15 @@ describe('pagination and stats', () => {
 })
 
 describe('getUserMovieStats', () => {
-  test('counts movies in given year only (createdAt-based)', async () => {
+  test('counts movies in given year only (watchedDate-based)', async () => {
     const { db, client } = await makeTestDb()
     try {
       const alice = await createUser(db, { username: 'alice' })
-      // 2025
-      await createMovie(db, alice.id, { createdAt: new Date('2025-06-01').getTime() })
+      // 2025 — should NOT count toward 2026 thisYear
+      await createMovie(db, alice.id, { watchedDate: '2025-06-01' })
       // 2026
-      await createMovie(db, alice.id, { createdAt: new Date('2026-03-01').getTime() })
-      await createMovie(db, alice.id, { createdAt: new Date('2026-04-01').getTime() })
+      await createMovie(db, alice.id, { watchedDate: '2026-03-01' })
+      await createMovie(db, alice.id, { watchedDate: '2026-04-01' })
 
       const stats = await getUserMovieStats(db, alice.id, 2026)
       expect(stats.moviesTotal).toBe(3)
