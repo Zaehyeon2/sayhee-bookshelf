@@ -1,6 +1,6 @@
 import { eq, like, desc, and, sql, inArray } from 'drizzle-orm'
 import type { LibSQLDatabase } from 'drizzle-orm/libsql'
-import { books, tags, bookTags, writings, writingTags } from './schema'
+import { books, tags, bookTags, writings, writingTags, users } from './schema'
 import type * as schema from './schema'
 import { toSlug } from '@/lib/slug'
 import type {
@@ -397,6 +397,58 @@ export async function listGenresWithCounts(
   return rows.map((r) => ({ genre: r.genre, count: Number(r.count) }))
 }
 
+// ─── public feed ───────────────────────────────────────────────────────────
+// MULTITENANT INVARIANT EXCEPTION: 아래 두 함수는 authorUserId 필터가 없는 유일한
+// read 경로. 다른 모든 list/get은 본인 스코프(authorUserId 매칭) 유지.
+
+export type PublicBookCard = {
+  id: number
+  slug: string
+  title: string
+  author: string
+  genre: string
+  rating: number
+  oneLineReview: string | null
+  publishedAt: number
+  authorDisplayName: string
+}
+
+export async function listRecentPublicBooks(
+  db: Db,
+  opts: { limit: number; offset?: number },
+): Promise<PublicBookCard[]> {
+  let q = db
+    .select({
+      id: books.id,
+      slug: books.slug,
+      title: books.title,
+      author: books.author,
+      genre: books.genre,
+      rating: books.rating,
+      oneLineReview: books.oneLineReview,
+      publishedAt: books.publishedAt,
+      authorDisplayName: users.displayName,
+    })
+    .from(books)
+    .innerJoin(users, eq(books.authorUserId, users.id))
+    .where(and(eq(books.isPublic, 1), sql`${books.publishedAt} IS NOT NULL`))
+    .orderBy(desc(books.publishedAt))
+    .$dynamic()
+  q = q.limit(opts.limit)
+  if (opts.offset !== undefined) q = q.offset(opts.offset)
+  const rows = await q
+  // publishedAt은 위 WHERE로 NOT NULL 보장 — 타입을 number로 narrow
+  return rows.map((r) => ({ ...r, publishedAt: r.publishedAt as number }))
+}
+
+export async function countPublicBooks(db: Db): Promise<number> {
+  const rows = await db
+    .select({ n: sql<number>`COUNT(*)` })
+    .from(books)
+    .where(and(eq(books.isPublic, 1), sql`${books.publishedAt} IS NOT NULL`))
+  return Number(rows[0]?.n ?? 0)
+}
+
 // ─── writings ──────────────────────────────────────────────────────────────
 
 async function attachWritingTags(db: Db, writingId: number): Promise<string[]> {
@@ -731,10 +783,7 @@ export async function countBooks(
     const rows = await db
       .select({ n: sql<number>`COUNT(*)` })
       .from(books)
-      .innerJoin(
-        bookTags,
-        and(eq(bookTags.bookId, books.id), eq(bookTags.tagId, tagId))!,
-      )
+      .innerJoin(bookTags, and(eq(bookTags.bookId, books.id), eq(bookTags.tagId, tagId))!)
       .where(and(...conditions))
     return Number(rows[0]?.n ?? 0)
   }

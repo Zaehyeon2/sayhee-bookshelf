@@ -47,6 +47,9 @@ export async function createBook(
       slug: overrides.slug ?? `test-${now}-${Math.random().toString(36).slice(2, 6)}`,
       createdAt: overrides.createdAt ?? now,
       updatedAt: overrides.updatedAt ?? now,
+      ...(overrides.isPublic !== undefined && { isPublic: overrides.isPublic }),
+      ...(overrides.publishedAt !== undefined && { publishedAt: overrides.publishedAt }),
+      ...(overrides.oneLineReview !== undefined && { oneLineReview: overrides.oneLineReview }),
     })
     .returning()
   return b
