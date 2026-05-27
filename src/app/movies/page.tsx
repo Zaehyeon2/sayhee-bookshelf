@@ -124,7 +124,12 @@ export default async function MoviesPage({ searchParams }: SP) {
               const snippet =
                 isSearch && !matchesMeta ? (excerpt(m.content, q) ?? undefined) : undefined
               return (
-                <MovieCard key={m.id} movie={m} snippet={snippet} query={isSearch ? q : undefined} />
+                <MovieCard
+                  key={m.id}
+                  movie={m}
+                  snippet={snippet}
+                  query={isSearch ? q : undefined}
+                />
               )
             })}
           </div>

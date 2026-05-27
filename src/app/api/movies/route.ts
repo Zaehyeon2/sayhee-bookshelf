@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
-import { countMovies, countSearchMovies, createMovie, listMovies, searchMovies } from '@/lib/db/queries'
+import {
+  countMovies,
+  countSearchMovies,
+  createMovie,
+  listMovies,
+  searchMovies,
+} from '@/lib/db/queries'
 import { CreateMovieSchema, ListMoviesQuerySchema } from '@/lib/validations'
 import { requireUser, HttpError } from '@/lib/auth-helpers'
 

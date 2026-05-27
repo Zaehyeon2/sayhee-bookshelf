@@ -41,14 +41,14 @@ test('영화 생성 → 목록 → 수정 → 삭제 golden path', async ({ page
   await page.waitForSelector('.toastui-editor-defaultUI', { timeout: 30_000 })
 
   // 제목 수정
-  const titleInput = page
-    .locator('input:not([type="hidden"]):not([type="date"])')
-    .first()
+  const titleInput = page.locator('input:not([type="hidden"]):not([type="date"])').first()
   await titleInput.fill(`${uniqueTitle} 수정됨`)
   await page.click('button:has-text("수정")')
   // After edit, redirect to movie detail
   await page.waitForURL(/\/movies\/(?!new|edit)/, { timeout: 15_000 })
-  await expect(page.getByRole('heading', { name: `${uniqueTitle} 수정됨` })).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByRole('heading', { name: `${uniqueTitle} 수정됨` })).toBeVisible({
+    timeout: 10_000,
+  })
 
   // 수정 페이지에서 삭제
   await page.click('a:has-text("수정")')

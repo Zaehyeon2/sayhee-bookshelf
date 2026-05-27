@@ -141,11 +141,7 @@ export function MovieForm({ initial, mode }: Props) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelCls}>장르</label>
-            <select
-              value={genre}
-              onChange={(e) => setGenre(e.target.value)}
-              className={inputCls}
-            >
+            <select value={genre} onChange={(e) => setGenre(e.target.value)} className={inputCls}>
               {MOVIE_GENRES.map((g) => (
                 <option key={g} value={g}>
                   {g}

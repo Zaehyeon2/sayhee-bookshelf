@@ -59,8 +59,8 @@ async function main() {
     const now = Date.now()
     for (let i = 0; i < MOVIE_COUNT; i++) {
       const slug = `${displayShort}-movie-${i + 1}-seed`
-      const month = String(((i % 12) + 1)).padStart(2, '0')
-      const day = String(((i % 28) + 1)).padStart(2, '0')
+      const month = String((i % 12) + 1).padStart(2, '0')
+      const day = String((i % 28) + 1).padStart(2, '0')
       await db
         .insert(schema.movies)
         .values({

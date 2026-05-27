@@ -1,6 +1,11 @@
 import Link from 'next/link'
 import { db } from '@/lib/db/client'
-import { listRecentPublicBooks, listWritings, getUserStats, getUserMovieStats } from '@/lib/db/queries'
+import {
+  listRecentPublicBooks,
+  listWritings,
+  getUserStats,
+  getUserMovieStats,
+} from '@/lib/db/queries'
 import { PublicReviewCard } from '@/components/PublicReviewCard'
 import { WritingCard } from '@/components/WritingCard'
 import { EmptyState } from '@/components/EmptyState'

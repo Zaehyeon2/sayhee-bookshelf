@@ -22,7 +22,9 @@ export function MovieCard({ movie, snippet, query }: Props) {
         </h3>
         <GenreBadge genre={movie.genre} />
       </div>
-      <p className="mt-1 text-[14px] text-[var(--color-text-muted)] line-clamp-1">{movie.director}</p>
+      <p className="mt-1 text-[14px] text-[var(--color-text-muted)] line-clamp-1">
+        {movie.director}
+      </p>
       {snippet && (
         <p className="mt-2 text-[13px] text-[var(--color-text-muted)] line-clamp-2 leading-relaxed">
           {query ? highlightMatch(snippet, query) : snippet}
