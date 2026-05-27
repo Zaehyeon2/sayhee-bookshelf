@@ -4,7 +4,9 @@ import { GenreBadge } from '@/components/GenreBadge'
 import { RatingStars } from '@/components/RatingStars'
 import { Filters } from '@/components/Filters'
 import { MovieCard } from '@/components/MovieCard'
+import { PublicMovieCard } from '@/components/PublicMovieCard'
 import type { MovieWithTags } from '@/lib/db/queries'
+import type { PublicMovieCard as PublicMovieItem } from '@/lib/db/queries'
 import { BOOK_GENRES, MOVIE_GENRES } from '@/lib/genres'
 
 vi.mock('next/navigation', () => ({
@@ -109,5 +111,39 @@ describe('MovieCard', () => {
     render(<MovieCard movie={{ ...movie, tags: ['a', 'b', 'c', 'd'] }} />)
     expect(screen.getByText(/#a/)).toBeInTheDocument()
     expect(screen.queryByText(/#d/)).toBeNull()
+  })
+})
+
+describe('PublicMovieCard', () => {
+  const item: PublicMovieItem = {
+    id: 1,
+    slug: 'inception',
+    title: '인셉션',
+    director: '크리스토퍼 놀란',
+    genre: 'SF',
+    rating: 9,
+    oneLineReview: '꿈 안의 꿈',
+    publishedAt: Date.now() - 60_000,
+    authorDisplayName: '앨리스',
+  }
+
+  test('renders director (not author)', () => {
+    render(<PublicMovieCard item={item} />)
+    expect(screen.getByText('크리스토퍼 놀란')).toBeInTheDocument()
+  })
+
+  test('renders oneLineReview when present', () => {
+    render(<PublicMovieCard item={item} />)
+    expect(screen.getByText('꿈 안의 꿈')).toBeInTheDocument()
+  })
+
+  test('omits oneLineReview when null', () => {
+    render(<PublicMovieCard item={{ ...item, oneLineReview: null }} />)
+    expect(screen.queryByText('꿈 안의 꿈')).toBeNull()
+  })
+
+  test('renders authorDisplayName', () => {
+    render(<PublicMovieCard item={item} />)
+    expect(screen.getByText('앨리스')).toBeInTheDocument()
   })
 })
