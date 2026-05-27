@@ -3,8 +3,20 @@ import { movies, movieTags, tags, users } from '../schema'
 import { toSlug } from '@/lib/slug'
 import type { CreateMovieInput, UpdateMovieInput } from '@/lib/validations'
 import { escapeLikePattern, isMovieSlugUniqueViolation } from './shared'
-import type { Db, MovieWithTags, PublicMovieCard } from './shared'
+import type { Db, MovieWithTags } from './shared'
 import { attachMovieTags, attachTagsToMoviesBatch, replaceMovieTagsTx } from './tags'
+
+export type PublicMovieCard = {
+  id: number
+  slug: string
+  title: string
+  director: string
+  genre: string
+  rating: number
+  oneLineReview: string | null
+  publishedAt: number
+  authorDisplayName: string
+}
 
 export interface ListMovieFilters {
   genre?: string
@@ -138,13 +150,13 @@ export async function getMovieBySlug(
   db: Db,
   authorUserId: number,
   slug: string,
-): Promise<MovieWithTags | undefined> {
+): Promise<MovieWithTags | null> {
   const rows = await db
     .select()
     .from(movies)
     .where(and(eq(movies.slug, slug), eq(movies.authorUserId, authorUserId)))
     .limit(1)
-  if (rows.length === 0) return undefined
+  if (rows.length === 0) return null
   const movie = rows[0]
   const tagNames = await attachMovieTags(db, movie.id)
   return { ...movie, tags: tagNames }
@@ -154,13 +166,13 @@ export async function getMovieById(
   db: Db,
   authorUserId: number,
   id: number,
-): Promise<MovieWithTags | undefined> {
+): Promise<MovieWithTags | null> {
   const rows = await db
     .select()
     .from(movies)
     .where(and(eq(movies.id, id), eq(movies.authorUserId, authorUserId)))
     .limit(1)
-  if (rows.length === 0) return undefined
+  if (rows.length === 0) return null
   const movie = rows[0]
   const tagNames = await attachMovieTags(db, movie.id)
   return { ...movie, tags: tagNames }
@@ -262,11 +274,7 @@ export async function searchMovies(
   return rows.map((r) => ({ ...r, tags: tagMap.get(r.id) ?? [] }))
 }
 
-export async function countSearchMovies(
-  db: Db,
-  authorUserId: number,
-  q: string,
-): Promise<number> {
+export async function countSearchMovies(db: Db, authorUserId: number, q: string): Promise<number> {
   const pattern = `%${escapeLikePattern(q)}%`
   const rows = await db
     .select({ n: sql<number>`COUNT(*)` })

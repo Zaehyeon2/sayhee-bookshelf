@@ -6,18 +6,6 @@ export type BookWithTags = typeof books.$inferSelect & { tags: string[] }
 export type WritingWithTags = typeof writings.$inferSelect & { tags: string[] }
 export type MovieWithTags = typeof movies.$inferSelect & { tags: string[] }
 
-export type PublicMovieCard = {
-  id: number
-  slug: string
-  title: string
-  director: string
-  genre: string
-  rating: number
-  oneLineReview: string | null
-  publishedAt: number
-  authorDisplayName: string
-}
-
 export type Db = LibSQLDatabase<typeof schema>
 // db.transaction 콜백의 인자 타입 — SQLiteTransaction은 Db와 일부 메서드(batch)가 다르므로
 // Db로 alias하지 않고 트랜잭션 콜백 시그니처에서 추론한다.

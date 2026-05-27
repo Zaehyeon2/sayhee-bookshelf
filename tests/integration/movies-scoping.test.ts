@@ -7,6 +7,7 @@ import {
   getMovieBySlug,
   listMovies,
   countMovies,
+  suggestTags,
 } from '@/lib/db/queries'
 import { makeTestDb, type TestDb } from '../setup-db'
 import { createUser, createMovie } from '../factories'
@@ -42,31 +43,34 @@ describe('movie queries — user scoping (data isolation)', () => {
     expect(await countMovies(db, b.id, {})).toBe(1)
   })
 
-  it('getMovieById returns undefined for other user movie', async () => {
+  it('getMovieById returns null for other user movie', async () => {
     const a = await createUser(db, { username: 'alice' })
     const b = await createUser(db, { username: 'bob' })
     const aMovie = await createMovie(db, a.id, { title: 'Alice Movie' })
 
-    expect(await getMovieById(db, a.id, aMovie.id)).not.toBeUndefined()
-    expect(await getMovieById(db, b.id, aMovie.id)).toBeUndefined()
+    expect(await getMovieById(db, a.id, aMovie.id)).not.toBeNull()
+    expect(await getMovieById(db, b.id, aMovie.id)).toBeNull()
   })
 
-  it('getMovieBySlug returns undefined for other user movie', async () => {
+  it('getMovieBySlug returns null for other user movie', async () => {
     const a = await createUser(db, { username: 'alice' })
     const b = await createUser(db, { username: 'bob' })
     await createMovie(db, a.id, { slug: 'shared-slug' })
 
-    expect(await getMovieBySlug(db, a.id, 'shared-slug')).not.toBeUndefined()
-    expect(await getMovieBySlug(db, b.id, 'shared-slug')).toBeUndefined()
+    expect(await getMovieBySlug(db, a.id, 'shared-slug')).not.toBeNull()
+    expect(await getMovieBySlug(db, b.id, 'shared-slug')).toBeNull()
   })
 
-  it('updateMovie scoped to owner — returns undefined for other user', async () => {
+  it('updateMovie scoped to owner — returns null for other user', async () => {
     const a = await createUser(db, { username: 'alice' })
     const b = await createUser(db, { username: 'bob' })
     const aMovie = await createMovie(db, a.id, { title: 'orig' })
 
-    // bob attempts to update alice's movie → undefined (null)
-    const result = await updateMovie(db, b.id, aMovie.id, { title: 'hijacked', oneLineReview: null })
+    // bob attempts to update alice's movie → null
+    const result = await updateMovie(db, b.id, aMovie.id, {
+      title: 'hijacked',
+      oneLineReview: null,
+    })
     expect(result).toBeNull()
 
     // alice's movie unchanged
@@ -176,8 +180,33 @@ describe('movie queries — user scoping (data isolation)', () => {
     })
 
     const fetched = await getMovieBySlug(db, a.id, created.slug)
-    expect(fetched).not.toBeUndefined()
+    expect(fetched).not.toBeNull()
     expect(fetched?.tags.sort()).toEqual(['드라마', '한국영화'])
     expect(fetched?.title).toBe('기생충')
+  })
+
+  it('suggestTags includes movie-pool tags scoped to owner', async () => {
+    const { db, client } = await makeTestDb()
+    try {
+      const alice = await createUser(db, { username: 'alice' })
+      const bob = await createUser(db, { username: 'bob' })
+      await queryCreateMovie(db, alice.id, {
+        title: 'movie',
+        director: 'd',
+        genre: 'SF',
+        watchedDate: '2026-01-01',
+        rating: 7,
+        content: '',
+        tags: ['액션태그'],
+        oneLineReview: null,
+        isPublic: true,
+      })
+      const aliceSuggestions = await suggestTags(db, alice.id, '액션')
+      expect(aliceSuggestions).toContain('액션태그')
+      const bobSuggestions = await suggestTags(db, bob.id, '액션')
+      expect(bobSuggestions).not.toContain('액션태그')
+    } finally {
+      client.close()
+    }
   })
 })
