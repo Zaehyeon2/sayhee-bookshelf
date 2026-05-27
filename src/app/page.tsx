@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { db } from '@/lib/db/client'
-import { listRecentPublicBooks, listWritings, getUserStats } from '@/lib/db/queries'
+import { listRecentPublicBooks, listWritings, getUserStats, getUserMovieStats } from '@/lib/db/queries'
 import { PublicReviewCard } from '@/components/PublicReviewCard'
 import { WritingCard } from '@/components/WritingCard'
 import { EmptyState } from '@/components/EmptyState'
@@ -29,8 +29,9 @@ export default async function HomePage() {
   }
 
   const thisYear = new Date().getFullYear()
-  const [stats, recentPublicBooks, recentWritings] = await Promise.all([
+  const [stats, movieStats, recentPublicBooks, recentWritings] = await Promise.all([
     getUserStats(db, me.id, thisYear),
+    getUserMovieStats(db, me.id, thisYear),
     listRecentPublicBooks(db, { limit: 6 }),
     listWritings(db, me.id, { limit: 6 }),
   ])
@@ -48,7 +49,7 @@ export default async function HomePage() {
         <p className="mt-2 text-[15px] text-[var(--color-text-muted)]">책과 글을 한 곳에서.</p>
       </section>
 
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <EntryCard
           href="/books"
           emoji="📚"
@@ -69,6 +70,20 @@ export default async function HomePage() {
           unit="편"
           metrics={[`${thisYear}년 ${stats.writingsThisYear}편`]}
           subAction={{ href: '/writings/new', label: '새 글' }}
+        />
+        <EntryCard
+          href="/movies"
+          emoji="🎬"
+          label="영화관"
+          count={movieStats.moviesTotal}
+          unit="편"
+          metrics={[
+            `${thisYear}년 ${movieStats.moviesThisYear}편`,
+            movieStats.moviesTotal > 0 && movieStats.avgMovieRating !== null
+              ? `평균 ★${(movieStats.avgMovieRating / 2).toFixed(1)}`
+              : null,
+          ]}
+          subAction={{ href: '/movies/new', label: '새 영화' }}
         />
       </section>
 
