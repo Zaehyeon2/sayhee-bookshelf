@@ -28,11 +28,21 @@ export function BookCard({ book, snippet, query }: Props) {
           {query ? highlightMatch(snippet, query) : snippet}
         </p>
       )}
-      <div className="mt-4 flex items-center justify-between">
+      <div className="mt-4 flex items-center justify-between gap-2">
         <RatingStars value={book.rating} size="sm" />
-        <time className="text-[12px] text-[var(--color-text-weak)] font-tabular">
-          {book.readDate}
-        </time>
+        <div className="flex items-center gap-2">
+          {book.isPublic === 1 && (
+            <span
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--color-toss-blue)]"
+              title="모두의 서재에 공개됨"
+            >
+              🌐 공개
+            </span>
+          )}
+          <time className="text-[12px] text-[var(--color-text-weak)] font-tabular">
+            {book.readDate}
+          </time>
+        </div>
       </div>
       {book.tags.length > 0 && (
         <ul className="mt-3 flex flex-wrap gap-1.5">
