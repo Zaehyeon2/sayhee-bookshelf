@@ -56,7 +56,7 @@ export const UpdateBookSchema = z
       .trim()
       .max(150, '한줄평은 150자 이내로 입력해주세요')
       .optional()
-      .transform((v) => (v && v.length > 0 ? v : null)),
+      .transform((v) => (v === undefined ? undefined : v.length > 0 ? v : null)),
     isPublic: z.coerce.boolean().optional(),
   })
   .strict()

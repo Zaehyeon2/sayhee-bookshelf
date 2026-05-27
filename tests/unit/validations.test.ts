@@ -5,6 +5,7 @@ import {
   CreateUserSchema,
   UpdateProfileSchema,
   CreateBookSchema,
+  UpdateBookSchema,
   CreateMovieSchema,
   UpdateMovieSchema,
   ListMoviesQuerySchema,
@@ -170,6 +171,33 @@ describe('UpdateMovieSchema', () => {
   test('single field update works', () => {
     const parsed = UpdateMovieSchema.parse({ title: '새 제목' })
     expect(parsed.title).toBe('새 제목')
+  })
+  test('omitting oneLineReview does not produce null (partial update preserves)', () => {
+    const parsed = UpdateMovieSchema.parse({})
+    expect(parsed).not.toHaveProperty('oneLineReview')
+  })
+  test('explicit empty string oneLineReview becomes null', () => {
+    const parsed = UpdateMovieSchema.parse({ oneLineReview: '' })
+    expect(parsed.oneLineReview).toBeNull()
+  })
+  test('whitespace-only oneLineReview becomes null', () => {
+    const parsed = UpdateMovieSchema.parse({ oneLineReview: '   ' })
+    expect(parsed.oneLineReview).toBeNull()
+  })
+})
+
+describe('UpdateBookSchema oneLineReview guard', () => {
+  test('omitting oneLineReview does not produce null', () => {
+    const parsed = UpdateBookSchema.parse({})
+    expect(parsed).not.toHaveProperty('oneLineReview')
+  })
+  test('explicit empty string oneLineReview becomes null', () => {
+    const parsed = UpdateBookSchema.parse({ oneLineReview: '' })
+    expect(parsed.oneLineReview).toBeNull()
+  })
+  test('whitespace-only oneLineReview becomes null', () => {
+    const parsed = UpdateBookSchema.parse({ oneLineReview: '   ' })
+    expect(parsed.oneLineReview).toBeNull()
   })
 })
 
