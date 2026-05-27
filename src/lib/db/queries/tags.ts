@@ -1,5 +1,5 @@
 import { eq, inArray, sql } from 'drizzle-orm'
-import { books, bookTags, tags, writingTags, writings } from '../schema'
+import { books, bookTags, tags, writingTags, writings, movieTags, movies } from '../schema'
 import { escapeLikePattern } from './shared'
 import type { Db, Tx } from './shared'
 
@@ -90,9 +90,49 @@ export async function replaceWritingTagsTx(
   }
 }
 
+export async function attachMovieTags(db: Db, movieId: number): Promise<string[]> {
+  const rows = await db
+    .select({ name: tags.name })
+    .from(movieTags)
+    .innerJoin(tags, eq(movieTags.tagId, tags.id))
+    .where(eq(movieTags.movieId, movieId))
+  return rows.map((r) => r.name)
+}
+
+export async function attachTagsToMoviesBatch(
+  db: Db,
+  movieIds: number[],
+): Promise<Map<number, string[]>> {
+  if (movieIds.length === 0) return new Map()
+  const rows = await db
+    .select({ movieId: movieTags.movieId, name: tags.name })
+    .from(movieTags)
+    .innerJoin(tags, eq(movieTags.tagId, tags.id))
+    .where(inArray(movieTags.movieId, movieIds))
+  const map = new Map<number, string[]>()
+  for (const r of rows) {
+    const existing = map.get(r.movieId) ?? []
+    existing.push(r.name)
+    map.set(r.movieId, existing)
+  }
+  return map
+}
+
+export async function replaceMovieTagsTx(
+  tx: Tx,
+  movieId: number,
+  tagNames: string[],
+): Promise<void> {
+  await tx.delete(movieTags).where(eq(movieTags.movieId, movieId))
+  for (const name of tagNames) {
+    const tagId = await getOrCreateTag(tx, name)
+    await tx.insert(movieTags).values({ movieId, tagId })
+  }
+}
+
 export async function suggestTags(db: Db, authorUserId: number, q: string): Promise<string[]> {
   const pattern = `${escapeLikePattern(q)}%`
-  // 본인 풀(책 + 글)의 태그 합집합에서 자동완성
+  // 본인 풀(책 + 글 + 영화)의 태그 합집합에서 자동완성
   const rows = await db.all(sql`
     SELECT DISTINCT t.name
     FROM ${tags} t
@@ -107,6 +147,11 @@ export async function suggestTags(db: Db, authorUserId: number, q: string): Prom
           SELECT 1 FROM ${writingTags} wt
           INNER JOIN ${writings} w ON w.id = wt.writing_id
           WHERE wt.tag_id = t.id AND w.author_user_id = ${authorUserId}
+        )
+        OR EXISTS (
+          SELECT 1 FROM ${movieTags} mt
+          INNER JOIN ${movies} m ON m.id = mt.movie_id
+          WHERE mt.tag_id = t.id AND m.author_user_id = ${authorUserId}
         )
       )
     LIMIT 8

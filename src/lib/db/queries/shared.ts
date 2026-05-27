@@ -1,9 +1,22 @@
 import type { LibSQLDatabase } from 'drizzle-orm/libsql'
-import type { books, writings } from '../schema'
+import type { books, writings, movies } from '../schema'
 import type * as schema from '../schema'
 
 export type BookWithTags = typeof books.$inferSelect & { tags: string[] }
 export type WritingWithTags = typeof writings.$inferSelect & { tags: string[] }
+export type MovieWithTags = typeof movies.$inferSelect & { tags: string[] }
+
+export type PublicMovieCard = {
+  id: number
+  slug: string
+  title: string
+  director: string
+  genre: string
+  rating: number
+  oneLineReview: string | null
+  publishedAt: number
+  authorDisplayName: string
+}
 
 export type Db = LibSQLDatabase<typeof schema>
 // db.transaction 콜백의 인자 타입 — SQLiteTransaction은 Db와 일부 메서드(batch)가 다르므로
@@ -57,3 +70,6 @@ export const isSlugUniqueViolation = (e: unknown) =>
 
 export const isWritingSlugUniqueViolation = (e: unknown) =>
   isTableSlugViolation(e, 'idx_writings_user_slug', 'writings')
+
+export const isMovieSlugUniqueViolation = (e: unknown) =>
+  isTableSlugViolation(e, 'idx_movies_user_slug', 'movies')
