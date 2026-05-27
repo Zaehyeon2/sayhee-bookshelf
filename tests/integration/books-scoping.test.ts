@@ -50,6 +50,8 @@ describe('book queries — user scoping (data isolation)', () => {
       rating: 5,
       content: '',
       tags: [],
+      oneLineReview: null,
+      isPublic: true,
     })
     const bBook = await queryCreateBook(db, b.id, {
       title: '데미안',
@@ -59,6 +61,8 @@ describe('book queries — user scoping (data isolation)', () => {
       rating: 5,
       content: '',
       tags: [],
+      oneLineReview: null,
+      isPublic: true,
     })
     expect(aBook.slug).toBe(bBook.slug)
     expect(aBook.authorUserId).not.toBe(bBook.authorUserId)
@@ -70,7 +74,7 @@ describe('book queries — user scoping (data isolation)', () => {
     const aBook = await createBook(db, a.id, { title: 'orig' })
 
     // bob attempts to update alice's book → null
-    const result = await updateBook(db, b.id, aBook.id, { title: 'hijacked' })
+    const result = await updateBook(db, b.id, aBook.id, { title: 'hijacked', oneLineReview: null })
     expect(result).toBeNull()
 
     // alice's book unchanged

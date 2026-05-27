@@ -92,6 +92,7 @@ export const config = {
   matcher: [
     '/feed/:path*',
     '/books/:path*',
+    '/movies/:path*',
     '/writings/:path*',
     '/admin/:path*',
     '/settings/:path*',

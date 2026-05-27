@@ -1,10 +1,15 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, test } from 'vitest'
 import {
   LoginSchema,
   ChangePasswordSchema,
   CreateUserSchema,
   UpdateProfileSchema,
   CreateBookSchema,
+  UpdateBookSchema,
+  CreateMovieSchema,
+  UpdateMovieSchema,
+  ListMoviesQuerySchema,
+  FeedQuerySchema,
 } from '@/lib/validations'
 
 describe('LoginSchema', () => {
@@ -108,5 +113,113 @@ describe('CreateBookSchema — public feed fields', () => {
     // z.coerce.boolean() converts the string 'false' to true (Boolean('false') === true).
     // 폼은 boolean을 보내므로 실용적으로 OK.
     if (r2.success) expect(r2.data.isPublic).toBe(true)
+  })
+})
+
+describe('CreateMovieSchema', () => {
+  const valid = {
+    title: '인셉션',
+    director: '크리스토퍼 놀란',
+    genre: 'SF',
+    watchedDate: '2026-01-15',
+    rating: 9,
+    content: '',
+    tags: [],
+  }
+
+  test('valid input parses', () => {
+    expect(CreateMovieSchema.safeParse(valid).success).toBe(true)
+  })
+  test('rating below 1 rejected', () => {
+    expect(CreateMovieSchema.safeParse({ ...valid, rating: 0 }).success).toBe(false)
+  })
+  test('rating above 10 rejected', () => {
+    expect(CreateMovieSchema.safeParse({ ...valid, rating: 11 }).success).toBe(false)
+  })
+  test('rating non-integer rejected', () => {
+    expect(CreateMovieSchema.safeParse({ ...valid, rating: 5.5 }).success).toBe(false)
+  })
+  test('invalid genre rejected (book genre not allowed)', () => {
+    expect(CreateMovieSchema.safeParse({ ...valid, genre: '소설' }).success).toBe(false)
+  })
+  test('invalid date format rejected', () => {
+    expect(CreateMovieSchema.safeParse({ ...valid, watchedDate: '2026/01/15' }).success).toBe(false)
+  })
+  test('isPublic defaults to true', () => {
+    const parsed = CreateMovieSchema.parse(valid)
+    expect(parsed.isPublic).toBe(true)
+  })
+  test('empty oneLineReview becomes null', () => {
+    const parsed = CreateMovieSchema.parse({ ...valid, oneLineReview: '   ' })
+    expect(parsed.oneLineReview).toBeNull()
+  })
+  test('oneLineReview over 150 chars rejected', () => {
+    const long = 'x'.repeat(151)
+    expect(CreateMovieSchema.safeParse({ ...valid, oneLineReview: long }).success).toBe(false)
+  })
+  test('tags are deduplicated and trimmed', () => {
+    const parsed = CreateMovieSchema.parse({ ...valid, tags: [' 액션 ', '액션', 'SF', ''] })
+    expect(parsed.tags).toEqual(['액션', 'SF'])
+  })
+})
+
+describe('UpdateMovieSchema', () => {
+  test('empty object parses to empty (partial update)', () => {
+    const parsed = UpdateMovieSchema.parse({})
+    expect(parsed).toEqual({})
+  })
+  test('single field update works', () => {
+    const parsed = UpdateMovieSchema.parse({ title: '새 제목' })
+    expect(parsed.title).toBe('새 제목')
+  })
+  test('omitting oneLineReview does not produce null (partial update preserves)', () => {
+    const parsed = UpdateMovieSchema.parse({})
+    expect(parsed).not.toHaveProperty('oneLineReview')
+  })
+  test('explicit empty string oneLineReview becomes null', () => {
+    const parsed = UpdateMovieSchema.parse({ oneLineReview: '' })
+    expect(parsed.oneLineReview).toBeNull()
+  })
+  test('whitespace-only oneLineReview becomes null', () => {
+    const parsed = UpdateMovieSchema.parse({ oneLineReview: '   ' })
+    expect(parsed.oneLineReview).toBeNull()
+  })
+})
+
+describe('UpdateBookSchema oneLineReview guard', () => {
+  test('omitting oneLineReview does not produce null', () => {
+    const parsed = UpdateBookSchema.parse({})
+    expect(parsed).not.toHaveProperty('oneLineReview')
+  })
+  test('explicit empty string oneLineReview becomes null', () => {
+    const parsed = UpdateBookSchema.parse({ oneLineReview: '' })
+    expect(parsed.oneLineReview).toBeNull()
+  })
+  test('whitespace-only oneLineReview becomes null', () => {
+    const parsed = UpdateBookSchema.parse({ oneLineReview: '   ' })
+    expect(parsed.oneLineReview).toBeNull()
+  })
+})
+
+describe('ListMoviesQuerySchema', () => {
+  test('genre must be MOVIE_GENRES', () => {
+    expect(ListMoviesQuerySchema.safeParse({ genre: '액션' }).success).toBe(true)
+    expect(ListMoviesQuerySchema.safeParse({ genre: '소설' }).success).toBe(false)
+  })
+  test('page coerced from string', () => {
+    const parsed = ListMoviesQuerySchema.parse({ page: '3' })
+    expect(parsed.page).toBe(3)
+  })
+})
+
+describe('FeedQuerySchema', () => {
+  test('type defaults to book', () => {
+    expect(FeedQuerySchema.parse({}).type).toBe('book')
+  })
+  test('type=movie accepted', () => {
+    expect(FeedQuerySchema.parse({ type: 'movie' }).type).toBe('movie')
+  })
+  test('unknown type rejected', () => {
+    expect(FeedQuerySchema.safeParse({ type: 'foo' }).success).toBe(false)
   })
 })

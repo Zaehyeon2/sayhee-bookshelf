@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { BOOK_GENRES } from '@/lib/genres'
+import { MOVIE_GENRES } from '@/lib/genres'
 import { RatingStars } from './RatingStars'
 import { TagInput } from './TagInput'
 import { MarkdownEditor, type MarkdownEditorHandle } from './MarkdownEditor'
@@ -11,11 +11,11 @@ import { ConfirmDialog } from './ConfirmDialog'
 import { Spinner } from './Spinner'
 import { Toggle } from './Toggle'
 
-export interface BookFormValues {
+export interface MovieFormValues {
   title: string
-  author: string
+  director: string
   genre: string
-  readDate: string
+  watchedDate: string
   rating: number
   content: string
   tags: string[]
@@ -24,7 +24,7 @@ export interface BookFormValues {
 }
 
 interface Props {
-  initial?: Partial<BookFormValues> & { id?: number }
+  initial?: Partial<MovieFormValues> & { id?: number }
   mode: 'create' | 'edit'
 }
 
@@ -33,7 +33,7 @@ const inputCls =
 
 const labelCls = 'block text-[13px] font-semibold text-[var(--color-text-muted)] mb-2'
 
-export function BookForm({ initial, mode }: Props) {
+export function MovieForm({ initial, mode }: Props) {
   const router = useRouter()
   // useTransition은 async 콜백을 await하지 않아 pending이 fetch 도중에 false로 돌아가서
   // 중복 제출이 가능했다. 명시적 boolean state로 in-flight 상태를 정확히 추적한다.
@@ -42,10 +42,10 @@ export function BookForm({ initial, mode }: Props) {
   const [deleting, setDeleting] = useState(false)
 
   const [title, setTitle] = useState(initial?.title ?? '')
-  const [author, setAuthor] = useState(initial?.author ?? '')
-  const [genre, setGenre] = useState(initial?.genre ?? BOOK_GENRES[0])
-  const [readDate, setReadDate] = useState(
-    initial?.readDate ?? new Date().toISOString().slice(0, 10),
+  const [director, setDirector] = useState(initial?.director ?? '')
+  const [genre, setGenre] = useState(initial?.genre ?? MOVIE_GENRES[0])
+  const [watchedDate, setWatchedDate] = useState(
+    initial?.watchedDate ?? new Date().toISOString().slice(0, 10),
   )
   const [rating, setRating] = useState(initial?.rating ?? 6)
   const [tags, setTags] = useState<string[]>(initial?.tags ?? [])
@@ -68,16 +68,16 @@ export function BookForm({ initial, mode }: Props) {
       }
       const payload = {
         title,
-        author,
+        director,
         genre,
-        readDate,
+        watchedDate,
         rating,
         content,
         tags,
         oneLineReview,
         isPublic,
       }
-      const url = mode === 'create' ? '/api/books' : `/api/books/${initial?.id}`
+      const url = mode === 'create' ? '/api/movies' : `/api/movies/${initial?.id}`
       const res = await fetch(url, {
         method: mode === 'create' ? 'POST' : 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -90,7 +90,7 @@ export function BookForm({ initial, mode }: Props) {
       }
       const data = await res.json()
       toast.success(mode === 'create' ? '등록되었습니다' : '수정되었습니다')
-      router.push(`/books/${data.slug}`)
+      router.push(`/movies/${data.slug}`)
       router.refresh()
     } finally {
       setSubmitting(false)
@@ -101,14 +101,14 @@ export function BookForm({ initial, mode }: Props) {
     if (!initial?.id || deleting) return
     setDeleting(true)
     try {
-      const res = await fetch(`/api/books/${initial.id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/movies/${initial.id}`, { method: 'DELETE' })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
         toast.error(data.error || '삭제 실패')
         return
       }
       toast.success('삭제되었습니다')
-      router.push('/books')
+      router.push('/movies')
       router.refresh()
     } finally {
       setDeleting(false)
@@ -129,10 +129,10 @@ export function BookForm({ initial, mode }: Props) {
           />
         </div>
         <div>
-          <label className={labelCls}>작가</label>
+          <label className={labelCls}>감독</label>
           <input
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
+            value={director}
+            onChange={(e) => setDirector(e.target.value)}
             required
             maxLength={100}
             className={inputCls}
@@ -142,7 +142,7 @@ export function BookForm({ initial, mode }: Props) {
           <div>
             <label className={labelCls}>장르</label>
             <select value={genre} onChange={(e) => setGenre(e.target.value)} className={inputCls}>
-              {BOOK_GENRES.map((g) => (
+              {MOVIE_GENRES.map((g) => (
                 <option key={g} value={g}>
                   {g}
                 </option>
@@ -150,11 +150,11 @@ export function BookForm({ initial, mode }: Props) {
             </select>
           </div>
           <div>
-            <label className={labelCls}>읽은 날짜</label>
+            <label className={labelCls}>본 날짜</label>
             <input
               type="date"
-              value={readDate}
-              onChange={(e) => setReadDate(e.target.value)}
+              value={watchedDate}
+              onChange={(e) => setWatchedDate(e.target.value)}
               required
               className={inputCls}
             />
@@ -178,7 +178,7 @@ export function BookForm({ initial, mode }: Props) {
               value={oneLineReview}
               onChange={(e) => setOneLineReview(e.target.value.slice(0, 150))}
               maxLength={150}
-              placeholder="이 책을 한 줄로 표현한다면?"
+              placeholder="이 영화를 한 줄로 표현한다면?"
               className={inputCls}
             />
             <span
@@ -198,8 +198,8 @@ export function BookForm({ initial, mode }: Props) {
           <Toggle
             checked={isPublic}
             onChange={setIsPublic}
-            label="모두의 서재에 공개"
-            description="이 책의 한줄평·별점·제목·저자를 모두의 서재에서 다른 사람도 볼 수 있어요"
+            label="모두의 영화관에 공개"
+            description="이 영화의 한줄평·별점·제목·감독을 모두의 영화관에서 다른 사람도 볼 수 있어요"
           />
         </div>
       </section>
@@ -221,7 +221,7 @@ export function BookForm({ initial, mode }: Props) {
             <ConfirmDialog
               open={confirmingDelete}
               onOpenChange={(open) => !deleting && setConfirmingDelete(open)}
-              title="이 독후감을 삭제할까요?"
+              title="이 영화 기록을 삭제할까요?"
               description={`'${title || '제목 없음'}' 기록이 영구적으로 사라집니다. 되돌릴 수 없어요.`}
               confirmLabel="삭제"
               onConfirm={handleDelete}

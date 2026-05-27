@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { NextResponse } from 'next/server'
 import { eq, and } from 'drizzle-orm'
 import { db } from '@/lib/db/client'
-import { books, writings, type Book, type Writing } from '@/lib/db/schema'
+import { books, writings, movies, type Book, type Writing, type Movie } from '@/lib/db/schema'
 import { getCurrentUser } from '@/lib/auth'
 import type { User } from '@/lib/db/schema'
 
@@ -100,4 +100,31 @@ export async function requireOwnWritingForPage(
     .limit(1)
   if (rows.length === 0) notFound()
   return { user, writing: rows[0] }
+}
+
+/** API route용: 본인 영화 한 편 조회. 다른 사용자의 영화면 404. */
+export async function requireOwnMovie(movieId: number): Promise<{ user: User; movie: Movie }> {
+  const user = await requireUser()
+  const rows = await db
+    .select()
+    .from(movies)
+    .where(and(eq(movies.id, movieId), eq(movies.authorUserId, user.id)))
+    .limit(1)
+  if (rows.length === 0) throw new HttpError(404, { error: '영화를 찾을 수 없습니다' })
+  return { user, movie: rows[0] }
+}
+
+/** 서버 컴포넌트(페이지)용: 다른 사용자의 영화면 notFound() throw. */
+export async function requireOwnMovieForPage(
+  movieId: number,
+): Promise<{ user: User; movie: Movie }> {
+  const user = await getCurrentUser()
+  if (!user) notFound()
+  const rows = await db
+    .select()
+    .from(movies)
+    .where(and(eq(movies.id, movieId), eq(movies.authorUserId, user.id)))
+    .limit(1)
+  if (rows.length === 0) notFound()
+  return { user, movie: rows[0] }
 }

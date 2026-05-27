@@ -2,15 +2,15 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db/client'
-import { countBooks, countSearchBooks, listBooks, searchBooks } from '@/lib/db/queries'
-import { BookCard } from '@/components/BookCard'
+import { countMovies, countSearchMovies, listMovies, searchMovies } from '@/lib/db/queries'
+import { MovieCard } from '@/components/MovieCard'
 import { SearchBox } from '@/components/SearchBox'
 import { Filters } from '@/components/Filters'
 import { Pagination } from '@/components/Pagination'
 import { excerpt } from '@/lib/excerpt'
 import { EmptyState } from '@/components/EmptyState'
 import { getCurrentUser } from '@/lib/auth'
-import { BOOK_GENRES } from '@/lib/genres'
+import { MOVIE_GENRES } from '@/lib/genres'
 
 const PAGE_SIZE = 24
 
@@ -37,24 +37,24 @@ interface SP {
   }>
 }
 
-export default async function BooksPage({ searchParams }: SP) {
+export default async function MoviesPage({ searchParams }: SP) {
   const me = await getCurrentUser()
-  if (!me) redirect('/login?next=/books')
+  if (!me) redirect('/login?next=/movies')
   const sp = await searchParams
   const page = parsePage(sp.page)
   const q = sp.q?.trim() ?? ''
   const isSearch = q.length > 0
   const offset = (page - 1) * PAGE_SIZE
 
-  let books
+  let movies
   let total: number
 
   if (isSearch) {
     const [list, count] = await Promise.all([
-      searchBooks(db, me.id, q, { limit: PAGE_SIZE, offset }),
-      countSearchBooks(db, me.id, q),
+      searchMovies(db, me.id, q, { limit: PAGE_SIZE, offset }),
+      countSearchMovies(db, me.id, q),
     ])
-    books = list
+    movies = list
     total = count
   } else {
     const filters = {
@@ -64,10 +64,10 @@ export default async function BooksPage({ searchParams }: SP) {
       sort: sp.sort === 'rating' ? ('rating' as const) : ('date' as const),
     }
     const [list, count] = await Promise.all([
-      listBooks(db, me.id, { ...filters, limit: PAGE_SIZE, offset }),
-      countBooks(db, me.id, { genre: filters.genre, tag: filters.tag, year: filters.year }),
+      listMovies(db, me.id, { ...filters, limit: PAGE_SIZE, offset }),
+      countMovies(db, me.id, { genre: filters.genre, tag: filters.tag, year: filters.year }),
     ])
-    books = list
+    movies = list
     total = count
   }
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -78,60 +78,65 @@ export default async function BooksPage({ searchParams }: SP) {
       ? `장르 · ${sp.genre}`
       : sp.tag
         ? `태그 · ${sp.tag}`
-        : '전체 책'
+        : '전체 영화'
 
   return (
     <div className="space-y-6">
       <Suspense fallback={null}>
         <SearchBox />
-        <Filters basePath="/books" genres={BOOK_GENRES} />
+        <Filters basePath="/movies" genres={MOVIE_GENRES} />
       </Suspense>
       <div className="flex items-baseline justify-between">
         <h2 className="text-[22px] font-bold text-[var(--color-text-strong)]">{title}</h2>
         <div className="flex items-center gap-3">
-          <span className="text-[13px] text-[var(--color-text-weak)] font-tabular">{total}권</span>
+          <span className="text-[13px] text-[var(--color-text-weak)] font-tabular">{total}편</span>
           <Link
-            href="/books/new"
+            href="/movies/new"
             className="inline-flex items-center h-9 px-3 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[13px] font-semibold hover:bg-[var(--color-toss-blue-hover)] active:scale-[0.97] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
           >
-            새 책
+            새 영화
           </Link>
         </div>
       </div>
-      {books.length === 0 ? (
+      {movies.length === 0 ? (
         isSearch ? (
           <EmptyState
             emoji="🔍"
-            title="찾는 책이 없어요"
+            title="찾는 영화가 없어요"
             description={`'${q}' 와 일치하는 결과가 없습니다`}
           />
         ) : (
           <EmptyState
-            emoji="📭"
-            title="아직 책이 없어요"
-            description="첫 독후감을 남겨보세요"
-            action={{ href: '/books/new', label: '새 독후감' }}
+            emoji="🎬"
+            title="아직 영화가 없어요"
+            description="첫 감상을 남겨보세요"
+            action={{ href: '/movies/new', label: '새 감상' }}
           />
         )
       ) : (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-            {books.map((b) => {
+            {movies.map((m) => {
               const matchesMeta = isSearch
-                ? b.title.toLowerCase().includes(q.toLowerCase()) ||
-                  b.author.toLowerCase().includes(q.toLowerCase())
+                ? m.title.toLowerCase().includes(q.toLowerCase()) ||
+                  m.director.toLowerCase().includes(q.toLowerCase())
                 : true
               const snippet =
-                isSearch && !matchesMeta ? (excerpt(b.content, q) ?? undefined) : undefined
+                isSearch && !matchesMeta ? (excerpt(m.content, q) ?? undefined) : undefined
               return (
-                <BookCard key={b.id} book={b} snippet={snippet} query={isSearch ? q : undefined} />
+                <MovieCard
+                  key={m.id}
+                  movie={m}
+                  snippet={snippet}
+                  query={isSearch ? q : undefined}
+                />
               )
             })}
           </div>
           <Pagination
             currentPage={page}
             totalPages={totalPages}
-            basePath="/books"
+            basePath="/movies"
             preservedQuery={{
               genre: sp.genre,
               tag: sp.tag,

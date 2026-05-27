@@ -188,7 +188,7 @@ describe('updateBook publishedAt transitions', () => {
     expect(book.publishedAt).toBeNull()
 
     const before = Date.now()
-    const updated = await updateBook(db3, a.id, book.id, { isPublic: true })
+    const updated = await updateBook(db3, a.id, book.id, { isPublic: true, oneLineReview: null })
     const after = Date.now()
     expect(updated?.isPublic).toBe(1)
     expect(updated?.publishedAt).not.toBeNull()
@@ -213,7 +213,7 @@ describe('updateBook publishedAt transitions', () => {
     const originalPublishedAt = book.publishedAt!
     expect(originalPublishedAt).not.toBeNull()
 
-    const updated = await updateBook(db3, a.id, book.id, { isPublic: false })
+    const updated = await updateBook(db3, a.id, book.id, { isPublic: false, oneLineReview: null })
     expect(updated?.isPublic).toBe(0)
     expect(updated?.publishedAt).toBe(originalPublishedAt)
   })
@@ -235,7 +235,10 @@ describe('updateBook publishedAt transitions', () => {
     const originalPublishedAt = book.publishedAt!
 
     await new Promise((r) => setTimeout(r, 5)) // ensure clock advances
-    const updated = await updateBook(db3, a.id, book.id, { title: 'New Title' })
+    const updated = await updateBook(db3, a.id, book.id, {
+      title: 'New Title',
+      oneLineReview: null,
+    })
     expect(updated?.title).toBe('New Title')
     expect(updated?.publishedAt).toBe(originalPublishedAt)
   })
@@ -256,14 +259,14 @@ describe('updateBook publishedAt transitions', () => {
     })
 
     await new Promise((r) => setTimeout(r, 5))
-    const r1 = await updateBook(db3, a.id, book.id, { isPublic: true })
+    const r1 = await updateBook(db3, a.id, book.id, { isPublic: true, oneLineReview: null })
     const t1 = r1!.publishedAt!
 
     await new Promise((r) => setTimeout(r, 5))
-    await updateBook(db3, a.id, book.id, { isPublic: false })
+    await updateBook(db3, a.id, book.id, { isPublic: false, oneLineReview: null })
 
     await new Promise((r) => setTimeout(r, 5))
-    const r3 = await updateBook(db3, a.id, book.id, { isPublic: true })
+    const r3 = await updateBook(db3, a.id, book.id, { isPublic: true, oneLineReview: null })
     const t3 = r3!.publishedAt!
 
     expect(t3).toBeGreaterThan(t1)
@@ -306,7 +309,7 @@ describe('updateBook publishedAt transitions', () => {
       isPublic: false,
     })
 
-    const attempt = await updateBook(db3, b.id, book.id, { isPublic: true })
+    const attempt = await updateBook(db3, b.id, book.id, { isPublic: true, oneLineReview: null })
     expect(attempt).toBeNull()
 
     // A의 책은 그대로 비공개

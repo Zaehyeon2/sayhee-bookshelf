@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs'
-import { users, books, writings } from '@/lib/db/schema'
+import { users, books, writings, movies } from '@/lib/db/schema'
 import { normalizeUsername } from '@/lib/username-normalize'
 import type { TestDb } from './setup-db'
 
@@ -73,4 +73,31 @@ export async function createWriting(
     })
     .returning()
   return w
+}
+
+export async function createMovie(
+  db: TestDb,
+  authorUserId: number,
+  overrides: Partial<typeof movies.$inferInsert> = {},
+) {
+  const now = Date.now()
+  const [m] = await db
+    .insert(movies)
+    .values({
+      authorUserId,
+      title: overrides.title ?? '테스트 영화',
+      director: overrides.director ?? '감독',
+      genre: overrides.genre ?? '드라마',
+      watchedDate: overrides.watchedDate ?? '2026-01-01',
+      rating: overrides.rating ?? 8,
+      content: overrides.content ?? '',
+      slug: overrides.slug ?? `movie-${now}-${Math.random().toString(36).slice(2, 6)}`,
+      createdAt: overrides.createdAt ?? now,
+      updatedAt: overrides.updatedAt ?? now,
+      ...(overrides.isPublic !== undefined && { isPublic: overrides.isPublic }),
+      ...(overrides.publishedAt !== undefined && { publishedAt: overrides.publishedAt }),
+      ...(overrides.oneLineReview !== undefined && { oneLineReview: overrides.oneLineReview }),
+    })
+    .returning()
+  return m
 }
