@@ -91,3 +91,70 @@ describe('public feed queries', () => {
     expect(await countPublicBooks(db)).toBe(2)
   })
 })
+
+describe('createBook publishedAt logic', () => {
+  let db2: TestDb
+  beforeEach(async () => {
+    ;({ db: db2 } = await makeTestDb())
+  })
+
+  it('sets publishedAt on insert when isPublic=true (default)', async () => {
+    const { createBook: queryCreateBook } = await import('@/lib/db/queries')
+    const a = await createUser(db2, { username: 'alice' })
+
+    const before = Date.now()
+    const book = await queryCreateBook(db2, a.id, {
+      title: 'T',
+      author: 'A',
+      genre: '소설',
+      readDate: '2026-01-01',
+      rating: 4,
+      content: '',
+      tags: [],
+      oneLineReview: null,
+      isPublic: true,
+    })
+    const after = Date.now()
+
+    expect(book.isPublic).toBe(1)
+    expect(book.publishedAt).not.toBeNull()
+    expect(book.publishedAt).toBeGreaterThanOrEqual(before)
+    expect(book.publishedAt).toBeLessThanOrEqual(after)
+  })
+
+  it('leaves publishedAt NULL when isPublic=false', async () => {
+    const { createBook: queryCreateBook } = await import('@/lib/db/queries')
+    const a = await createUser(db2, { username: 'alice' })
+
+    const book = await queryCreateBook(db2, a.id, {
+      title: 'T2',
+      author: 'A',
+      genre: '소설',
+      readDate: '2026-01-01',
+      rating: 4,
+      content: '',
+      tags: [],
+      oneLineReview: null,
+      isPublic: false,
+    })
+    expect(book.isPublic).toBe(0)
+    expect(book.publishedAt).toBeNull()
+  })
+
+  it('stores oneLineReview', async () => {
+    const { createBook: queryCreateBook } = await import('@/lib/db/queries')
+    const a = await createUser(db2, { username: 'alice' })
+    const book = await queryCreateBook(db2, a.id, {
+      title: 'T3',
+      author: 'A',
+      genre: '소설',
+      readDate: '2026-01-01',
+      rating: 4,
+      content: '',
+      tags: [],
+      oneLineReview: '좋은 책',
+      isPublic: true,
+    })
+    expect(book.oneLineReview).toBe('좋은 책')
+  })
+})

@@ -118,6 +118,8 @@ export async function createBook(
     try {
       // book INSERT + tags 교체를 단일 트랜잭션으로 묶어 중간 실패 시 부분 상태가 남지 않게 함.
       const result = await db.transaction(async (tx) => {
+        const isPublic = input.isPublic ? 1 : 0
+        const publishedAt = isPublic === 1 ? now : null
         const inserted = await tx
           .insert(books)
           .values({
@@ -128,6 +130,9 @@ export async function createBook(
             readDate: input.readDate,
             rating: input.rating,
             content: input.content ?? '',
+            oneLineReview: input.oneLineReview ?? null,
+            isPublic,
+            publishedAt,
             slug: candidate,
             createdAt: now,
             updatedAt: now,
