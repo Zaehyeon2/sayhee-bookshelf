@@ -15,7 +15,15 @@ export default async function EditBookPage({ params }: { params: Promise<{ id: s
       <h1 className="text-[28px] font-bold tracking-tight text-[var(--color-text-strong)]">
         독후감 수정
       </h1>
-      <BookForm mode="edit" initial={{ ...book, tags }} />
+      <BookForm
+        mode="edit"
+        initial={{
+          ...book,
+          tags,
+          oneLineReview: book.oneLineReview ?? '',
+          isPublic: book.isPublic === 1,
+        }}
+      />
     </div>
   )
 }

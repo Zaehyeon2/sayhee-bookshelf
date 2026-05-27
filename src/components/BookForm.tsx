@@ -9,6 +9,7 @@ import { TagInput } from './TagInput'
 import { MarkdownEditor, type MarkdownEditorHandle } from './MarkdownEditor'
 import { ConfirmDialog } from './ConfirmDialog'
 import { Spinner } from './Spinner'
+import { Toggle } from './Toggle'
 
 export interface BookFormValues {
   title: string
@@ -18,6 +19,8 @@ export interface BookFormValues {
   rating: number
   content: string
   tags: string[]
+  oneLineReview: string
+  isPublic: boolean
 }
 
 interface Props {
@@ -46,6 +49,10 @@ export function BookForm({ initial, mode }: Props) {
   )
   const [rating, setRating] = useState(initial?.rating ?? 3)
   const [tags, setTags] = useState<string[]>(initial?.tags ?? [])
+  const [oneLineReview, setOneLineReview] = useState(initial?.oneLineReview ?? '')
+  const [isPublic, setIsPublic] = useState(
+    initial?.isPublic !== undefined ? initial.isPublic : mode === 'create',
+  )
   const editorRef = useRef<MarkdownEditorHandle>(null)
 
   async function submit(e: React.FormEvent) {
@@ -59,7 +66,17 @@ export function BookForm({ initial, mode }: Props) {
         toast.error('에디터가 준비되지 않았습니다. 다시 시도해주세요.')
         return
       }
-      const payload = { title, author, genre, readDate, rating, content, tags }
+      const payload = {
+        title,
+        author,
+        genre,
+        readDate,
+        rating,
+        content,
+        tags,
+        oneLineReview,
+        isPublic,
+      }
       const url = mode === 'create' ? '/api/books' : `/api/books/${initial?.id}`
       const res = await fetch(url, {
         method: mode === 'create' ? 'POST' : 'PATCH',
@@ -150,6 +167,40 @@ export function BookForm({ initial, mode }: Props) {
         <div>
           <label className={labelCls}>태그</label>
           <TagInput value={tags} onChange={setTags} />
+        </div>
+        <div>
+          <label className={labelCls}>
+            한줄평{' '}
+            <span className="text-[var(--color-text-weak)] font-normal">(선택, 150자 이내)</span>
+          </label>
+          <div className="relative">
+            <input
+              value={oneLineReview}
+              onChange={(e) => setOneLineReview(e.target.value.slice(0, 150))}
+              maxLength={150}
+              placeholder="이 책을 한 줄로 표현한다면?"
+              className={inputCls}
+            />
+            <span
+              className={[
+                'absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-tabular tabular-nums',
+                oneLineReview.length > 120
+                  ? 'text-[var(--color-toss-blue)]'
+                  : 'text-[var(--color-text-weak)]',
+              ].join(' ')}
+              aria-hidden
+            >
+              {oneLineReview.length}/150
+            </span>
+          </div>
+        </div>
+        <div className="pt-2 border-t border-[var(--color-border)]">
+          <Toggle
+            checked={isPublic}
+            onChange={setIsPublic}
+            label="모두의 서재에 공개"
+            description="이 책의 한줄평·별점·제목·저자를 모두의 서재에서 다른 사람도 볼 수 있어요"
+          />
         </div>
       </section>
 
