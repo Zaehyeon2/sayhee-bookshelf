@@ -20,12 +20,15 @@ export function escapeLikePattern(s: string): string {
 
 /**
  * libSQL/Turso의 UNIQUE constraint 에러 메시지는 driver/version에 따라
- * - `UNIQUE constraint failed: books.author_user_id, books.slug`
- * - `idx_books_user_slug` (인덱스 이름 포함)
+ * - `UNIQUE constraint failed: <table>.author_user_id, <table>.slug`
+ * - `<indexName>` (인덱스 이름 포함)
  * - 양쪽 조합
  * 등으로 다양하다. 컬럼 시그니처와 인덱스 이름을 모두 매칭한다.
+ *
+ * tablePrefix를 받아 fallback 브랜치를 table-qualified로 한정함으로써
+ * books/writings/movies 간 false-positive를 방지한다.
  */
-export function isSlugUniqueViolation(e: unknown): boolean {
+function isTableSlugViolation(e: unknown, indexName: string, tablePrefix: string): boolean {
   const seen = new WeakSet<object>()
   let current: unknown = e
   while (current != null && typeof current === 'object') {
@@ -39,9 +42,8 @@ export function isSlugUniqueViolation(e: unknown): boolean {
       /UNIQUE constraint/i.test(msg)
     if (
       isUnique &&
-      (msg.includes('idx_books_user_slug') ||
-        (msg.includes('books.author_user_id') && msg.includes('books.slug')) ||
-        (msg.includes('author_user_id') && msg.includes('slug')))
+      (msg.includes(indexName) ||
+        (msg.includes(`${tablePrefix}.author_user_id`) && msg.includes(`${tablePrefix}.slug`)))
     ) {
       return true
     }
@@ -50,27 +52,8 @@ export function isSlugUniqueViolation(e: unknown): boolean {
   return false
 }
 
-export function isWritingSlugUniqueViolation(e: unknown): boolean {
-  const seen = new WeakSet<object>()
-  let current: unknown = e
-  while (current != null && typeof current === 'object') {
-    if (seen.has(current as object)) break
-    seen.add(current as object)
-    const err = current as { code?: string; message?: string; cause?: unknown }
-    const msg = err.message ?? ''
-    const isUnique =
-      err.code === 'SQLITE_CONSTRAINT' ||
-      err.code === 'SQLITE_CONSTRAINT_UNIQUE' ||
-      /UNIQUE constraint/i.test(msg)
-    if (
-      isUnique &&
-      (msg.includes('idx_writings_user_slug') ||
-        (msg.includes('writings.author_user_id') && msg.includes('writings.slug')) ||
-        (msg.includes('author_user_id') && msg.includes('slug')))
-    ) {
-      return true
-    }
-    current = err.cause
-  }
-  return false
-}
+export const isSlugUniqueViolation = (e: unknown) =>
+  isTableSlugViolation(e, 'idx_books_user_slug', 'books')
+
+export const isWritingSlugUniqueViolation = (e: unknown) =>
+  isTableSlugViolation(e, 'idx_writings_user_slug', 'writings')
