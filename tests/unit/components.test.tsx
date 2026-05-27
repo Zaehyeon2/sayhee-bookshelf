@@ -5,9 +5,14 @@ import { RatingStars } from '@/components/RatingStars'
 import { Filters } from '@/components/Filters'
 import { MovieCard } from '@/components/MovieCard'
 import { PublicMovieCard } from '@/components/PublicMovieCard'
+import { MovieForm } from '@/components/MovieForm'
 import type { MovieWithTags } from '@/lib/db/queries'
 import type { PublicMovieCard as PublicMovieItem } from '@/lib/db/queries'
 import { BOOK_GENRES, MOVIE_GENRES } from '@/lib/genres'
+
+vi.mock('@/components/MarkdownEditor', () => ({
+  MarkdownEditor: vi.fn().mockImplementation(() => null),
+}))
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
@@ -145,5 +150,28 @@ describe('PublicMovieCard', () => {
   test('renders authorDisplayName', () => {
     render(<PublicMovieCard item={item} />)
     expect(screen.getByText('앨리스')).toBeInTheDocument()
+  })
+})
+
+describe('MovieForm', () => {
+  test('create mode: isPublic defaults to true', () => {
+    render(<MovieForm mode="create" />)
+    const toggle = screen.getByRole('switch')
+    expect(toggle).toHaveAttribute('aria-checked', 'true')
+  })
+
+  test('create mode: rating defaults to 6 (half-star scale)', () => {
+    render(<MovieForm mode="create" />)
+    // RatingStars renders aria-label with the score; default rating=6 → 3/5
+    const ratingEl = document.querySelector('[aria-label="별점 3/5"]')
+    expect(ratingEl).not.toBeNull()
+  })
+
+  test('renders genre options from MOVIE_GENRES', () => {
+    render(<MovieForm mode="create" />)
+    const select = screen.getByRole('combobox')
+    expect(select).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: '액션' })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: '소설' })).toBeNull()
   })
 })
