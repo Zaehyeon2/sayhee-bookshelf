@@ -43,6 +43,13 @@
       "when": 1779821469596,
       "tag": "0005_bumpy_millenium_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1779882752704,
+      "tag": "0006_gifted_sentinels",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,565 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "278a9cd3-04ac-438e-ace1-e2ea30723a24",
+  "prevId": "67e406c3-e216-43d5-9870-cfeda6bfb01b",
+  "tables": {
+    "book_tags": {
+      "name": "book_tags",
+      "columns": {
+        "book_id": {
+          "name": "book_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tag_id": {
+          "name": "tag_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_book_tags_tag": {
+          "name": "idx_book_tags_tag",
+          "columns": [
+            "tag_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "book_tags_book_id_books_id_fk": {
+          "name": "book_tags_book_id_books_id_fk",
+          "tableFrom": "book_tags",
+          "tableTo": "books",
+          "columnsFrom": [
+            "book_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "book_tags_tag_id_tags_id_fk": {
+          "name": "book_tags_tag_id_tags_id_fk",
+          "tableFrom": "book_tags",
+          "tableTo": "tags",
+          "columnsFrom": [
+            "tag_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "book_tags_book_id_tag_id_pk": {
+          "columns": [
+            "book_id",
+            "tag_id"
+          ],
+          "name": "book_tags_book_id_tag_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "books": {
+      "name": "books",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "author_user_id": {
+          "name": "author_user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "author": {
+          "name": "author",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "genre": {
+          "name": "genre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "read_date": {
+          "name": "read_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rating": {
+          "name": "rating",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "one_line_review": {
+          "name": "one_line_review",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "is_public": {
+          "name": "is_public",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_books_author_user": {
+          "name": "idx_books_author_user",
+          "columns": [
+            "author_user_id"
+          ],
+          "isUnique": false
+        },
+        "idx_books_user_slug": {
+          "name": "idx_books_user_slug",
+          "columns": [
+            "author_user_id",
+            "slug"
+          ],
+          "isUnique": true
+        },
+        "idx_books_user_date": {
+          "name": "idx_books_user_date",
+          "columns": [
+            "author_user_id",
+            "\"read_date\" DESC"
+          ],
+          "isUnique": false
+        },
+        "idx_books_user_genre": {
+          "name": "idx_books_user_genre",
+          "columns": [
+            "author_user_id",
+            "genre"
+          ],
+          "isUnique": false
+        },
+        "idx_books_user_rating": {
+          "name": "idx_books_user_rating",
+          "columns": [
+            "author_user_id",
+            "\"rating\" DESC"
+          ],
+          "isUnique": false
+        },
+        "idx_books_public_published": {
+          "name": "idx_books_public_published",
+          "columns": [
+            "is_public",
+            "\"published_at\" DESC"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "books_author_user_id_users_id_fk": {
+          "name": "books_author_user_id_users_id_fk",
+          "tableFrom": "books",
+          "tableTo": "users",
+          "columnsFrom": [
+            "author_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "rating_range": {
+          "name": "rating_range",
+          "value": "\"books\".\"rating\" BETWEEN 1 AND 5"
+        }
+      }
+    },
+    "tags": {
+      "name": "tags",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "tags_name_unique": {
+          "name": "tags_name_unique",
+          "columns": [
+            "name"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "users": {
+      "name": "users",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "username": {
+          "name": "username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'member'"
+        },
+        "must_change_password": {
+          "name": "must_change_password",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "token_version": {
+          "name": "token_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_users_username": {
+          "name": "idx_users_username",
+          "columns": [
+            "username"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "writing_tags": {
+      "name": "writing_tags",
+      "columns": {
+        "writing_id": {
+          "name": "writing_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tag_id": {
+          "name": "tag_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_writing_tags_tag": {
+          "name": "idx_writing_tags_tag",
+          "columns": [
+            "tag_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "writing_tags_writing_id_writings_id_fk": {
+          "name": "writing_tags_writing_id_writings_id_fk",
+          "tableFrom": "writing_tags",
+          "tableTo": "writings",
+          "columnsFrom": [
+            "writing_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "writing_tags_tag_id_tags_id_fk": {
+          "name": "writing_tags_tag_id_tags_id_fk",
+          "tableFrom": "writing_tags",
+          "tableTo": "tags",
+          "columnsFrom": [
+            "tag_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "writing_tags_writing_id_tag_id_pk": {
+          "columns": [
+            "writing_id",
+            "tag_id"
+          ],
+          "name": "writing_tags_writing_id_tag_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "writings": {
+      "name": "writings",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "author_user_id": {
+          "name": "author_user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_writings_author_user": {
+          "name": "idx_writings_author_user",
+          "columns": [
+            "author_user_id"
+          ],
+          "isUnique": false
+        },
+        "idx_writings_user_slug": {
+          "name": "idx_writings_user_slug",
+          "columns": [
+            "author_user_id",
+            "slug"
+          ],
+          "isUnique": true
+        },
+        "idx_writings_user_created": {
+          "name": "idx_writings_user_created",
+          "columns": [
+            "author_user_id",
+            "\"created_at\" DESC"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "writings_author_user_id_users_id_fk": {
+          "name": "writings_author_user_id_users_id_fk",
+          "tableFrom": "writings",
+          "tableTo": "users",
+          "columnsFrom": [
+            "author_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {
+      "idx_books_user_date": {
+        "columns": {
+          "\"read_date\" DESC": {
+            "isExpression": true
+          }
+        }
+      },
+      "idx_books_user_rating": {
+        "columns": {
+          "\"rating\" DESC": {
+            "isExpression": true
+          }
+        }
+      },
+      "idx_books_public_published": {
+        "columns": {
+          "\"published_at\" DESC": {
+            "isExpression": true
+          }
+        }
+      },
+      "idx_writings_user_created": {
+        "columns": {
+          "\"created_at\" DESC": {
+            "isExpression": true
+          }
+        }
+      }
+    }
+  }
+}

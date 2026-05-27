@@ -41,6 +41,9 @@ export const books = sqliteTable(
     readDate: text('read_date').notNull(),
     rating: integer('rating').notNull(),
     content: text('content').notNull().default(''),
+    oneLineReview: text('one_line_review'),
+    isPublic: integer('is_public').notNull().default(1),
+    publishedAt: integer('published_at'),
     slug: text('slug').notNull(),
     createdAt: integer('created_at').notNull(),
     updatedAt: integer('updated_at').notNull(),
@@ -52,6 +55,10 @@ export const books = sqliteTable(
     userDateIdx: index('idx_books_user_date').on(t.authorUserId, sql`${t.readDate} DESC`),
     userGenreIdx: index('idx_books_user_genre').on(t.authorUserId, t.genre),
     userRatingIdx: index('idx_books_user_rating').on(t.authorUserId, sql`${t.rating} DESC`),
+    publicPublishedIdx: index('idx_books_public_published').on(
+      t.isPublic,
+      sql`${t.publishedAt} DESC`,
+    ),
     ratingCheck: check('rating_range', sql`${t.rating} BETWEEN 1 AND 5`),
   }),
 )
