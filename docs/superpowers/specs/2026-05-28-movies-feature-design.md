@@ -287,7 +287,26 @@ movies/
 
 PR A는 작고 review 부담 적음. PR B는 한 번에 가는 게 동작 일관성 측면에서 안전.
 
-## 8. Open Questions
+## 8. 번들 (movies와 무관한 동시 작업)
+
+### Vercel Speed Insights 통합
+
+영화 PR과 같은 묶음으로 처리 (도메인 충돌 0, 변경 면적 작음, 별도 PR 분리 비용 > 이득).
+
+**변경**:
+- 의존성 추가: `pnpm add @vercel/speed-insights`
+- `src/app/layout.tsx`:
+  ```tsx
+  import { SpeedInsights } from '@vercel/speed-insights/next'
+  // <body> 내 어디든:
+  <SpeedInsights />
+  ```
+
+**Auth/세션/CSRF 영향 0**, SSR 안전 (Vercel 공식 client component, 자체 동적 로딩). 테스트 신규 불필요 (Vercel runtime이 production에서만 활성).
+
+**Open Question**: 분석 데이터 수집 동의 표시 (개인정보 안내) 필요한지 — 현재 사이트 약관 정책 확인 후 결정.
+
+## 9. Open Questions
 
 - `MOVIE_GENRES` 초기 목록 확정 — 위 §5.2의 안이 충분한가?
 - E2E 시드에 영화 몇 개? (책 시드 규모 확인 후 동등 수 권장)
