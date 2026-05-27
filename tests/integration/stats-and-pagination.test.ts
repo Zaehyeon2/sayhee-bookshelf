@@ -1,7 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { listBooks, listWritings, countBooks, countWritings, getUserStats } from '@/lib/db/queries'
+import { describe, it, test, expect, beforeEach } from 'vitest'
+import {
+  listBooks,
+  listWritings,
+  countBooks,
+  countWritings,
+  getUserStats,
+  getUserMovieStats,
+} from '@/lib/db/queries'
 import { makeTestDb, type TestDb } from '../setup-db'
-import { createUser, createBook, createWriting } from '../factories'
+import { createUser, createBook, createWriting, createMovie } from '../factories'
 
 describe('pagination and stats', () => {
   let db: TestDb
@@ -84,5 +91,72 @@ describe('pagination and stats', () => {
     expect(s.avgRating).toBe(0)
     expect(s.writingsTotal).toBe(0)
     expect(s.writingsThisYear).toBe(0)
+  })
+})
+
+describe('getUserMovieStats', () => {
+  test('counts movies in given year only (createdAt-based)', async () => {
+    const { db, client } = await makeTestDb()
+    try {
+      const alice = await createUser(db, { username: 'alice' })
+      // 2025
+      await createMovie(db, alice.id, { createdAt: new Date('2025-06-01').getTime() })
+      // 2026
+      await createMovie(db, alice.id, { createdAt: new Date('2026-03-01').getTime() })
+      await createMovie(db, alice.id, { createdAt: new Date('2026-04-01').getTime() })
+
+      const stats = await getUserMovieStats(db, alice.id, 2026)
+      expect(stats.moviesTotal).toBe(3)
+      expect(stats.moviesThisYear).toBe(2)
+    } finally {
+      client.close()
+    }
+  })
+
+  test('avgMovieRating computed across all user movies', async () => {
+    const { db, client } = await makeTestDb()
+    try {
+      const alice = await createUser(db, { username: 'alice' })
+      await createMovie(db, alice.id, { rating: 6 })
+      await createMovie(db, alice.id, { rating: 10 })
+      const stats = await getUserMovieStats(db, alice.id, 2026)
+      expect(stats.avgMovieRating).toBe(8)
+    } finally {
+      client.close()
+    }
+  })
+
+  test('returns 0/null when user has no movies', async () => {
+    const { db, client } = await makeTestDb()
+    try {
+      const alice = await createUser(db, { username: 'alice' })
+      const stats = await getUserMovieStats(db, alice.id, 2026)
+      expect(stats.moviesTotal).toBe(0)
+      expect(stats.moviesThisYear).toBe(0)
+      expect(stats.avgMovieRating).toBeNull()
+    } finally {
+      client.close()
+    }
+  })
+
+  test('scoped to user (does not count other user movies)', async () => {
+    const { db, client } = await makeTestDb()
+    try {
+      const alice = await createUser(db, { username: 'alice' })
+      const bob = await createUser(db, { username: 'bob' })
+      await createMovie(db, alice.id, { rating: 5 })
+      await createMovie(db, bob.id, { rating: 10 })
+      await createMovie(db, bob.id, { rating: 10 })
+
+      const aStats = await getUserMovieStats(db, alice.id, 2026)
+      expect(aStats.moviesTotal).toBe(1)
+      expect(aStats.avgMovieRating).toBe(5)
+
+      const bStats = await getUserMovieStats(db, bob.id, 2026)
+      expect(bStats.moviesTotal).toBe(2)
+      expect(bStats.avgMovieRating).toBe(10)
+    } finally {
+      client.close()
+    }
   })
 })
