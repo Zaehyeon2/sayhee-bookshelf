@@ -1,7 +1,14 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { GenreBadge } from '@/components/GenreBadge'
 import { RatingStars } from '@/components/RatingStars'
+import { Filters } from '@/components/Filters'
+import { BOOK_GENRES, MOVIE_GENRES } from '@/lib/genres'
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+}))
 
 describe('GenreBadge', () => {
   it('장르 이름을 표시한다', () => {
@@ -37,5 +44,19 @@ describe('RatingStars', () => {
   it('editable 모드에서는 반쪽별마다 클릭존이 있다 (5 stars × 2)', () => {
     const { container } = render(<RatingStars value={4} onChange={() => {}} />)
     expect(container.querySelectorAll('button').length).toBe(10)
+  })
+})
+
+describe('Filters', () => {
+  it('renders given movie genres as chips', () => {
+    render(<Filters basePath="/movies" genres={MOVIE_GENRES} />)
+    expect(screen.getByText('액션')).toBeInTheDocument()
+    expect(screen.queryByText('소설')).toBeNull()
+  })
+
+  it('book mode renders book genres', () => {
+    render(<Filters basePath="/books" genres={BOOK_GENRES} />)
+    expect(screen.getByText('소설')).toBeInTheDocument()
+    expect(screen.queryByText('액션')).toBeNull()
   })
 })

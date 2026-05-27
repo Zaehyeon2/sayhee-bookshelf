@@ -10,6 +10,7 @@ import { Pagination } from '@/components/Pagination'
 import { excerpt } from '@/lib/excerpt'
 import { EmptyState } from '@/components/EmptyState'
 import { getCurrentUser } from '@/lib/auth'
+import { BOOK_GENRES } from '@/lib/genres'
 
 const PAGE_SIZE = 24
 
@@ -83,7 +84,7 @@ export default async function BooksPage({ searchParams }: SP) {
     <div className="space-y-6">
       <Suspense fallback={null}>
         <SearchBox />
-        <Filters />
+        <Filters basePath="/books" genres={BOOK_GENRES} />
       </Suspense>
       <div className="flex items-baseline justify-between">
         <h2 className="text-[22px] font-bold text-[var(--color-text-strong)]">{title}</h2>

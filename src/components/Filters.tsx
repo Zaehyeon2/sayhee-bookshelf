@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { BOOK_GENRES } from '@/lib/genres'
 
 function ChipButton({
   label,
@@ -91,7 +90,12 @@ function useDragScroll<T extends HTMLElement>(ref: React.RefObject<T | null>) {
   }, [ref])
 }
 
-export function Filters() {
+interface FiltersProps {
+  basePath: string
+  genres: readonly string[]
+}
+
+export function Filters({ basePath, genres }: FiltersProps) {
   const router = useRouter()
   const sp = useSearchParams()
   const currentGenre = sp.get('genre') ?? ''
@@ -107,7 +111,7 @@ export function Filters() {
     // 식의 죽은 페이지를 보여주지 않도록.
     params.delete('page')
     const qs = params.toString()
-    router.push(qs ? `/books?${qs}` : '/books')
+    router.push(qs ? `${basePath}?${qs}` : basePath)
   }
 
   return (
@@ -119,7 +123,7 @@ export function Filters() {
             active={currentGenre === ''}
             onClick={() => setParam('genre', null)}
           />
-          {BOOK_GENRES.map((g) => (
+          {genres.map((g) => (
             <ChipButton
               key={g}
               label={g}
