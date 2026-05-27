@@ -56,6 +56,14 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
             <time className="text-[13px] text-[var(--color-text-weak)] font-tabular">
               {book.readDate}
             </time>
+            {book.isPublic === 1 && (
+              <span
+                className="inline-flex items-center text-[12px] font-semibold text-[var(--color-toss-blue)]"
+                title="모두의 서재에 공개됨"
+              >
+                🌐 공개
+              </span>
+            )}
           </div>
           <Link
             href={`/books/edit/${book.id}`}
@@ -88,6 +96,13 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
       </header>
 
       <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 sm:p-8 shadow-[var(--shadow-toss)]">
+        {book.oneLineReview && (
+          <blockquote className="mb-6 px-5 py-4 rounded-[var(--radius-toss)] bg-[var(--color-surface-2)] border-l-4 border-[var(--color-toss-blue)]">
+            <p className="text-[16px] leading-relaxed text-[var(--color-text-strong)] font-medium">
+              &ldquo;{book.oneLineReview}&rdquo;
+            </p>
+          </blockquote>
+        )}
         {book.content ? (
           <MarkdownViewer initialValue={book.content} />
         ) : (
