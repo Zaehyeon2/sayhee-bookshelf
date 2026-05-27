@@ -1,8 +1,10 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, test } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { GenreBadge } from '@/components/GenreBadge'
 import { RatingStars } from '@/components/RatingStars'
 import { Filters } from '@/components/Filters'
+import { MovieCard } from '@/components/MovieCard'
+import type { MovieWithTags } from '@/lib/db/queries'
 import { BOOK_GENRES, MOVIE_GENRES } from '@/lib/genres'
 
 vi.mock('next/navigation', () => ({
@@ -58,5 +60,54 @@ describe('Filters', () => {
     render(<Filters basePath="/books" genres={BOOK_GENRES} />)
     expect(screen.getByText('소설')).toBeInTheDocument()
     expect(screen.queryByText('액션')).toBeNull()
+  })
+})
+
+describe('MovieCard', () => {
+  const movie: MovieWithTags = {
+    id: 1,
+    slug: 'inception',
+    title: '인셉션',
+    director: '크리스토퍼 놀란',
+    genre: 'SF',
+    watchedDate: '2026-01-15',
+    rating: 9,
+    content: '',
+    oneLineReview: null,
+    isPublic: 1,
+    publishedAt: Date.now(),
+    authorUserId: 1,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    tags: ['액션', '꿈'],
+  }
+
+  test('renders title, director, watchedDate', () => {
+    render(<MovieCard movie={movie} />)
+    expect(screen.getByText('인셉션')).toBeInTheDocument()
+    expect(screen.getByText('크리스토퍼 놀란')).toBeInTheDocument()
+    expect(screen.getByText('2026-01-15')).toBeInTheDocument()
+  })
+
+  test('links to /movies/[slug]', () => {
+    render(<MovieCard movie={movie} />)
+    const link = screen.getByRole('link')
+    expect(link).toHaveAttribute('href', '/movies/inception')
+  })
+
+  test('shows public badge when isPublic=1', () => {
+    render(<MovieCard movie={movie} />)
+    expect(screen.getByText(/공개/)).toBeInTheDocument()
+  })
+
+  test('omits public badge when isPublic=0', () => {
+    render(<MovieCard movie={{ ...movie, isPublic: 0 }} />)
+    expect(screen.queryByText(/🌐/)).toBeNull()
+  })
+
+  test('renders up to 3 tags', () => {
+    render(<MovieCard movie={{ ...movie, tags: ['a', 'b', 'c', 'd'] }} />)
+    expect(screen.getByText(/#a/)).toBeInTheDocument()
+    expect(screen.queryByText(/#d/)).toBeNull()
   })
 })
