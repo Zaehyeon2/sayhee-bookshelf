@@ -12,7 +12,8 @@ async function login(page: Page) {
   await page.waitForSelector('.toastui-editor-defaultUI', { timeout: 30_000 })
 }
 
-test('영화 생성 → 목록 → 수정 → 삭제 golden path', { timeout: 90_000 }, async ({ page }) => {
+test('영화 생성 → 목록 → 수정 → 삭제 golden path', async ({ page }) => {
+  test.setTimeout(90_000)
   await login(page)
 
   const uniqueTitle = `E2E 영화 ${Date.now()}`
@@ -47,7 +48,7 @@ test('영화 생성 → 목록 → 수정 → 삭제 golden path', { timeout: 90
   await page.click('button:has-text("수정")')
   // After edit, redirect to movie detail
   await page.waitForURL(/\/movies\/(?!new|edit)/, { timeout: 15_000 })
-  await expect(page.getByText(`${uniqueTitle} 수정됨`)).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByRole('heading', { name: `${uniqueTitle} 수정됨` })).toBeVisible({ timeout: 10_000 })
 
   // 수정 페이지에서 삭제
   await page.click('a:has-text("수정")')
