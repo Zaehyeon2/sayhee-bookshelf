@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getSessionUser } from '@/lib/auth'
+import { getSessionUser } from '@/lib/auth-edge'
 
 const PASSWORD_PATH = '/settings/password'
 const PASSWORD_API = '/api/users/me/password'
