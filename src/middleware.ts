@@ -90,6 +90,7 @@ export async function middleware(req: NextRequest) {
 // /api/** 도 포함하므로 모든 mutation 엔드포인트가 edge에서 한 번 더 게이트된다.
 export const config = {
   matcher: [
+    '/feed/:path*',
     '/books/:path*',
     '/writings/:path*',
     '/admin/:path*',
