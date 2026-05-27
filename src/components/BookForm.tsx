@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { GENRES } from '@/lib/genres'
+import { BOOK_GENRES } from '@/lib/genres'
 import { RatingStars } from './RatingStars'
 import { TagInput } from './TagInput'
 import { MarkdownEditor, type MarkdownEditorHandle } from './MarkdownEditor'
@@ -43,7 +43,7 @@ export function BookForm({ initial, mode }: Props) {
 
   const [title, setTitle] = useState(initial?.title ?? '')
   const [author, setAuthor] = useState(initial?.author ?? '')
-  const [genre, setGenre] = useState(initial?.genre ?? GENRES[0])
+  const [genre, setGenre] = useState(initial?.genre ?? BOOK_GENRES[0])
   const [readDate, setReadDate] = useState(
     initial?.readDate ?? new Date().toISOString().slice(0, 10),
   )
@@ -142,7 +142,7 @@ export function BookForm({ initial, mode }: Props) {
           <div>
             <label className={labelCls}>장르</label>
             <select value={genre} onChange={(e) => setGenre(e.target.value)} className={inputCls}>
-              {GENRES.map((g) => (
+              {BOOK_GENRES.map((g) => (
                 <option key={g} value={g}>
                   {g}
                 </option>

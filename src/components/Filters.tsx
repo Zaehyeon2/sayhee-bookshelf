@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { GENRES } from '@/lib/genres'
+import { BOOK_GENRES } from '@/lib/genres'
 
 function ChipButton({
   label,
@@ -119,7 +119,7 @@ export function Filters() {
             active={currentGenre === ''}
             onClick={() => setParam('genre', null)}
           />
-          {GENRES.map((g) => (
+          {BOOK_GENRES.map((g) => (
             <ChipButton
               key={g}
               label={g}

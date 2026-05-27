@@ -1,7 +1,7 @@
-import type { Genre } from '@/lib/genres'
+import type { BookGenre } from '@/lib/genres'
 
 interface Props {
-  genre: Genre | string
+  genre: BookGenre | string
   active?: boolean
 }
 
