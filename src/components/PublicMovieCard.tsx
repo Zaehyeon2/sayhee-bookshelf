@@ -1,9 +1,9 @@
 import { GenreBadge } from './GenreBadge'
 import { RatingStars } from './RatingStars'
-import type { PublicMovieCard } from '@/lib/db/queries'
+import type { PublicMovieCard as PublicMovieCardItem } from '@/lib/db/queries'
 
 interface Props {
-  item: PublicMovieCard
+  item: PublicMovieCardItem
 }
 
 function formatRelative(ts: number): string {
