@@ -124,6 +124,7 @@ export const writingTags = sqliteTable(
 export const usersRelations = relations(users, ({ many }) => ({
   books: many(books),
   writings: many(writings),
+  movies: many(movies),
 }))
 export const booksRelations = relations(books, ({ one, many }) => ({
   author: one(users, { fields: [books.authorUserId], references: [users.id] }),
@@ -132,6 +133,7 @@ export const booksRelations = relations(books, ({ one, many }) => ({
 export const tagsRelations = relations(tags, ({ many }) => ({
   bookTags: many(bookTags),
   writingTags: many(writingTags),
+  movieTags: many(movieTags),
 }))
 export const bookTagsRelations = relations(bookTags, ({ one }) => ({
   book: one(books, { fields: [bookTags.bookId], references: [books.id] }),
@@ -146,6 +148,66 @@ export const writingTagsRelations = relations(writingTags, ({ one }) => ({
   tag: one(tags, { fields: [writingTags.tagId], references: [tags.id] }),
 }))
 
+export const movies = sqliteTable(
+  'movies',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    authorUserId: integer('author_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    director: text('director').notNull(),
+    genre: text('genre').notNull(),
+    watchedDate: text('watched_date').notNull(),
+    rating: integer('rating').notNull(),
+    content: text('content').notNull().default(''),
+    oneLineReview: text('one_line_review'),
+    isPublic: integer('is_public').notNull().default(1),
+    publishedAt: integer('published_at'),
+    slug: text('slug').notNull(),
+    createdAt: integer('created_at').notNull(),
+    updatedAt: integer('updated_at').notNull(),
+  },
+  (t) => ({
+    authorUserIdx: index('idx_movies_author_user').on(t.authorUserId),
+    userSlugUnique: uniqueIndex('idx_movies_user_slug').on(t.authorUserId, t.slug),
+    userDateIdx: index('idx_movies_user_date').on(t.authorUserId, sql`${t.watchedDate} DESC`),
+    userGenreIdx: index('idx_movies_user_genre').on(t.authorUserId, t.genre),
+    userRatingIdx: index('idx_movies_user_rating').on(t.authorUserId, sql`${t.rating} DESC`),
+    publicPublishedIdx: index('idx_movies_public_published').on(
+      t.isPublic,
+      sql`${t.publishedAt} DESC`,
+    ),
+    ratingCheck: check('movies_rating_range', sql`${t.rating} BETWEEN 1 AND 10`),
+  }),
+)
+
+export const movieTags = sqliteTable(
+  'movie_tags',
+  {
+    movieId: integer('movie_id')
+      .notNull()
+      .references(() => movies.id, { onDelete: 'cascade' }),
+    tagId: integer('tag_id')
+      .notNull()
+      .references(() => tags.id, { onDelete: 'cascade' }),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.movieId, t.tagId] }),
+    tagIdx: index('idx_movie_tags_tag').on(t.tagId),
+  }),
+)
+
+export const moviesRelations = relations(movies, ({ one, many }) => ({
+  author: one(users, { fields: [movies.authorUserId], references: [users.id] }),
+  movieTags: many(movieTags),
+}))
+
+export const movieTagsRelations = relations(movieTags, ({ one }) => ({
+  movie: one(movies, { fields: [movieTags.movieId], references: [movies.id] }),
+  tag: one(tags, { fields: [movieTags.tagId], references: [tags.id] }),
+}))
+
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Book = typeof books.$inferSelect
@@ -158,3 +220,7 @@ export type Writing = typeof writings.$inferSelect
 export type NewWriting = typeof writings.$inferInsert
 export type WritingTag = typeof writingTags.$inferSelect
 export type NewWritingTag = typeof writingTags.$inferInsert
+export type Movie = typeof movies.$inferSelect
+export type NewMovie = typeof movies.$inferInsert
+export type MovieTag = typeof movieTags.$inferSelect
+export type NewMovieTag = typeof movieTags.$inferInsert
