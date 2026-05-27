@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "e2e": "playwright test",
     "seed:admin": "tsx scripts/seed-admin.ts",
+    "seed:e2e": "tsx scripts/seed-e2e.ts",
     "migrate:existing-books": "tsx scripts/migrate-existing-books.ts"
   },
   "dependencies": {
