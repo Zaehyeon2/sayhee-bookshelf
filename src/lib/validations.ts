@@ -20,7 +20,7 @@ export const CreateBookSchema = z
     author: z.string().trim().min(1, '작가를 입력하세요').max(100),
     genre: z.enum(GENRES),
     readDate: z.string().regex(dateRe, '날짜 형식은 YYYY-MM-DD'),
-    rating: z.number().int().min(1).max(5),
+    rating: z.number().int().min(1).max(10),
     content: z.string().max(MAX_CONTENT_LEN, '본문이 너무 깁니다').default(''),
     tags: tagsArraySchema
       .default([])
@@ -46,7 +46,7 @@ export const UpdateBookSchema = z
     author: z.string().trim().min(1, '작가를 입력하세요').max(100).optional(),
     genre: z.enum(GENRES).optional(),
     readDate: z.string().regex(dateRe, '날짜 형식은 YYYY-MM-DD').optional(),
-    rating: z.number().int().min(1).max(5).optional(),
+    rating: z.number().int().min(1).max(10).optional(),
     content: z.string().max(MAX_CONTENT_LEN, '본문이 너무 깁니다').optional(),
     tags: tagsArraySchema
       .transform((arr) => Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))))

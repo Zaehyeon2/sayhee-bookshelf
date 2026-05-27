@@ -57,7 +57,7 @@ export default async function HomePage() {
           unit="권"
           metrics={[
             `${thisYear}년 ${stats.booksThisYear}권`,
-            totalBooks > 0 ? `평균 ★${avgRating.toFixed(1)}` : null,
+            totalBooks > 0 ? `평균 ★${(avgRating / 2).toFixed(1)}` : null,
           ]}
           subAction={{ href: '/books/new', label: '새 책' }}
         />

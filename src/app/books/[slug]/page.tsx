@@ -19,7 +19,7 @@ export async function generateMetadata({
   const book = await getBookBySlug(db, me.id, decodeURIComponent(slug))
   if (!book) return { title: '책을 찾을 수 없어요' }
   const pageTitle = `${book.title} · ${book.author}`
-  const description = `${book.author}의 ${book.genre} — 별점 ${book.rating}/5`
+  const description = `${book.author}의 ${book.genre} — 별점 ${book.rating / 2}/5`
   return {
     title: pageTitle,
     description,

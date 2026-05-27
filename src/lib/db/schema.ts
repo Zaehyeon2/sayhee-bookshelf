@@ -59,7 +59,7 @@ export const books = sqliteTable(
       t.isPublic,
       sql`${t.publishedAt} DESC`,
     ),
-    ratingCheck: check('rating_range', sql`${t.rating} BETWEEN 1 AND 5`),
+    ratingCheck: check('rating_range', sql`${t.rating} BETWEEN 1 AND 10`),
   }),
 )
 

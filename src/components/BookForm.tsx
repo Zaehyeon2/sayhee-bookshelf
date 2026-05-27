@@ -47,7 +47,7 @@ export function BookForm({ initial, mode }: Props) {
   const [readDate, setReadDate] = useState(
     initial?.readDate ?? new Date().toISOString().slice(0, 10),
   )
-  const [rating, setRating] = useState(initial?.rating ?? 3)
+  const [rating, setRating] = useState(initial?.rating ?? 6)
   const [tags, setTags] = useState<string[]>(initial?.tags ?? [])
   const [oneLineReview, setOneLineReview] = useState(initial?.oneLineReview ?? '')
   const [isPublic, setIsPublic] = useState(
