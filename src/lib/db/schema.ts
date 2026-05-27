@@ -101,10 +101,7 @@ export const writings = sqliteTable(
     authorUserIdx: index('idx_writings_author_user').on(t.authorUserId),
     userSlugUnique: uniqueIndex('idx_writings_user_slug').on(t.authorUserId, t.slug),
     // listWritings 기본 정렬 cover
-    userCreatedIdx: index('idx_writings_user_created').on(
-      t.authorUserId,
-      sql`${t.createdAt} DESC`,
-    ),
+    userCreatedIdx: index('idx_writings_user_created').on(t.authorUserId, sql`${t.createdAt} DESC`),
   }),
 )
 

@@ -34,10 +34,7 @@ export async function DELETE(_req: Request, { params }: Params) {
         .where(eq(users.role, 'admin'))
       const adminCount = Number(adminCountRows[0]?.n ?? 0)
       if (adminCount <= 1) {
-        return NextResponse.json(
-          { error: '마지막 관리자를 삭제할 수 없습니다' },
-          { status: 400 },
-        )
+        return NextResponse.json({ error: '마지막 관리자를 삭제할 수 없습니다' }, { status: 400 })
       }
     }
 

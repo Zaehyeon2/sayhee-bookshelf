@@ -175,9 +175,15 @@ describe('updateBook publishedAt transitions', () => {
     const { updateBook, createBook: queryCreateBook } = await import('@/lib/db/queries')
     const { a } = await setup()
     const book = await queryCreateBook(db3, a.id, {
-      title: 'T', author: 'A', genre: '소설', readDate: '2026-01-01',
-      rating: 4, content: '', tags: [],
-      oneLineReview: null, isPublic: false,
+      title: 'T',
+      author: 'A',
+      genre: '소설',
+      readDate: '2026-01-01',
+      rating: 4,
+      content: '',
+      tags: [],
+      oneLineReview: null,
+      isPublic: false,
     })
     expect(book.publishedAt).toBeNull()
 
@@ -194,9 +200,15 @@ describe('updateBook publishedAt transitions', () => {
     const { updateBook, createBook: queryCreateBook } = await import('@/lib/db/queries')
     const { a } = await setup()
     const book = await queryCreateBook(db3, a.id, {
-      title: 'T', author: 'A', genre: '소설', readDate: '2026-01-01',
-      rating: 4, content: '', tags: [],
-      oneLineReview: null, isPublic: true,
+      title: 'T',
+      author: 'A',
+      genre: '소설',
+      readDate: '2026-01-01',
+      rating: 4,
+      content: '',
+      tags: [],
+      oneLineReview: null,
+      isPublic: true,
     })
     const originalPublishedAt = book.publishedAt!
     expect(originalPublishedAt).not.toBeNull()
@@ -210,9 +222,15 @@ describe('updateBook publishedAt transitions', () => {
     const { updateBook, createBook: queryCreateBook } = await import('@/lib/db/queries')
     const { a } = await setup()
     const book = await queryCreateBook(db3, a.id, {
-      title: 'T', author: 'A', genre: '소설', readDate: '2026-01-01',
-      rating: 4, content: '', tags: [],
-      oneLineReview: null, isPublic: true,
+      title: 'T',
+      author: 'A',
+      genre: '소설',
+      readDate: '2026-01-01',
+      rating: 4,
+      content: '',
+      tags: [],
+      oneLineReview: null,
+      isPublic: true,
     })
     const originalPublishedAt = book.publishedAt!
 
@@ -226,9 +244,15 @@ describe('updateBook publishedAt transitions', () => {
     const { updateBook, createBook: queryCreateBook } = await import('@/lib/db/queries')
     const { a } = await setup()
     const book = await queryCreateBook(db3, a.id, {
-      title: 'T', author: 'A', genre: '소설', readDate: '2026-01-01',
-      rating: 4, content: '', tags: [],
-      oneLineReview: null, isPublic: false,
+      title: 'T',
+      author: 'A',
+      genre: '소설',
+      readDate: '2026-01-01',
+      rating: 4,
+      content: '',
+      tags: [],
+      oneLineReview: null,
+      isPublic: false,
     })
 
     await new Promise((r) => setTimeout(r, 5))
@@ -249,9 +273,15 @@ describe('updateBook publishedAt transitions', () => {
     const { updateBook, createBook: queryCreateBook } = await import('@/lib/db/queries')
     const { a } = await setup()
     const book = await queryCreateBook(db3, a.id, {
-      title: 'T', author: 'A', genre: '소설', readDate: '2026-01-01',
-      rating: 4, content: '', tags: [],
-      oneLineReview: '처음', isPublic: true,
+      title: 'T',
+      author: 'A',
+      genre: '소설',
+      readDate: '2026-01-01',
+      rating: 4,
+      content: '',
+      tags: [],
+      oneLineReview: '처음',
+      isPublic: true,
     })
     const t0 = book.publishedAt!
 
@@ -265,9 +295,15 @@ describe('updateBook publishedAt transitions', () => {
     const { a } = await setup()
     const b = await createUser(db3, { username: 'bob' })
     const book = await queryCreateBook(db3, a.id, {
-      title: 'T', author: 'A', genre: '소설', readDate: '2026-01-01',
-      rating: 4, content: '', tags: [],
-      oneLineReview: null, isPublic: false,
+      title: 'T',
+      author: 'A',
+      genre: '소설',
+      readDate: '2026-01-01',
+      rating: 4,
+      content: '',
+      tags: [],
+      oneLineReview: null,
+      isPublic: false,
     })
 
     const attempt = await updateBook(db3, b.id, book.id, { isPublic: true })
