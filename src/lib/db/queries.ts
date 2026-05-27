@@ -170,8 +170,22 @@ export async function updateBook(
       .where(and(eq(books.id, id), eq(books.authorUserId, authorUserId)))
       .limit(1)
     if (existing.length === 0) return null
+    const prev = existing[0]
 
     const now = Date.now()
+
+    // isPublic transition 판정: 0 → 1만 publishedAt 갱신.
+    // 1 → 0 또는 1 → 1 또는 0 → 0은 publishedAt 보존.
+    let nextIsPublic: number | undefined
+    let nextPublishedAt: number | null | undefined
+    if (input.isPublic !== undefined) {
+      nextIsPublic = input.isPublic ? 1 : 0
+      if (prev.isPublic === 0 && nextIsPublic === 1) {
+        nextPublishedAt = now
+      }
+      // else: nextPublishedAt 그대로 undefined → SET에서 제외돼 기존 값 보존
+    }
+
     const updated = await tx
       .update(books)
       .set({
@@ -181,6 +195,9 @@ export async function updateBook(
         ...(input.readDate !== undefined && { readDate: input.readDate }),
         ...(input.rating !== undefined && { rating: input.rating }),
         ...(input.content !== undefined && { content: input.content }),
+        ...(input.oneLineReview !== undefined && { oneLineReview: input.oneLineReview }),
+        ...(nextIsPublic !== undefined && { isPublic: nextIsPublic }),
+        ...(nextPublishedAt !== undefined && { publishedAt: nextPublishedAt }),
         updatedAt: now,
       })
       .where(and(eq(books.id, id), eq(books.authorUserId, authorUserId)))

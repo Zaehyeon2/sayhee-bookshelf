@@ -158,3 +158,125 @@ describe('createBook publishedAt logic', () => {
     expect(book.oneLineReview).toBe('좋은 책')
   })
 })
+
+describe('updateBook publishedAt transitions', () => {
+  let db3: TestDb
+  beforeEach(async () => {
+    ;({ db: db3 } = await makeTestDb())
+  })
+
+  async function setup() {
+    const { createBook: queryCreateBook } = await import('@/lib/db/queries')
+    const a = await createUser(db3, { username: 'alice' })
+    return { a, queryCreateBook }
+  }
+
+  it('transitions 0→1: sets publishedAt to now()', async () => {
+    const { updateBook, createBook: queryCreateBook } = await import('@/lib/db/queries')
+    const { a } = await setup()
+    const book = await queryCreateBook(db3, a.id, {
+      title: 'T', author: 'A', genre: '소설', readDate: '2026-01-01',
+      rating: 4, content: '', tags: [],
+      oneLineReview: null, isPublic: false,
+    })
+    expect(book.publishedAt).toBeNull()
+
+    const before = Date.now()
+    const updated = await updateBook(db3, a.id, book.id, { isPublic: true })
+    const after = Date.now()
+    expect(updated?.isPublic).toBe(1)
+    expect(updated?.publishedAt).not.toBeNull()
+    expect(updated?.publishedAt).toBeGreaterThanOrEqual(before)
+    expect(updated?.publishedAt).toBeLessThanOrEqual(after)
+  })
+
+  it('transitions 1→0: preserves publishedAt', async () => {
+    const { updateBook, createBook: queryCreateBook } = await import('@/lib/db/queries')
+    const { a } = await setup()
+    const book = await queryCreateBook(db3, a.id, {
+      title: 'T', author: 'A', genre: '소설', readDate: '2026-01-01',
+      rating: 4, content: '', tags: [],
+      oneLineReview: null, isPublic: true,
+    })
+    const originalPublishedAt = book.publishedAt!
+    expect(originalPublishedAt).not.toBeNull()
+
+    const updated = await updateBook(db3, a.id, book.id, { isPublic: false })
+    expect(updated?.isPublic).toBe(0)
+    expect(updated?.publishedAt).toBe(originalPublishedAt)
+  })
+
+  it('non-transition 1→1: publishedAt unchanged', async () => {
+    const { updateBook, createBook: queryCreateBook } = await import('@/lib/db/queries')
+    const { a } = await setup()
+    const book = await queryCreateBook(db3, a.id, {
+      title: 'T', author: 'A', genre: '소설', readDate: '2026-01-01',
+      rating: 4, content: '', tags: [],
+      oneLineReview: null, isPublic: true,
+    })
+    const originalPublishedAt = book.publishedAt!
+
+    await new Promise((r) => setTimeout(r, 5)) // ensure clock advances
+    const updated = await updateBook(db3, a.id, book.id, { title: 'New Title' })
+    expect(updated?.title).toBe('New Title')
+    expect(updated?.publishedAt).toBe(originalPublishedAt)
+  })
+
+  it('0→1→0→1 sequence: publishedAt updates on each 0→1', async () => {
+    const { updateBook, createBook: queryCreateBook } = await import('@/lib/db/queries')
+    const { a } = await setup()
+    const book = await queryCreateBook(db3, a.id, {
+      title: 'T', author: 'A', genre: '소설', readDate: '2026-01-01',
+      rating: 4, content: '', tags: [],
+      oneLineReview: null, isPublic: false,
+    })
+
+    await new Promise((r) => setTimeout(r, 5))
+    const r1 = await updateBook(db3, a.id, book.id, { isPublic: true })
+    const t1 = r1!.publishedAt!
+
+    await new Promise((r) => setTimeout(r, 5))
+    await updateBook(db3, a.id, book.id, { isPublic: false })
+
+    await new Promise((r) => setTimeout(r, 5))
+    const r3 = await updateBook(db3, a.id, book.id, { isPublic: true })
+    const t3 = r3!.publishedAt!
+
+    expect(t3).toBeGreaterThan(t1)
+  })
+
+  it('updates oneLineReview without changing isPublic/publishedAt', async () => {
+    const { updateBook, createBook: queryCreateBook } = await import('@/lib/db/queries')
+    const { a } = await setup()
+    const book = await queryCreateBook(db3, a.id, {
+      title: 'T', author: 'A', genre: '소설', readDate: '2026-01-01',
+      rating: 4, content: '', tags: [],
+      oneLineReview: '처음', isPublic: true,
+    })
+    const t0 = book.publishedAt!
+
+    const updated = await updateBook(db3, a.id, book.id, { oneLineReview: '바뀐 한줄평' })
+    expect(updated?.oneLineReview).toBe('바뀐 한줄평')
+    expect(updated?.publishedAt).toBe(t0)
+  })
+
+  it('cross-user: B cannot update isPublic on A book', async () => {
+    const { updateBook, createBook: queryCreateBook } = await import('@/lib/db/queries')
+    const { a } = await setup()
+    const b = await createUser(db3, { username: 'bob' })
+    const book = await queryCreateBook(db3, a.id, {
+      title: 'T', author: 'A', genre: '소설', readDate: '2026-01-01',
+      rating: 4, content: '', tags: [],
+      oneLineReview: null, isPublic: false,
+    })
+
+    const attempt = await updateBook(db3, b.id, book.id, { isPublic: true })
+    expect(attempt).toBeNull()
+
+    // A의 책은 그대로 비공개
+    const { getBookById } = await import('@/lib/db/queries')
+    const after = await getBookById(db3, a.id, book.id)
+    expect(after?.isPublic).toBe(0)
+    expect(after?.publishedAt).toBeNull()
+  })
+})
