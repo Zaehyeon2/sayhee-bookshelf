@@ -24,6 +24,7 @@ export function WorksSearchBar({ type, initialQuery }: Props) {
     <form onSubmit={onSubmit} className="flex gap-2">
       <input
         type="search"
+        aria-label={type === 'book' ? '책 검색' : '영화 검색'}
         value={q}
         onChange={(e) => setQ(e.target.value)}
         maxLength={100}

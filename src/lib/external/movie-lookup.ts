@@ -33,7 +33,8 @@ export async function lookupMovieByTmdbId(
   })
 
   if (res.status === 404) return null
-  if (res.status === 429) throw new Error('TMDB rate limited')
+  if (res.status === 429)
+    throw new Error(`TMDB rate limited (retry-after=${res.headers.get('retry-after') ?? 'n/a'})`)
   if (res.status === 401 || res.status === 403) throw new Error(`TMDB auth ${res.status}`)
   if (res.status >= 500) throw new Error(`TMDB upstream ${res.status}`)
   if (res.status >= 400) return null

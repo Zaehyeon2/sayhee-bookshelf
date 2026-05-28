@@ -5,6 +5,7 @@ import { WorksSearchQuerySchema } from '@/lib/validations'
 import { searchBooksExternal } from '@/lib/external/books'
 import { searchMoviesExternal } from '@/lib/external/movies'
 import { checkRateLimit } from '@/lib/external/rate-limit'
+import { logAdapterError } from '@/lib/external/log-error'
 import {
   getBookAggregatesByIsbns,
   getMovieAggregatesByTmdbIds,
@@ -19,7 +20,7 @@ export async function GET(req: Request) {
     const url = new URL(req.url)
     const parsed = WorksSearchQuerySchema.safeParse(Object.fromEntries(url.searchParams))
     if (!parsed.success) {
-      return NextResponse.json({ error: 'invalid query' }, { status: 400 })
+      return NextResponse.json({ error: '잘못된 검색 요청' }, { status: 400 })
     }
     const { type, q, page = 1 } = parsed.data
     const limited = checkRateLimit(user.id)
@@ -55,7 +56,7 @@ export async function GET(req: Request) {
     }
   } catch (e) {
     if (e instanceof HttpError) return e.toResponse()
-    console.error('[works/search] error:', e)
+    logAdapterError('works/search', e)
     return NextResponse.json({ error: '검색 서비스가 일시적으로 응답하지 않아요' }, { status: 503 })
   }
 }

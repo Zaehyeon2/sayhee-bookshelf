@@ -70,7 +70,8 @@ export async function lookupBookByIsbn(
     },
   })
 
-  if (res.status === 429) throw new Error('Naver rate limited')
+  if (res.status === 429)
+    throw new Error(`Naver rate limited (retry-after=${res.headers.get('retry-after') ?? 'n/a'})`)
   if (res.status === 401 || res.status === 403) throw new Error(`Naver auth ${res.status}`)
   if (res.status >= 500) throw new Error(`Naver upstream ${res.status}`)
   if (res.status >= 400) return null

@@ -153,6 +153,8 @@ export const WorksSearchQuerySchema = z.object({
   page: z.coerce.number().int().min(1).max(10_000).optional(),
 })
 
+export const PageParamSchema = z.coerce.number().int().min(1).max(10_000).catch(1)
+
 export const IsbnParamSchema = z.string().regex(/^\d{10}(\d{3})?$/)
 export const TmdbIdParamSchema = z.coerce.number().int().positive()
 

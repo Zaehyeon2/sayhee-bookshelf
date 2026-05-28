@@ -33,6 +33,7 @@ export function WorksSearchCard(props: Props) {
     >
       <div className="flex gap-3">
         {props.coverUrl ? (
+          // alt="" — cover is decorative; <h3>{title}</h3> below carries the semantic label
           <Image
             src={props.coverUrl}
             alt=""

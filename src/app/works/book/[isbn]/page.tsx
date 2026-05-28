@@ -1,8 +1,9 @@
 import { notFound, redirect } from 'next/navigation'
 import { db } from '@/lib/db/client'
 import { getCurrentUser } from '@/lib/auth'
-import { IsbnParamSchema } from '@/lib/validations'
+import { IsbnParamSchema, PageParamSchema } from '@/lib/validations'
 import { lookupBookByIsbn } from '@/lib/external/book-lookup'
+import { logAdapterError } from '@/lib/external/log-error'
 import {
   listBookReviewsByIsbn,
   countBookReviewsByIsbn,
@@ -31,8 +32,7 @@ export default async function WorksBookDetailPage({ params, searchParams }: SP) 
   const isbn = parsedIsbn.data
 
   const sp = await searchParams
-  const pageRaw = Number(sp.page ?? '1')
-  const page = Number.isFinite(pageRaw) && pageRaw >= 1 ? Math.floor(pageRaw) : 1
+  const page = PageParamSchema.parse(sp.page ?? '1')
   const offset = (page - 1) * PAGE_SIZE
 
   const [meta, items, total, distribution] = await Promise.all([
@@ -64,7 +64,7 @@ export default async function WorksBookDetailPage({ params, searchParams }: SP) 
 
       <section>
         <h2 className="text-[16px] font-bold text-[var(--color-text-strong)] mb-3">
-          한줄평 {total > 0 ? total : ''}
+          한줄평{total > 0 ? ` ${total}` : ''}
         </h2>
         {items.length === 0 ? (
           <EmptyState
@@ -99,7 +99,7 @@ async function safeBookLookup(isbn: string) {
   try {
     return await lookupBookByIsbn(isbn)
   } catch (e) {
-    console.error('[works/book] lookup error:', e)
+    logAdapterError('works/book', e)
     return null
   }
 }

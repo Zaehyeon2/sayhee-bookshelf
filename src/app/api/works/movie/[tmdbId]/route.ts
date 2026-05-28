@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
 import { requireUser, HttpError } from '@/lib/auth-helpers'
-import { TmdbIdParamSchema } from '@/lib/validations'
+import { TmdbIdParamSchema, PageParamSchema } from '@/lib/validations'
 import {
   listMovieReviewsByTmdbId,
   countMovieReviewsByTmdbId,
@@ -16,11 +16,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ tmdbId: 
     const { tmdbId: rawTmdbId } = await params
     const parsedTmdb = TmdbIdParamSchema.safeParse(rawTmdbId)
     if (!parsedTmdb.success) {
-      return NextResponse.json({ error: 'invalid tmdbId' }, { status: 400 })
+      return NextResponse.json({ error: '잘못된 TMDB ID' }, { status: 400 })
     }
     const url = new URL(req.url)
-    const pageRaw = Number(url.searchParams.get('page') ?? '1')
-    const page = Number.isFinite(pageRaw) && pageRaw >= 1 ? Math.floor(pageRaw) : 1
+    const page = PageParamSchema.parse(url.searchParams.get('page') ?? '1')
     const offset = (page - 1) * PAGE_SIZE
     const [items, total, distribution] = await Promise.all([
       listMovieReviewsByTmdbId(db, parsedTmdb.data, { limit: PAGE_SIZE, offset }),

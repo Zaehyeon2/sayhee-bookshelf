@@ -15,6 +15,7 @@ export function WorksDetailHeader(props: Props) {
   return (
     <header className="flex flex-col gap-6 md:flex-row">
       {props.coverUrl ? (
+        // alt="" — cover is decorative; <h1>{title}</h1> below carries the semantic label
         <Image
           src={props.coverUrl}
           alt=""

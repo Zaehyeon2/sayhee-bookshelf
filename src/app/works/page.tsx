@@ -5,6 +5,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { WorksSearchQuerySchema } from '@/lib/validations'
 import { searchBooksExternal } from '@/lib/external/books'
 import { searchMoviesExternal } from '@/lib/external/movies'
+import { logAdapterError } from '@/lib/external/log-error'
 import {
   getBookAggregatesByIsbns,
   getMovieAggregatesByTmdbIds,
@@ -67,7 +68,7 @@ async function BookResults({ q }: { q: string }) {
   try {
     items = await searchBooksExternal(q, { limit: 24 })
   } catch (e) {
-    console.error('[works/search] books external error:', e)
+    logAdapterError('works/search', e)
     return (
       <EmptyState
         emoji="📡"
@@ -110,7 +111,7 @@ async function MovieResults({ q }: { q: string }) {
   try {
     items = await searchMoviesExternal(q, { limit: 24 })
   } catch (e) {
-    console.error('[works/search] movies external error:', e)
+    logAdapterError('works/search', e)
     return (
       <EmptyState
         emoji="📡"

@@ -1,8 +1,9 @@
 import { notFound, redirect } from 'next/navigation'
 import { db } from '@/lib/db/client'
 import { getCurrentUser } from '@/lib/auth'
-import { TmdbIdParamSchema } from '@/lib/validations'
+import { TmdbIdParamSchema, PageParamSchema } from '@/lib/validations'
 import { lookupMovieByTmdbId } from '@/lib/external/movie-lookup'
+import { logAdapterError } from '@/lib/external/log-error'
 import {
   listMovieReviewsByTmdbId,
   countMovieReviewsByTmdbId,
@@ -31,8 +32,7 @@ export default async function WorksMovieDetailPage({ params, searchParams }: SP)
   const tmdbId = parsedTmdb.data
 
   const sp = await searchParams
-  const pageRaw = Number(sp.page ?? '1')
-  const page = Number.isFinite(pageRaw) && pageRaw >= 1 ? Math.floor(pageRaw) : 1
+  const page = PageParamSchema.parse(sp.page ?? '1')
   const offset = (page - 1) * PAGE_SIZE
 
   const [meta, items, total, distribution] = await Promise.all([
@@ -65,7 +65,7 @@ export default async function WorksMovieDetailPage({ params, searchParams }: SP)
 
       <section>
         <h2 className="text-[16px] font-bold text-[var(--color-text-strong)] mb-3">
-          한줄평 {total > 0 ? total : ''}
+          한줄평{total > 0 ? ` ${total}` : ''}
         </h2>
         {items.length === 0 ? (
           <EmptyState
@@ -100,7 +100,7 @@ async function safeMovieLookup(tmdbId: number) {
   try {
     return await lookupMovieByTmdbId(tmdbId)
   } catch (e) {
-    console.error('[works/movie] lookup error:', e)
+    logAdapterError('works/movie', e)
     return null
   }
 }
