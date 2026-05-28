@@ -48,4 +48,16 @@ describe('PublicReviewCard', () => {
     // React-rendered text node — no <script> element exists in the DOM
     expect(document.querySelector('script')).toBeNull()
   })
+
+  it('renders oneLineReview inside a <blockquote> when present', () => {
+    const { container } = render(<PublicReviewCard item={baseProps} />)
+    const bq = container.querySelector('blockquote')
+    expect(bq).not.toBeNull()
+    expect(bq!.textContent).toContain('인생 책')
+  })
+
+  it('omits <blockquote> when oneLineReview is null', () => {
+    const { container } = render(<PublicReviewCard item={{ ...baseProps, oneLineReview: null }} />)
+    expect(container.querySelector('blockquote')).toBeNull()
+  })
 })

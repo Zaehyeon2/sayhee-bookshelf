@@ -47,4 +47,16 @@ describe('PublicMovieCard', () => {
     expect(screen.queryByText('<script>alert(1)</script>')).toBeInTheDocument()
     expect(document.querySelector('script')).toBeNull()
   })
+
+  it('renders oneLineReview inside a <blockquote> when present', () => {
+    const { container } = render(<PublicMovieCard item={baseProps} />)
+    const bq = container.querySelector('blockquote')
+    expect(bq).not.toBeNull()
+    expect(bq!.textContent).toContain('시간이 흐른다')
+  })
+
+  it('omits <blockquote> when oneLineReview is null', () => {
+    const { container } = render(<PublicMovieCard item={{ ...baseProps, oneLineReview: null }} />)
+    expect(container.querySelector('blockquote')).toBeNull()
+  })
 })

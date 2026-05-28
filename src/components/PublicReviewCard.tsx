@@ -33,17 +33,8 @@ export function PublicReviewCard({ item }: Props) {
       href={`/works?type=book&q=${encodeURIComponent(item.title)}`}
       className="block rounded-[var(--radius-toss)] active:scale-[0.99] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
     >
-      <article className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] transition">
-        <div className="flex items-center justify-between gap-3">
-          <RatingStars value={item.rating} size="sm" />
-          <GenreBadge genre={item.genre} />
-        </div>
-        {item.oneLineReview && (
-          <p className="mt-3 text-[14px] leading-relaxed text-[var(--color-text-strong)] line-clamp-3">
-            {item.oneLineReview}
-          </p>
-        )}
-        <div className="mt-4 flex gap-3">
+      <article className="bg-[var(--color-surface)] p-5 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] rounded-[var(--radius-toss)] transition">
+        <div className="flex gap-3">
           {item.coverUrl && (
             <Image
               src={item.coverUrl}
@@ -61,6 +52,23 @@ export function PublicReviewCard({ item }: Props) {
               {item.author}
             </p>
           </div>
+        </div>
+        {item.oneLineReview && (
+          <blockquote className="mt-4 border-l-4 border-[var(--color-toss-blue)] pl-3 py-1 flex gap-1">
+            <span
+              aria-hidden
+              className="text-[24px] text-[var(--color-text-weak)] leading-none select-none"
+            >
+              &ldquo;
+            </span>
+            <p className="text-[15px] leading-relaxed font-medium text-[var(--color-text-strong)] line-clamp-3">
+              {item.oneLineReview}
+            </p>
+          </blockquote>
+        )}
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <RatingStars value={item.rating} size="sm" />
+          <GenreBadge genre={item.genre} />
         </div>
         <div className="mt-4 pt-3 border-t border-[var(--color-border)] flex items-center justify-between text-[12px] text-[var(--color-text-weak)]">
           <span className="font-semibold text-[var(--color-text-muted)]">
