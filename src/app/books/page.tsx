@@ -13,6 +13,7 @@ import { CardGridSkeleton } from '@/components/CardGridSkeleton'
 import { Skeleton } from '@/components/Skeleton'
 import { getCurrentUser } from '@/lib/auth'
 import { BOOK_GENRES } from '@/lib/genres'
+import { spKey } from '@/lib/sp-key'
 import { ListBooksQuerySchema } from '@/lib/validations'
 
 const PAGE_SIZE = 24
@@ -39,7 +40,7 @@ export default async function BooksPage({ searchParams }: SP) {
         <SearchBox />
         <Filters basePath="/books" genres={BOOK_GENRES} />
       </Suspense>
-      <Suspense fallback={<BooksResultsSkeleton />} key={JSON.stringify(sp)}>
+      <Suspense fallback={<BooksResultsSkeleton />} key={spKey(sp)}>
         <BooksResults sp={sp} userId={me.id} />
       </Suspense>
     </div>

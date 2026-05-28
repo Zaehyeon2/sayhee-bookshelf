@@ -36,13 +36,14 @@ export default async function WorksBookDetailPage({ params, searchParams }: SP) 
   const page = PageParamSchema.parse(sp.page ?? '1')
   const offset = (page - 1) * PAGE_SIZE
 
-  const [meta, items, total, distribution, fallback] = await Promise.all([
+  const [meta, items, total, distribution] = await Promise.all([
     safeBookLookup(isbn),
     listBookReviewsByIsbn(db, isbn, { limit: PAGE_SIZE, offset }),
     countBookReviewsByIsbn(db, isbn),
     getBookRatingDistributionByIsbn(db, isbn),
-    getPublicBookFallbackByIsbn(db, isbn),
   ])
+  // 외부 lookup 실패 시에만 DB fallback 조회 — 정상 케이스의 불필요한 DB hit 회피.
+  const fallback = meta ? null : await getPublicBookFallbackByIsbn(db, isbn)
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 

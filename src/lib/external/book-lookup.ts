@@ -15,6 +15,19 @@ function pickIsbn13(raw: string | undefined): string {
   return parts.find((p) => /^\d{13}$/.test(p)) ?? ''
 }
 
+// ISBN-10 → ISBN-13 변환 (Bookland EAN). Naver 응답에 ISBN-10만 포함되거나
+// 사용자가 ISBN-10으로 검색한 경우에도 13자리 canonical form으로 정규화해
+// dedup invariant(src/lib/external/books.ts)와 호환.
+function isbn10to13(isbn10: string): string {
+  const body = `978${isbn10.slice(0, 9)}`
+  let sum = 0
+  for (let i = 0; i < 12; i++) {
+    sum += Number(body[i]) * (i % 2 === 0 ? 1 : 3)
+  }
+  const check = (10 - (sum % 10)) % 10
+  return body + check
+}
+
 function parsePubYear(s: string | undefined): number | undefined {
   if (!s) return undefined
   const m = /^(\d{4})/.exec(s.trim())
@@ -83,10 +96,16 @@ export async function lookupBookByIsbn(
   if (!item) return null
 
   // Canonical 13-digit ISBN only — preserves dedup invariant with src/lib/external/books.ts.
-  // If neither Naver response nor input yields 13 digits, treat as not-found.
+  // Naver isbn 필드는 "ISBN10 ISBN13" 또는 한쪽만 올 수 있다.
+  // 우선순위: Naver 응답의 13자리 → 입력의 13자리 → Naver 응답 10자리 변환 → 입력 10자리 변환.
+  const naverIsbn10 = item.isbn?.trim().split(/\s+/).find((p) => /^\d{10}$/.test(p))
   const naverIsbn13 = pickIsbn13(item.isbn)
   const inputIsbn13 = /^\d{13}$/.test(isbn) ? isbn : ''
-  const normalizedIsbn = naverIsbn13 || inputIsbn13
+  const normalizedIsbn =
+    naverIsbn13 ||
+    inputIsbn13 ||
+    (naverIsbn10 ? isbn10to13(naverIsbn10) : '') ||
+    (/^\d{10}$/.test(isbn) ? isbn10to13(isbn) : '')
   if (!normalizedIsbn) return null
 
   const title = stripBoldTags(item.title)

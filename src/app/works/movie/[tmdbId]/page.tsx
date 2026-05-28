@@ -36,13 +36,14 @@ export default async function WorksMovieDetailPage({ params, searchParams }: SP)
   const page = PageParamSchema.parse(sp.page ?? '1')
   const offset = (page - 1) * PAGE_SIZE
 
-  const [meta, items, total, distribution, fallback] = await Promise.all([
+  const [meta, items, total, distribution] = await Promise.all([
     safeMovieLookup(tmdbId),
     listMovieReviewsByTmdbId(db, tmdbId, { limit: PAGE_SIZE, offset }),
     countMovieReviewsByTmdbId(db, tmdbId),
     getMovieRatingDistributionByTmdbId(db, tmdbId),
-    getPublicMovieFallbackByTmdbId(db, tmdbId),
   ])
+  // 외부 lookup 실패 시에만 DB fallback 조회 — 정상 케이스의 불필요한 DB hit 회피.
+  const fallback = meta ? null : await getPublicMovieFallbackByTmdbId(db, tmdbId)
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
@@ -51,6 +52,7 @@ export default async function WorksMovieDetailPage({ params, searchParams }: SP)
       <WorksDetailHeader
         title={meta?.title ?? fallback?.title ?? `TMDB ${tmdbId}`}
         subtitle={meta?.originalTitle}
+        director={fallback?.director}
         coverUrl={meta?.coverUrl ?? fallback?.coverUrl ?? undefined}
         description={meta?.description}
         externalRating={meta?.externalRating}

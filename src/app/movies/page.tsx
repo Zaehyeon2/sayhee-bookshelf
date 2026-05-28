@@ -13,6 +13,7 @@ import { CardGridSkeleton } from '@/components/CardGridSkeleton'
 import { Skeleton } from '@/components/Skeleton'
 import { getCurrentUser } from '@/lib/auth'
 import { MOVIE_GENRES } from '@/lib/genres'
+import { spKey } from '@/lib/sp-key'
 import { ListMoviesQuerySchema } from '@/lib/validations'
 
 const PAGE_SIZE = 24
@@ -39,7 +40,7 @@ export default async function MoviesPage({ searchParams }: SP) {
         <SearchBox basePath="/movies" placeholder="제목·감독·본문 검색" />
         <Filters basePath="/movies" genres={MOVIE_GENRES} />
       </Suspense>
-      <Suspense fallback={<MoviesResultsSkeleton />} key={JSON.stringify(sp)}>
+      <Suspense fallback={<MoviesResultsSkeleton />} key={spKey(sp)}>
         <MoviesResults sp={sp} userId={me.id} />
       </Suspense>
     </div>

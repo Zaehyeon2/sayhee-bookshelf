@@ -5,6 +5,7 @@ interface Props {
   subtitle?: string
   coverUrl?: string
   byline?: string
+  director?: string
   description?: string
   externalRating?: number
   siteAvg: number
@@ -34,6 +35,9 @@ export function WorksDetailHeader(props: Props) {
           )}
           {props.byline && (
             <p className="mt-2 text-[13px] text-[var(--color-text-muted)]">{props.byline}</p>
+          )}
+          {props.director && (
+            <p className="mt-2 text-[13px] text-[var(--color-text-muted)]">감독 {props.director}</p>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-5 text-[14px]">

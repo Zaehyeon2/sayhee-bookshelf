@@ -118,7 +118,12 @@ export function Filters({ basePath, genres }: FiltersProps) {
   }
 
   return (
-    <div className="flex items-center gap-3" aria-busy={isPending}>
+    <div
+      className={`flex items-center gap-3 transition ${
+        isPending ? 'opacity-60 pointer-events-none' : ''
+      }`}
+      aria-busy={isPending}
+    >
       <div ref={scrollRef} className="flex-1 -mx-1 -my-1.5 scroll-x-touch cursor-grab">
         <div className="flex gap-2 px-1 py-1.5">
           <ChipButton

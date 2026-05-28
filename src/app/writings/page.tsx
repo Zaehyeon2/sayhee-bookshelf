@@ -10,6 +10,7 @@ import { SearchBox } from '@/components/SearchBox'
 import { CardGridSkeleton } from '@/components/CardGridSkeleton'
 import { Skeleton } from '@/components/Skeleton'
 import { excerpt } from '@/lib/excerpt'
+import { spKey } from '@/lib/sp-key'
 import { getCurrentUser } from '@/lib/auth'
 
 const PAGE_SIZE = 24
@@ -34,7 +35,7 @@ export default async function WritingsPage({ searchParams }: SP) {
       <Suspense fallback={null}>
         <SearchBox basePath="/writings" placeholder="제목·본문 검색" />
       </Suspense>
-      <Suspense fallback={<WritingsResultsSkeleton />} key={JSON.stringify(sp)}>
+      <Suspense fallback={<WritingsResultsSkeleton />} key={spKey(sp)}>
         <WritingsResults sp={sp} userId={me.id} />
       </Suspense>
     </div>
