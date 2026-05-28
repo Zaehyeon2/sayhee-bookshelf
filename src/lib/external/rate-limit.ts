@@ -1,4 +1,6 @@
-const WINDOW_MS = 60_000
+// NOTE: per-instance state. Multiplies under multi-instance deployment (Vercel).
+// Single-user app scale acceptable; revisit with KV/Redis if multi-tenant.
+export const WINDOW_MS = 60_000
 export const EXTERNAL_SEARCH_RATE_LIMIT = 20
 
 interface Entry {

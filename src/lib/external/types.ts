@@ -2,6 +2,7 @@ export interface ExternalSearchItem<TId extends string | number> {
   externalId: TId
   title: string
   subtitle?: string
+  /** Polymorphic author label: book author(s) for books, director for movies. */
   byline: string
   year?: number
   genre?: string
