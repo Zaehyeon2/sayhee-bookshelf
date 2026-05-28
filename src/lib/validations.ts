@@ -9,10 +9,20 @@ export const MAX_TAG_LEN = 30
 export const MAX_CONTENT_LEN = 50_000
 export const MAX_SEARCH_Q = 100
 export const MAX_SLUG_LEN = 80
+export const MAX_EXTERNAL_IDS = 50
 
 const tagsArraySchema = z
   .array(z.string().max(MAX_TAG_LEN, '태그는 최대 30자입니다'))
   .max(MAX_TAGS, '태그는 최대 20개까지 등록할 수 있습니다')
+
+const coverUrlSchema = z
+  .string()
+  .trim()
+  .max(500)
+  .url()
+  .refine((u) => /^https?:\/\//i.test(u), { message: 'http/https URL만 허용됩니다' })
+  .nullable()
+  .optional()
 
 export const CreateBookSchema = z
   .object({
@@ -35,15 +45,7 @@ export const CreateBookSchema = z
       .transform((v) => (v && v.length > 0 ? v : null)),
     isPublic: z.boolean().optional().default(true),
     isbn: z.string().trim().max(40).nullable().optional(),
-    coverUrl: z
-      .string()
-      .url()
-      .max(500)
-      .refine((u) => u.startsWith('http://') || u.startsWith('https://'), {
-        message: 'http/https URL만 허용됩니다',
-      })
-      .nullable()
-      .optional(),
+    coverUrl: coverUrlSchema,
     externalSource: z.enum(['nl-kr']).nullable().optional(),
   })
   .strict()
@@ -70,15 +72,7 @@ export const UpdateBookSchema = z
       .transform((v) => (v === undefined ? undefined : v.length > 0 ? v : null)),
     isPublic: z.boolean().optional(),
     isbn: z.string().trim().max(40).nullable().optional(),
-    coverUrl: z
-      .string()
-      .url()
-      .max(500)
-      .refine((u) => u.startsWith('http://') || u.startsWith('https://'), {
-        message: 'http/https URL만 허용됩니다',
-      })
-      .nullable()
-      .optional(),
+    coverUrl: coverUrlSchema,
     externalSource: z.enum(['nl-kr']).nullable().optional(),
   })
   .strict()
@@ -106,15 +100,7 @@ export const CreateMovieSchema = z
       .transform((v) => (v && v.length > 0 ? v : null)),
     isPublic: z.boolean().optional().default(true),
     tmdbId: z.number().int().positive().nullable().optional(),
-    coverUrl: z
-      .string()
-      .url()
-      .max(500)
-      .refine((u) => u.startsWith('http://') || u.startsWith('https://'), {
-        message: 'http/https URL만 허용됩니다',
-      })
-      .nullable()
-      .optional(),
+    coverUrl: coverUrlSchema,
     externalSource: z.enum(['tmdb']).nullable().optional(),
   })
   .strict()
@@ -140,15 +126,7 @@ export const UpdateMovieSchema = z
       .transform((v) => (v === undefined ? undefined : v.length > 0 ? v : null)),
     isPublic: z.boolean().optional(),
     tmdbId: z.number().int().positive().nullable().optional(),
-    coverUrl: z
-      .string()
-      .url()
-      .max(500)
-      .refine((u) => u.startsWith('http://') || u.startsWith('https://'), {
-        message: 'http/https URL만 허용됩니다',
-      })
-      .nullable()
-      .optional(),
+    coverUrl: coverUrlSchema,
     externalSource: z.enum(['tmdb']).nullable().optional(),
   })
   .strict()
@@ -254,13 +232,12 @@ export const limits = {
   MAX_CONTENT_LEN,
   MAX_SEARCH_Q,
   MAX_SLUG_LEN,
+  MAX_EXTERNAL_IDS,
 } as const
 
 export const ExternalSearchQuerySchema = z.object({
   q: z.string().trim().min(2, '검색어는 2자 이상').max(80, '검색어는 80자 이하'),
 })
-
-const MAX_EXTERNAL_IDS = 50
 
 export const ExternalIdsQuerySchema = z.object({
   ids: z

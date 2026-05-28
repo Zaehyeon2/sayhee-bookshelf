@@ -287,6 +287,22 @@ describe('external metadata fields', () => {
     const r = UpdateMovieSchema.parse({ tmdbId: null })
     expect(r.tmdbId).toBeNull()
   })
+
+  it('accepts case-insensitive http(s) scheme on coverUrl', () => {
+    const r = CreateBookSchema.parse({
+      ...baseBook,
+      coverUrl: 'HTTPS://Example.com/x.jpg',
+    })
+    expect(r.coverUrl?.toLowerCase()).toContain('https://')
+  })
+
+  it('trims whitespace around coverUrl before validation', () => {
+    const r = CreateBookSchema.parse({
+      ...baseBook,
+      coverUrl: '  https://example.com/x.jpg  ',
+    })
+    expect(r.coverUrl).toBe('https://example.com/x.jpg')
+  })
 })
 
 describe('ExternalSearchQuerySchema', () => {
@@ -298,6 +314,10 @@ describe('ExternalSearchQuerySchema', () => {
   })
   it('rejects q over 80 chars', () => {
     expect(() => ExternalSearchQuerySchema.parse({ q: 'x'.repeat(81) })).toThrow()
+  })
+  it('accepts q at boundaries (2 and 80 chars)', () => {
+    expect(ExternalSearchQuerySchema.parse({ q: 'ab' }).q).toBe('ab')
+    expect(ExternalSearchQuerySchema.parse({ q: 'x'.repeat(80) }).q).toHaveLength(80)
   })
 })
 
