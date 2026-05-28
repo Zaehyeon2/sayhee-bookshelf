@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Metadata } from 'next'
 import { db } from '@/lib/db/client'
 import { getBookBySlug } from '@/lib/db/queries'
@@ -72,12 +73,25 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
             수정
           </Link>
         </div>
-        <h1 className="mt-3 text-[28px] sm:text-[32px] font-bold tracking-tight leading-tight text-[var(--color-text-strong)]">
-          {book.title}
-        </h1>
-        <p className="mt-1 text-[16px] text-[var(--color-text-muted)]">{book.author}</p>
-        <div className="mt-4">
-          <RatingStars value={book.rating} size="lg" />
+        <div className="mt-3 flex gap-5 items-start">
+          {book.coverUrl && (
+            <Image
+              src={book.coverUrl}
+              alt={`${book.title} 표지`}
+              width={150}
+              height={220}
+              className="flex-shrink-0 rounded-[var(--radius-toss-sm)] shadow-[var(--shadow-toss)] object-cover"
+            />
+          )}
+          <div className="flex-1 min-w-0">
+            <h1 className="text-[28px] sm:text-[32px] font-bold tracking-tight leading-tight text-[var(--color-text-strong)]">
+              {book.title}
+            </h1>
+            <p className="mt-1 text-[16px] text-[var(--color-text-muted)]">{book.author}</p>
+            <div className="mt-4">
+              <RatingStars value={book.rating} size="lg" />
+            </div>
+          </div>
         </div>
         {book.tags.length > 0 && (
           <ul className="mt-5 flex flex-wrap gap-1.5">
