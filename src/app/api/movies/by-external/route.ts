@@ -31,10 +31,15 @@ export async function GET(req: Request): Promise<Response> {
     )
   }
 
-  // tmdbId는 schema상 integer — string[] → number[] coerce (NaN/음수/0 제외)
+  // Strict canonical-form check: only accepts unambiguous positive integer strings.
+  // Rejects '5e2', '550.0', '0x226', ' 550 ' etc. that Number() would otherwise accept.
   const numericIds = parsed.data.ids
-    .map((s) => Number(s))
-    .filter((n) => Number.isFinite(n) && Number.isInteger(n) && n > 0)
+    .map((s) => {
+      const trimmed = s.trim()
+      const n = Number(trimmed)
+      return Number.isInteger(n) && n > 0 && String(n) === trimmed ? n : null
+    })
+    .filter((n): n is number => n !== null)
 
   const map = await countMoviesByExternalIds(db, user.id, numericIds)
   // JSON 객체 키는 문자열이므로 number → string으로 직렬화

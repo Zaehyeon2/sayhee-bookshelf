@@ -169,4 +169,28 @@ describe('GET /api/movies/by-external', () => {
     expect(body.counts['200']).toBe(1)
     expect(body.counts['300']).toBeUndefined()
   })
+
+  it('rejects non-canonical numeric forms (5e2, 550.0)', async () => {
+    const user = await createUser(testDb!, { username: 'canon' })
+    await createMovie(testDb!, user.id, { tmdbId: 500, title: 'real-500' })
+    await createMovie(testDb!, user.id, { tmdbId: 550, title: 'real-550' })
+    vi.mocked(requireUser).mockResolvedValue(asTestUser(user))
+
+    // '5e2' would be Number()→500; should NOT match the real 500 record.
+    // '550.0' would be Number()→550 + isInteger=true; should NOT match either.
+    const r = await moviesByExternal(req('https://x/api/movies/by-external?ids=5e2,550.0'))
+    expect(r.status).toBe(200)
+    const body = await r.json()
+    expect(body.counts).toEqual({})
+  })
+
+  it('accepts canonical positive integers', async () => {
+    const user = await createUser(testDb!, { username: 'canon2' })
+    await createMovie(testDb!, user.id, { tmdbId: 550, title: 'real-550' })
+    vi.mocked(requireUser).mockResolvedValue(asTestUser(user))
+
+    const r = await moviesByExternal(req('https://x/api/movies/by-external?ids=550'))
+    const body = await r.json()
+    expect(body.counts['550']).toBe(1)
+  })
 })
