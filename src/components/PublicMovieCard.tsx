@@ -30,7 +30,7 @@ export function PublicMovieCard({ item }: Props) {
   return (
     <Link
       href={`/works?type=movie&q=${encodeURIComponent(item.title)}`}
-      className="block rounded-[var(--radius-toss)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+      className="block rounded-[var(--radius-toss)] active:scale-[0.99] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
     >
       <article className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] transition">
         <div className="flex items-center justify-between gap-3">
