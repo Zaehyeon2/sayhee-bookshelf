@@ -22,6 +22,7 @@ export default async function EditMoviePage({ params }: { params: Promise<{ id: 
           tags,
           oneLineReview: movie.oneLineReview ?? '',
           isPublic: movie.isPublic === 1,
+          externalSource: movie.externalSource === 'tmdb' ? 'tmdb' : null,
         }}
       />
     </div>

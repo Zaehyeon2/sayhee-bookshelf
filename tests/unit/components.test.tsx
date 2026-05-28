@@ -172,8 +172,10 @@ describe('MovieForm', () => {
 
   test('renders genre options from MOVIE_GENRES', () => {
     render(<MovieForm mode="create" />)
-    const select = screen.getByRole('combobox')
-    expect(select).toBeInTheDocument()
+    // ExternalMovieSearchBar (cmdk) also registers a combobox role, so query
+    // the native <select> tag explicitly rather than by role.
+    const select = document.querySelector('select')
+    expect(select).not.toBeNull()
     expect(screen.getByRole('option', { name: '액션' })).toBeInTheDocument()
     expect(screen.queryByRole('option', { name: '소설' })).toBeNull()
   })
