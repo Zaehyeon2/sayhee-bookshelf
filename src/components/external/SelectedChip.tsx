@@ -4,11 +4,19 @@ interface Props {
   title: string
   byline?: string
   coverUrl?: string | null
+  fallbackIcon?: string
   onClear: () => void
   onReopen: () => void
 }
 
-export function SelectedChip({ title, byline, coverUrl, onClear, onReopen }: Props) {
+export function SelectedChip({
+  title,
+  byline,
+  coverUrl,
+  fallbackIcon,
+  onClear,
+  onReopen,
+}: Props) {
   return (
     <div className="flex items-center gap-3 px-3 py-2 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface-2)] border border-[var(--color-border)]">
       {coverUrl ? (
@@ -25,7 +33,7 @@ export function SelectedChip({ title, byline, coverUrl, onClear, onReopen }: Pro
         />
       ) : (
         <div className="w-9 h-[52px] rounded-sm bg-[var(--color-surface)] flex items-center justify-center text-[var(--color-text-muted)] text-lg">
-          📚
+          {fallbackIcon ?? '📚'}
         </div>
       )}
       <div className="min-w-0 flex-1">

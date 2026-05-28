@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { SearchDropdown } from './external/SearchDropdown'
 import { SelectedChip } from './external/SelectedChip'
 import { useExternalSearch } from './external/useExternalSearch'
@@ -29,6 +29,10 @@ export function ExternalBookSearchBar({ initial, onSelect, onClear }: Props) {
   const [showChip, setShowChip] = useState(
     Boolean(initial?.isbn) && Boolean(initial?.title),
   )
+  // Sync chip visibility with prop changes (e.g. after router.refresh()).
+  useEffect(() => {
+    setShowChip(Boolean(initial?.isbn) && Boolean(initial?.title))
+  }, [initial?.isbn, initial?.title])
   const { query, setQuery, state, reset } = useExternalSearch<string>({
     searchUrl: '/api/external/books/search',
     byExternalUrl: '/api/books/by-external',
@@ -40,6 +44,7 @@ export function ExternalBookSearchBar({ initial, onSelect, onClear }: Props) {
         title={initial.title ?? ''}
         byline={initial.byline}
         coverUrl={initial.coverUrl}
+        fallbackIcon="📚"
         onClear={() => {
           setShowChip(false)
           onClear()

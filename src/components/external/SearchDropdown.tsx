@@ -11,7 +11,7 @@ export interface SearchDropdownProps<T> {
   state:
     | { kind: 'idle' }
     | { kind: 'loading' }
-    | { kind: 'error'; message: string }
+    | { kind: 'error'; message: string; retryAfterSeconds?: number }
     | { kind: 'ok'; items: T[]; counts: Record<string, number> }
   onSelect: (item: T) => void
   renderItem: (item: T, count: number) => ReactNode
@@ -49,7 +49,10 @@ export function SearchDropdown<T>({
             </div>
           )}
           {state.kind === 'error' && (
-            <div className="px-4 py-3 text-[13px] text-[var(--color-danger)]">{state.message}</div>
+            <div className="px-4 py-3 text-[13px] text-[var(--color-danger)]">
+              {state.message}
+              {state.retryAfterSeconds != null && ` (${state.retryAfterSeconds}초 후 다시 시도)`}
+            </div>
           )}
           {state.kind === 'ok' && state.items.length === 0 && (
             <Command.Empty className="px-4 py-3 text-[13px] text-[var(--color-text-muted)]">

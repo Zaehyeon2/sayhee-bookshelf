@@ -30,6 +30,12 @@ export async function GET(req: Request): Promise<Response> {
     )
   }
 
-  const map = await countBooksByExternalIds(db, user.id, parsed.data.ids)
+  // Strict canonical-form check: only accepts 13-digit ISBN numerals.
+  // Mirrors pickIsbn13 in adapters — keeps dedup invariant tight.
+  const validIds = parsed.data.ids.filter((id) => /^\d{13}$/.test(id))
+  if (validIds.length === 0) {
+    return NextResponse.json({ counts: {} })
+  }
+  const map = await countBooksByExternalIds(db, user.id, validIds)
   return NextResponse.json({ counts: Object.fromEntries(map) })
 }

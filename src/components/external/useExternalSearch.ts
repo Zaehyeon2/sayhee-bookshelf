@@ -9,7 +9,7 @@ const MIN_Q = 2
 export type SearchState<TId extends string | number> =
   | { kind: 'idle' }
   | { kind: 'loading' }
-  | { kind: 'error'; message: string }
+  | { kind: 'error'; message: string; retryAfterSeconds?: number }
   | { kind: 'ok'; items: ExternalSearchItem<TId>[]; counts: Record<string, number> }
 
 interface Options {
@@ -55,7 +55,15 @@ export function useExternalSearch<TId extends string | number>(opts: Options) {
           const body: { error?: unknown } = await res.json().catch(() => ({}))
           const message =
             typeof body.error === 'string' ? body.error : '검색 실패'
-          setState({ kind: 'error', message })
+          const retryAfterHeader = res.headers.get('retry-after')
+          const retryAfterSeconds = retryAfterHeader ? Number(retryAfterHeader) : undefined
+          setState({
+            kind: 'error',
+            message,
+            retryAfterSeconds: Number.isFinite(retryAfterSeconds)
+              ? retryAfterSeconds
+              : undefined,
+          })
           return
         }
         const data = (await res.json()) as ExternalSearchResponse<TId>
