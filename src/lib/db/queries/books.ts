@@ -424,3 +424,137 @@ export async function countBooksByExternalIds(
   }
   return counts
 }
+
+// ─── works (external-id aggregation) ─────────────────────────────────────────
+// MULTITENANT INVARIANT EXCEPTION: 아래 4개 함수는 authorUserId 필터가 없는
+// cross-user read 경로 — /works 작품별 별점·한줄평 묶음용.
+// 한줄평 유무와 무관하게 published 항목 모두 포함 (별점 집계 왜곡 방지).
+// 다른 모든 user-scoped 쿼리는 본인 스코프 유지.
+
+export type BookSiteAggregate = { avg: number; cnt: number }
+
+export async function getBookAggregatesByIsbns(
+  db: Db,
+  isbns: string[],
+): Promise<Map<string, BookSiteAggregate>> {
+  const out = new Map<string, BookSiteAggregate>()
+  if (isbns.length === 0) return out
+  const rows = await db
+    .select({
+      isbn: books.isbn,
+      avg: sql<number>`AVG(${books.rating})`,
+      cnt: sql<number>`COUNT(*)`,
+    })
+    .from(books)
+    .where(
+      and(
+        eq(books.isPublic, 1),
+        sql`${books.publishedAt} IS NOT NULL`,
+        inArray(books.isbn, isbns),
+      ),
+    )
+    .groupBy(books.isbn)
+  for (const r of rows) {
+    if (r.isbn) out.set(r.isbn, { avg: Number(r.avg), cnt: Number(r.cnt) })
+  }
+  return out
+}
+
+export type BookReviewItem = {
+  id: number
+  slug: string
+  oneLineReview: string | null
+  rating: number
+  publishedAt: number
+  authorUsername: string
+  authorDisplayName: string
+}
+
+export async function listBookReviewsByIsbn(
+  db: Db,
+  isbn: string,
+  opts: { limit: number; offset?: number },
+): Promise<BookReviewItem[]> {
+  let q = db
+    .select({
+      id: books.id,
+      slug: books.slug,
+      oneLineReview: books.oneLineReview,
+      rating: books.rating,
+      publishedAt: books.publishedAt,
+      authorUsername: users.username,
+      authorDisplayName: users.displayName,
+    })
+    .from(books)
+    .innerJoin(users, eq(books.authorUserId, users.id))
+    .where(
+      and(
+        eq(books.isPublic, 1),
+        sql`${books.publishedAt} IS NOT NULL`,
+        eq(books.isbn, isbn),
+      ),
+    )
+    .orderBy(desc(books.publishedAt))
+    .$dynamic()
+  q = q.limit(opts.limit)
+  if (opts.offset !== undefined) q = q.offset(opts.offset)
+  const rows = await q
+  return rows.map((r) => ({ ...r, publishedAt: r.publishedAt as number }))
+}
+
+export async function countBookReviewsByIsbn(db: Db, isbn: string): Promise<number> {
+  const rows = await db
+    .select({ n: sql<number>`COUNT(*)` })
+    .from(books)
+    .where(
+      and(
+        eq(books.isPublic, 1),
+        sql`${books.publishedAt} IS NOT NULL`,
+        eq(books.isbn, isbn),
+      ),
+    )
+  return Number(rows[0]?.n ?? 0)
+}
+
+export type RatingDistribution = {
+  avg: number
+  cnt: number
+  buckets: Record<number, number> // keys 1..10
+}
+
+export async function getBookRatingDistributionByIsbn(
+  db: Db,
+  isbn: string,
+): Promise<RatingDistribution> {
+  const rows = await db
+    .select({
+      rating: books.rating,
+      cnt: sql<number>`COUNT(*)`,
+    })
+    .from(books)
+    .where(
+      and(
+        eq(books.isPublic, 1),
+        sql`${books.publishedAt} IS NOT NULL`,
+        eq(books.isbn, isbn),
+      ),
+    )
+    .groupBy(books.rating)
+
+  const buckets: Record<number, number> = {}
+  for (let r = 1; r <= 10; r++) buckets[r] = 0
+  let total = 0
+  let weightedSum = 0
+  for (const row of rows) {
+    const r = Number(row.rating)
+    const c = Number(row.cnt)
+    buckets[r] = c
+    total += c
+    weightedSum += r * c
+  }
+  return {
+    avg: total === 0 ? 0 : weightedSum / total,
+    cnt: total,
+    buckets,
+  }
+}
