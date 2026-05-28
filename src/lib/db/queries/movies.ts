@@ -401,6 +401,8 @@ export async function countMovies(
 /**
  * 본인 movies 중 주어진 tmdbId들 각각 몇 번 기록했는지 반환.
  * 멀티테넌트 invariant: authorUserId로 필터.
+ *
+ * @returns Map<tmdbId, count>. JSON 응답 직렬화 시 Object.fromEntries(map) 변환 필요.
  */
 export async function countMoviesByExternalIds(
   db: Db,
@@ -408,6 +410,7 @@ export async function countMoviesByExternalIds(
   tmdbIds: number[],
 ): Promise<Map<number, number>> {
   const counts = new Map<number, number>()
+  // Empty array → skip query; inArray([]) generates invalid SQL on some drivers.
   if (tmdbIds.length === 0) return counts
   const rows = await db
     .select({ tmdbId: movies.tmdbId, n: sql<number>`COUNT(*)` })

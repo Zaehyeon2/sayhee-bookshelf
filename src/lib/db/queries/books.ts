@@ -401,6 +401,8 @@ export async function countBooks(
 /**
  * 본인 books 중 주어진 isbn들 각각 몇 번 기록했는지 반환.
  * 멀티테넌트 invariant: authorUserId로 필터.
+ *
+ * @returns Map<isbn, count>. JSON 응답 직렬화 시 Object.fromEntries(map) 변환 필요.
  */
 export async function countBooksByExternalIds(
   db: Db,
@@ -408,6 +410,7 @@ export async function countBooksByExternalIds(
   isbns: string[],
 ): Promise<Map<string, number>> {
   const counts = new Map<string, number>()
+  // Empty array → skip query; inArray([]) generates invalid SQL on some drivers.
   if (isbns.length === 0) return counts
   const rows = await db
     .select({ isbn: books.isbn, n: sql<number>`COUNT(*)` })

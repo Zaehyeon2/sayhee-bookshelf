@@ -140,4 +140,14 @@ describe('countBooksByExternalIds', () => {
     const result = await countBooksByExternalIds(db, a.id, ['nonexistent'])
     expect(result.size).toBe(0)
   })
+
+  it('does not count rows with null isbn (regression guard for SQLite IN semantics)', async () => {
+    const a = await createUser(db, { username: 'aaaa' })
+    await createBook(db, a.id, { isbn: '9781', title: 'with-isbn' })
+    await createBook(db, a.id, { isbn: null, title: 'no-isbn' })
+
+    const result = await countBooksByExternalIds(db, a.id, ['9781'])
+    expect(result.get('9781')).toBe(1)
+    expect(result.size).toBe(1)
+  })
 })

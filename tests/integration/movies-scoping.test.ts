@@ -222,11 +222,12 @@ describe('countMoviesByExternalIds', () => {
   it('counts only own movies by tmdbId (multi-tenant isolation)', async () => {
     const a = await createUser(db, { username: 'aaaa' })
     const b = await createUser(db, { username: 'bbbb' })
-    await createMovie(db, a.id, { tmdbId: 550, title: 'A' })
+    await createMovie(db, a.id, { tmdbId: 550, title: 'A1' })
+    await createMovie(db, a.id, { tmdbId: 550, title: 'A2' })
     await createMovie(db, b.id, { tmdbId: 550, title: 'B' })
 
     const result = await countMoviesByExternalIds(db, a.id, [550, 12345])
-    expect(result.get(550)).toBe(1)
+    expect(result.get(550)).toBe(2) // user a has 2; user b's 1 is excluded
     expect(result.get(12345)).toBeUndefined()
   })
 
@@ -234,5 +235,15 @@ describe('countMoviesByExternalIds', () => {
     const a = await createUser(db, { username: 'aaaa' })
     const result = await countMoviesByExternalIds(db, a.id, [])
     expect(result.size).toBe(0)
+  })
+
+  it('does not count rows with null tmdbId (regression guard for SQLite IN semantics)', async () => {
+    const a = await createUser(db, { username: 'aaaa' })
+    await createMovie(db, a.id, { tmdbId: 550, title: 'with-tmdb' })
+    await createMovie(db, a.id, { tmdbId: null, title: 'no-tmdb' })
+
+    const result = await countMoviesByExternalIds(db, a.id, [550])
+    expect(result.get(550)).toBe(1)
+    expect(result.size).toBe(1)
   })
 })
