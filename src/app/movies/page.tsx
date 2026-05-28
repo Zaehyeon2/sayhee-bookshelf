@@ -76,7 +76,7 @@ export default async function MoviesPage({ searchParams }: SP) {
   return (
     <div className="space-y-6">
       <Suspense fallback={null}>
-        <SearchBox />
+        <SearchBox basePath="/movies" placeholder="제목·감독·본문 검색" />
         <Filters basePath="/movies" genres={MOVIE_GENRES} />
       </Suspense>
       <div className="flex items-baseline justify-between">
