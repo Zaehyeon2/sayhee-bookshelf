@@ -49,8 +49,7 @@ describe('searchBooksExternal', () => {
       year: 1999,
       coverUrl: 'https://image.nl.go.kr/cover1.jpg',
     })
-    // KDC 843 first digit = 8 (문학) — BOOK_GENRES에 '문학' 없음(가장 가까운 '소설'은 verbatim 아님) → undefined
-    expect(r[0].genre).toBeUndefined()
+    expect(r[0].genre).toBe('소설') // KDC 843 = 영미문학 → 8 → 소설 (default fiction)
     expect(r[1].coverUrl).toBeUndefined() // TITLE_URL omitted
   })
 
@@ -118,5 +117,34 @@ describe('searchBooksExternal', () => {
     globalThis.fetch = xmlStub(xml)
     const r = await searchBooksExternal('x', { limit: 1 })
     expect(r[0].externalId).toBe('978222')
+  })
+
+  it('returns [] when <docs> is empty (fast-xml-parser stringifies)', async () => {
+    const xml = `<?xml version="1.0"?><metadata><docs></docs></metadata>`
+    globalThis.fetch = xmlStub(xml)
+    const r = await searchBooksExternal('x', { limit: 1 })
+    expect(r).toEqual([])
+  })
+
+  it('drops docs with no identifier (empty EA_ISBN/SET_ISBN/CONTROL_NO)', async () => {
+    const xml = `<?xml version="1.0"?><metadata><TOTAL_COUNT>1</TOTAL_COUNT><docs><e><TITLE>익명 책</TITLE><AUTHOR>저자</AUTHOR></e></docs></metadata>`
+    globalThis.fetch = xmlStub(xml)
+    const r = await searchBooksExternal('x', { limit: 1 })
+    expect(r).toEqual([])
+  })
+
+  it('rejects javascript: scheme in TITLE_URL', async () => {
+    const xml = `<?xml version="1.0"?><metadata><TOTAL_COUNT>1</TOTAL_COUNT><docs><e><TITLE>t</TITLE><AUTHOR>a</AUTHOR><EA_ISBN>9781</EA_ISBN><TITLE_URL>javascript:alert(1)</TITLE_URL></e></docs></metadata>`
+    globalThis.fetch = xmlStub(xml)
+    const r = await searchBooksExternal('x', { limit: 1 })
+    expect(r[0].coverUrl).toBeUndefined()
+  })
+
+  it('returns [] on empty query (defensive)', async () => {
+    // No fetch stub — function should short-circuit before reaching fetch.
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error('should not be called'))
+    const r = await searchBooksExternal('   ', { limit: 1 })
+    expect(r).toEqual([])
+    expect(globalThis.fetch).not.toHaveBeenCalled()
   })
 })

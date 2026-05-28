@@ -4,13 +4,15 @@ import type { BookSearchItem } from './types'
 
 const SEOJI_ENDPOINT = 'https://www.nl.go.kr/seoji/SearchApi.do'
 
-// KDC 첫 자리 → BookGenre verbatim 매칭만 (매핑 없으면 omit).
-// BookGenre union으로 컴파일 타임에 드리프트 차단 — src/lib/genres.ts 참고.
-// KDC: 0 총류, 1 철학, 2 종교, 3 사회과학, 4 자연과학, 5 기술과학, 6 예술, 7 언어, 8 문학, 9 역사.
-// BOOK_GENRES와 verbatim 일치하는 것만 매핑 — 나머지는 omit.
+// KDC 첫 자리 → BookGenre 매핑.
+// '2', '6', '9': BOOK_GENRES와 verbatim 일치 — 정확.
+// '8': 문학 → '소설' best-effort default (한국 단행본 대부분이 KDC 8x).
+//   시·에세이·판타지/SF는 사용자가 수동으로 수정. 잘못된 자동 매칭이 빈 자동 매칭보다 UX 우위.
+// 나머지(0/1/3/4/5/7): verbatim 매칭 없음, omit.
 const KDC_GENRE_MAP: Readonly<Record<string, BookGenre>> = {
   '2': '종교',
   '6': '예술',
+  '8': '소설', // KDC 8 = 문학 — fiction default; user can change to 시/에세이/판타지·SF
   '9': '역사',
 }
 
@@ -30,7 +32,23 @@ const parser = new XMLParser({
   ignoreAttributes: true,
   trimValues: true,
   parseTagValue: false,
+  // Security hardening — explicit to survive dep upgrades:
+  processEntities: false,
+  allowBooleanAttributes: false,
+  htmlEntities: false,
 })
+
+function safeCoverUrl(raw: string | undefined): string | undefined {
+  const u = raw?.trim()
+  if (!u) return undefined
+  try {
+    const parsed = new URL(u)
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return undefined
+    return parsed.toString()
+  } catch {
+    return undefined
+  }
+}
 
 interface SeojiDoc {
   TITLE?: string
@@ -56,8 +74,12 @@ export async function searchBooksExternal(
 ): Promise<BookSearchItem[]> {
   const key = process.env.NL_KR_API_KEY
   if (!key) throw new Error('NL_KR_API_KEY env var not set')
+  if (!query.trim()) return []
 
   const url = new URL(SEOJI_ENDPOINT)
+  // NOTE: SeoJi API only supports query-string auth (no Authorization header).
+  // cert_key will appear in upstream access logs / Referer chains by design.
+  // Mitigation: proxy route (Task 6) MUST NOT log this URL on error.
   url.searchParams.set('cert_key', key)
   url.searchParams.set('result_style', 'xml')
   url.searchParams.set('page_no', '1')
@@ -84,15 +106,18 @@ export async function searchBooksExternal(
   if (!eRaw) return []
   const docs: SeojiDoc[] = Array.isArray(eRaw) ? eRaw : [eRaw]
 
-  return docs.slice(0, opts.limit).map((d) => {
-    const isbn = d.EA_ISBN?.trim() || d.SET_ISBN?.trim() || d.CONTROL_NO?.trim() || ''
-    return {
-      externalId: isbn,
-      title: d.TITLE?.trim() ?? '',
-      byline: d.AUTHOR?.trim() ?? '',
-      year: parsePubYear(d.PUBLISH_PREDATE),
-      genre: mapKdcToGenre(d.KDC),
-      coverUrl: d.TITLE_URL?.trim() || undefined,
-    }
+  return docs.slice(0, opts.limit).flatMap((d) => {
+    const isbn = d.EA_ISBN?.trim() || d.SET_ISBN?.trim() || d.CONTROL_NO?.trim()
+    if (!isbn) return []
+    return [
+      {
+        externalId: isbn,
+        title: d.TITLE?.trim() ?? '',
+        byline: d.AUTHOR?.trim() ?? '',
+        year: parsePubYear(d.PUBLISH_PREDATE),
+        genre: mapKdcToGenre(d.KDC),
+        coverUrl: safeCoverUrl(d.TITLE_URL),
+      },
+    ]
   })
 }
