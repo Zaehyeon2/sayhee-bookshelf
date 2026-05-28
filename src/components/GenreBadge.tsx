@@ -9,7 +9,7 @@ export function GenreBadge({ genre, active = false }: Props) {
     : 'bg-[var(--color-surface-2)] text-[var(--color-text-muted)]'
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-medium ${cls}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-medium shrink-0 whitespace-nowrap ${cls}`}
     >
       {genre}
     </span>
