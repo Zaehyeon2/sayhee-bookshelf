@@ -57,11 +57,12 @@ test.describe('External book search → autofill → save', () => {
       byline: '조앤 K. 롤링',
       year: 1999,
       genre: '소설',
-      // Cover URL points at a stable test image; image load failure is
-      // gracefully hidden by the onError handler in SearchDropdown / SelectedChip,
-      // but the detail page renders next/image which we don't gate on rendering
-      // completion (we only check the <img> exists in the DOM).
-      coverUrl: 'https://image.nl.go.kr/test.jpg',
+      // Cover URL points at an allowlisted host (per next.config.ts
+      // remotePatterns) so subsequent /feed renders don't throw on
+      // next/image host validation when this stubbed book is persisted.
+      // The path is intentionally unreachable; runtime image load failure
+      // is hidden by the onError handler in SearchDropdown / SelectedChip.
+      coverUrl: 'https://image.tmdb.org/test.jpg',
     })
 
     // The search bar lives at the top of the form. Type the query to trigger
