@@ -1,4 +1,4 @@
-import { and, desc, eq, like, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, like, sql } from 'drizzle-orm'
 import { books, bookTags, tags, users } from '../schema'
 import { toSlug } from '@/lib/slug'
 import type { CreateBookInput, UpdateBookInput } from '@/lib/validations'
@@ -53,6 +53,9 @@ export async function createBook(
             rating: input.rating,
             content: input.content ?? '',
             oneLineReview: input.oneLineReview ?? null,
+            isbn: input.isbn ?? null,
+            coverUrl: input.coverUrl ?? null,
+            externalSource: input.externalSource ?? null,
             isPublic,
             publishedAt,
             slug: candidate,
@@ -118,6 +121,9 @@ export async function updateBook(
         ...(input.rating !== undefined && { rating: input.rating }),
         ...(input.content !== undefined && { content: input.content }),
         ...(input.oneLineReview !== undefined && { oneLineReview: input.oneLineReview }),
+        ...(input.isbn !== undefined && { isbn: input.isbn }),
+        ...(input.coverUrl !== undefined && { coverUrl: input.coverUrl }),
+        ...(input.externalSource !== undefined && { externalSource: input.externalSource }),
         ...(nextIsPublic !== undefined && { isPublic: nextIsPublic }),
         ...(nextPublishedAt !== undefined && { publishedAt: nextPublishedAt }),
         updatedAt: now,
@@ -390,4 +396,26 @@ export async function countBooks(
     .from(books)
     .where(and(...conditions))
   return Number(rows[0]?.n ?? 0)
+}
+
+/**
+ * 본인 books 중 주어진 isbn들 각각 몇 번 기록했는지 반환.
+ * 멀티테넌트 invariant: authorUserId로 필터.
+ */
+export async function countBooksByExternalIds(
+  db: Db,
+  authorUserId: number,
+  isbns: string[],
+): Promise<Map<string, number>> {
+  const counts = new Map<string, number>()
+  if (isbns.length === 0) return counts
+  const rows = await db
+    .select({ isbn: books.isbn, n: sql<number>`COUNT(*)` })
+    .from(books)
+    .where(and(eq(books.authorUserId, authorUserId), inArray(books.isbn, isbns)))
+    .groupBy(books.isbn)
+  for (const r of rows) {
+    if (r.isbn != null) counts.set(r.isbn, Number(r.n))
+  }
+  return counts
 }

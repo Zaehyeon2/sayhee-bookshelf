@@ -6,6 +6,7 @@ import {
   updateBook,
   deleteBook,
   searchBooks,
+  countBooksByExternalIds,
 } from '@/lib/db/queries'
 import { makeTestDb, type TestDb } from '../setup-db'
 import { createUser, createBook } from '../factories'
@@ -106,5 +107,37 @@ describe('book queries — user scoping (data isolation)', () => {
     const aBook = await createBook(db, a.id, { title: 'default-public' })
     // factory는 override가 없으면 schema default(1)을 받음
     expect(aBook.isPublic).toBe(1)
+  })
+})
+
+describe('countBooksByExternalIds', () => {
+  let db: TestDb
+
+  beforeEach(async () => {
+    ;({ db } = await makeTestDb())
+  })
+
+  it('counts only own books by isbn (multi-tenant isolation)', async () => {
+    const a = await createUser(db, { username: 'aaaa' })
+    const b = await createUser(db, { username: 'bbbb' })
+    await createBook(db, a.id, { isbn: '9781', title: 'A1' })
+    await createBook(db, a.id, { isbn: '9781', title: 'A2' })
+    await createBook(db, b.id, { isbn: '9781', title: 'B1' })
+
+    const result = await countBooksByExternalIds(db, a.id, ['9781', '9999'])
+    expect(result.get('9781')).toBe(2)
+    expect(result.get('9999')).toBeUndefined()
+  })
+
+  it('returns empty Map when no isbns provided', async () => {
+    const a = await createUser(db, { username: 'aaaa' })
+    const result = await countBooksByExternalIds(db, a.id, [])
+    expect(result.size).toBe(0)
+  })
+
+  it('returns empty Map when no books match', async () => {
+    const a = await createUser(db, { username: 'aaaa' })
+    const result = await countBooksByExternalIds(db, a.id, ['nonexistent'])
+    expect(result.size).toBe(0)
   })
 })

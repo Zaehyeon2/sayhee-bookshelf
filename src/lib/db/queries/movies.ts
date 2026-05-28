@@ -1,4 +1,4 @@
-import { and, desc, eq, like, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, like, sql } from 'drizzle-orm'
 import { movies, movieTags, tags, users } from '../schema'
 import { toSlug } from '@/lib/slug'
 import type { CreateMovieInput, UpdateMovieInput } from '@/lib/validations'
@@ -53,6 +53,9 @@ export async function createMovie(
             rating: input.rating,
             content: input.content ?? '',
             oneLineReview: input.oneLineReview ?? null,
+            tmdbId: input.tmdbId ?? null,
+            coverUrl: input.coverUrl ?? null,
+            externalSource: input.externalSource ?? null,
             isPublic,
             publishedAt,
             slug: candidate,
@@ -118,6 +121,9 @@ export async function updateMovie(
         ...(input.rating !== undefined && { rating: input.rating }),
         ...(input.content !== undefined && { content: input.content }),
         ...(input.oneLineReview !== undefined && { oneLineReview: input.oneLineReview }),
+        ...(input.tmdbId !== undefined && { tmdbId: input.tmdbId }),
+        ...(input.coverUrl !== undefined && { coverUrl: input.coverUrl }),
+        ...(input.externalSource !== undefined && { externalSource: input.externalSource }),
         ...(nextIsPublic !== undefined && { isPublic: nextIsPublic }),
         ...(nextPublishedAt !== undefined && { publishedAt: nextPublishedAt }),
         updatedAt: now,
@@ -390,4 +396,26 @@ export async function countMovies(
     .from(movies)
     .where(and(...conditions))
   return Number(rows[0]?.n ?? 0)
+}
+
+/**
+ * 본인 movies 중 주어진 tmdbId들 각각 몇 번 기록했는지 반환.
+ * 멀티테넌트 invariant: authorUserId로 필터.
+ */
+export async function countMoviesByExternalIds(
+  db: Db,
+  authorUserId: number,
+  tmdbIds: number[],
+): Promise<Map<number, number>> {
+  const counts = new Map<number, number>()
+  if (tmdbIds.length === 0) return counts
+  const rows = await db
+    .select({ tmdbId: movies.tmdbId, n: sql<number>`COUNT(*)` })
+    .from(movies)
+    .where(and(eq(movies.authorUserId, authorUserId), inArray(movies.tmdbId, tmdbIds)))
+    .groupBy(movies.tmdbId)
+  for (const r of rows) {
+    if (r.tmdbId != null) counts.set(r.tmdbId, Number(r.n))
+  }
+  return counts
 }

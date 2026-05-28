@@ -50,6 +50,9 @@ export async function createBook(
       ...(overrides.isPublic !== undefined && { isPublic: overrides.isPublic }),
       ...(overrides.publishedAt !== undefined && { publishedAt: overrides.publishedAt }),
       ...(overrides.oneLineReview !== undefined && { oneLineReview: overrides.oneLineReview }),
+      ...(overrides.isbn !== undefined && { isbn: overrides.isbn }),
+      ...(overrides.coverUrl !== undefined && { coverUrl: overrides.coverUrl }),
+      ...(overrides.externalSource !== undefined && { externalSource: overrides.externalSource }),
     })
     .returning()
   return b
@@ -97,6 +100,9 @@ export async function createMovie(
       ...(overrides.isPublic !== undefined && { isPublic: overrides.isPublic }),
       ...(overrides.publishedAt !== undefined && { publishedAt: overrides.publishedAt }),
       ...(overrides.oneLineReview !== undefined && { oneLineReview: overrides.oneLineReview }),
+      ...(overrides.tmdbId !== undefined && { tmdbId: overrides.tmdbId }),
+      ...(overrides.coverUrl !== undefined && { coverUrl: overrides.coverUrl }),
+      ...(overrides.externalSource !== undefined && { externalSource: overrides.externalSource }),
     })
     .returning()
   return m

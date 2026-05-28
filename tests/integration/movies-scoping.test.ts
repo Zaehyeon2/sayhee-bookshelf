@@ -7,6 +7,7 @@ import {
   getMovieBySlug,
   listMovies,
   countMovies,
+  countMoviesByExternalIds,
   suggestTags,
 } from '@/lib/db/queries'
 import { makeTestDb, type TestDb } from '../setup-db'
@@ -208,5 +209,30 @@ describe('movie queries — user scoping (data isolation)', () => {
     } finally {
       client.close()
     }
+  })
+})
+
+describe('countMoviesByExternalIds', () => {
+  let db: TestDb
+
+  beforeEach(async () => {
+    ;({ db } = await makeTestDb())
+  })
+
+  it('counts only own movies by tmdbId (multi-tenant isolation)', async () => {
+    const a = await createUser(db, { username: 'aaaa' })
+    const b = await createUser(db, { username: 'bbbb' })
+    await createMovie(db, a.id, { tmdbId: 550, title: 'A' })
+    await createMovie(db, b.id, { tmdbId: 550, title: 'B' })
+
+    const result = await countMoviesByExternalIds(db, a.id, [550, 12345])
+    expect(result.get(550)).toBe(1)
+    expect(result.get(12345)).toBeUndefined()
+  })
+
+  it('returns empty Map when no tmdbIds provided', async () => {
+    const a = await createUser(db, { username: 'aaaa' })
+    const result = await countMoviesByExternalIds(db, a.id, [])
+    expect(result.size).toBe(0)
   })
 })
