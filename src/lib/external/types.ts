@@ -7,6 +7,8 @@ export interface ExternalSearchItem<TId extends string | number> {
   year?: number
   genre?: string
   coverUrl?: string
+  /** Upstream rating (0-10). TMDB vote_average for movies; Naver Books does not expose. */
+  externalRating?: number
 }
 
 export interface ExternalSearchResponse<TId extends string | number> {

@@ -26,6 +26,7 @@ interface TmdbSearchResponse {
     release_date?: string
     poster_path?: string | null
     genre_ids?: number[]
+    vote_average?: number
   }>
 }
 
@@ -74,6 +75,13 @@ export async function searchMoviesExternal(
     const genre = primaryGenreId != null ? TMDB_GENRE_MAP[primaryGenreId] : undefined
     const subtitle =
       r.original_title && r.original_title !== r.title ? r.original_title : undefined
+    // TMDB returns 0 when there are no ratings yet — surface as absent.
+    const externalRating =
+      typeof r.vote_average === 'number' &&
+      Number.isFinite(r.vote_average) &&
+      r.vote_average > 0
+        ? Math.round(r.vote_average * 10) / 10
+        : undefined
     return {
       externalId: r.id,
       title: r.title,
@@ -84,6 +92,7 @@ export async function searchMoviesExternal(
       year,
       genre,
       coverUrl: r.poster_path ? `${POSTER_PREFIX}${r.poster_path}` : undefined,
+      externalRating,
     }
   })
 }

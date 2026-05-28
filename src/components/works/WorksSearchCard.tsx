@@ -8,6 +8,8 @@ interface BookCardProps {
   byline: string
   year: number | undefined
   coverUrl: string | undefined
+  /** Naver Books does not expose ratings; book cards stay undefined. */
+  externalRating: number | undefined
   siteAgg: { avg: number; cnt: number }
 }
 
@@ -18,6 +20,8 @@ interface MovieCardProps {
   byline: string
   year: number | undefined
   coverUrl: string | undefined
+  /** TMDB vote_average (0-10). undefined when no upstream ratings yet. */
+  externalRating: number | undefined
   siteAgg: { avg: number; cnt: number }
 }
 
@@ -52,19 +56,24 @@ export function WorksSearchCard(props: Props) {
             {props.byline}
             {props.year ? ` · ${props.year}` : ''}
           </p>
-          <div className="mt-3 flex items-center gap-3 text-[12px]">
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]">
+            {typeof props.externalRating === 'number' && (
+              <span className="text-[var(--color-text-weak)] font-tabular tabular-nums">
+                외부 ★ {props.externalRating.toFixed(1)}
+              </span>
+            )}
             {props.siteAgg.cnt > 0 ? (
               <>
                 <span className="font-semibold text-[var(--color-text-strong)] font-tabular tabular-nums">
-                  ★ {props.siteAgg.avg.toFixed(1)}
+                  사이트 ★ {props.siteAgg.avg.toFixed(1)}
                 </span>
                 <span className="text-[var(--color-text-weak)] font-tabular tabular-nums">
                   📝 {props.siteAgg.cnt}
                 </span>
               </>
-            ) : (
+            ) : typeof props.externalRating !== 'number' ? (
               <span className="text-[var(--color-text-weak)]">아직 평가 없음</span>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

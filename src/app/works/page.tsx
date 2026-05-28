@@ -101,6 +101,7 @@ async function BookResults({ q }: { q: string }) {
           byline={it.byline}
           year={it.year}
           coverUrl={it.coverUrl}
+          externalRating={it.externalRating}
           siteAgg={agg.get(it.externalId) ?? { avg: 0, cnt: 0 }}
         />
       ))}
@@ -144,6 +145,7 @@ async function MovieResults({ q }: { q: string }) {
           byline={it.byline}
           year={it.year}
           coverUrl={it.coverUrl}
+          externalRating={it.externalRating}
           siteAgg={agg.get(it.externalId) ?? { avg: 0, cnt: 0 }}
         />
       ))}
