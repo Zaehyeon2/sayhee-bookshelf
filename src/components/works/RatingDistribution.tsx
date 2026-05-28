@@ -16,9 +16,12 @@ export function RatingDistribution({ distribution }: Props) {
       {Array.from({ length: 10 }, (_, i) => 10 - i).map((rating) => {
         const count = distribution.buckets[rating] ?? 0
         const ratio = maxBucket === 0 ? 0 : (count / maxBucket) * 100
+        const score = (rating / 2).toFixed(1)
         return (
           <div key={rating} className="flex items-center gap-3 text-[12px] font-tabular">
-            <span className="w-6 text-right text-[var(--color-text-muted)]">{rating}</span>
+            <span className="w-12 text-right text-[var(--color-text-muted)] tabular-nums">
+              <span aria-hidden="true">★</span> {score}
+            </span>
             <div className="flex-1 h-3 rounded-sm bg-[var(--color-surface-2)] overflow-hidden">
               <div
                 className="h-full bg-[var(--color-toss-blue)]"

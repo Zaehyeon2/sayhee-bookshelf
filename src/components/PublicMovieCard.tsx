@@ -5,7 +5,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { GenreBadge } from './GenreBadge'
-import { RatingScore } from './RatingScore'
+import { RatingStars } from './RatingStars'
 import type { PublicMovieCard as PublicMovieCardItem } from '@/lib/db/queries'
 import { MAX_SEARCH_Q } from '@/lib/validations'
 
@@ -49,12 +49,18 @@ export function PublicMovieCard({ item }: Props) {
             />
           )}
           <div className="min-w-0 flex-1">
-            <h3 className="text-[16px] font-bold leading-snug text-[var(--color-text-strong)] line-clamp-2">
-              {item.title}
-            </h3>
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="text-[16px] font-bold leading-snug text-[var(--color-text-strong)] line-clamp-2">
+                {item.title}
+              </h3>
+              <GenreBadge genre={item.genre} />
+            </div>
             <p className="mt-1 text-[13px] text-[var(--color-text-muted)] line-clamp-1">
               {item.director}
             </p>
+            <div className="mt-2">
+              <RatingStars value={item.rating} size="sm" />
+            </div>
           </div>
         </div>
         {item.oneLineReview && (
@@ -65,10 +71,6 @@ export function PublicMovieCard({ item }: Props) {
             </p>
           </blockquote>
         )}
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <RatingScore value={item.rating} />
-          <GenreBadge genre={item.genre} />
-        </div>
         <div className="mt-4 pt-3 border-t border-[var(--color-border)] flex items-center justify-between text-[12px] text-[var(--color-text-weak)]">
           <span className="font-semibold text-[var(--color-text-muted)]">
             {item.authorDisplayName}
