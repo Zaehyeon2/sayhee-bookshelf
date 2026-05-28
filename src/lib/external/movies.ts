@@ -69,7 +69,9 @@ export async function searchMoviesExternal(
       r.release_date && /^\d{4}-/.test(r.release_date)
         ? Number(r.release_date.slice(0, 4))
         : undefined
-    const genre = r.genre_ids?.map((id) => TMDB_GENRE_MAP[id]).find(Boolean)
+    // Take TMDB's primary genre (first id). If unmapped → omit genre (user picks).
+    const primaryGenreId = r.genre_ids?.[0]
+    const genre = primaryGenreId != null ? TMDB_GENRE_MAP[primaryGenreId] : undefined
     const subtitle =
       r.original_title && r.original_title !== r.title ? r.original_title : undefined
     return {

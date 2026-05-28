@@ -87,7 +87,7 @@ describe('searchMoviesExternal', () => {
     await expect(searchMoviesExternal('x', { limit: 1 })).rejects.toThrow(/auth 401/)
   })
 
-  it('picks first mapped genre id when [0] is unmapped', async () => {
+  it('uses primary genre id [0] only; omits when unmapped', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -97,8 +97,8 @@ describe('searchMoviesExternal', () => {
       ),
     )
     const r = await searchMoviesExternal('x', { limit: 1 })
-    // 12 (모험) is not in our map; 28 (액션) is — should pick 액션.
-    expect(r[0].genre).toBe('액션')
+    // Primary genre 12 (모험) is unmapped — omit rather than fall back to 28.
+    expect(r[0].genre).toBeUndefined()
   })
 
   it('sends Authorization Bearer header instead of api_key query param', async () => {

@@ -1,7 +1,23 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { z } from 'zod'
 import type { ExternalSearchItem, ExternalSearchResponse } from '@/lib/external/types'
+
+const SearchResponseSchema = z.object({
+  source: z.enum(['naver', 'tmdb']),
+  items: z.array(
+    z.object({
+      externalId: z.union([z.string(), z.number()]),
+      title: z.string(),
+      byline: z.string(),
+      subtitle: z.string().optional(),
+      year: z.number().optional(),
+      genre: z.string().optional(),
+      coverUrl: z.string().optional(),
+    }),
+  ),
+})
 
 const DEBOUNCE_MS = 300
 const MIN_Q = 2
@@ -43,8 +59,8 @@ export function useExternalSearch<TId extends string | number>(opts: Options) {
       return
     }
 
-    setState({ kind: 'loading' })
     timerRef.current = setTimeout(async () => {
+      setState({ kind: 'loading' })
       const ctl = new AbortController()
       abortRef.current = ctl
       try {
@@ -66,7 +82,13 @@ export function useExternalSearch<TId extends string | number>(opts: Options) {
           })
           return
         }
-        const data = (await res.json()) as ExternalSearchResponse<TId>
+        const rawData = await res.json().catch(() => null)
+        const parsedData = SearchResponseSchema.safeParse(rawData)
+        if (!parsedData.success) {
+          setState({ kind: 'error', message: '검색 응답 형식이 올바르지 않아요' })
+          return
+        }
+        const data = parsedData.data as unknown as ExternalSearchResponse<TId>
 
         // Best-effort by-external lookup. Lookup failure (network/parse/non-OK)
         // must NOT discard the search results — fall through with counts={}.
