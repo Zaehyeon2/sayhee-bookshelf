@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { GenreBadge } from './GenreBadge'
-import { RatingStars } from './RatingStars'
+import { RatingScore } from './RatingScore'
 import { highlightMatch } from '@/lib/highlight'
 import type { MovieWithTags } from '@/lib/db/queries'
 
@@ -43,7 +43,7 @@ export function MovieCard({ movie, snippet, query }: Props) {
             </p>
           )}
           <div className="mt-4 flex items-center justify-between gap-2">
-            <RatingStars value={movie.rating} size="sm" />
+            <RatingScore value={movie.rating} />
             <div className="flex items-center gap-2">
               {movie.isPublic === 1 && (
                 <span

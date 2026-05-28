@@ -1,4 +1,4 @@
-import { RatingStars } from '../RatingStars'
+import { RatingScore } from '../RatingScore'
 
 interface Props {
   item: {
@@ -22,7 +22,7 @@ export function ReviewListItem({ item }: Props) {
   return (
     <article className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] transition h-full flex flex-col">
       <div className="flex items-center justify-between gap-3">
-        <RatingStars value={item.rating} size="sm" />
+        <RatingScore value={item.rating} />
         {/* TODO: link to /u/<username> when that route exists */}
         <span className="text-[13px] font-semibold text-[var(--color-text-muted)]">
           {item.authorDisplayName}

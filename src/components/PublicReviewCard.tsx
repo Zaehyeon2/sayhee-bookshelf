@@ -6,7 +6,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { GenreBadge } from './GenreBadge'
-import { RatingStars } from './RatingStars'
+import { RatingScore } from './RatingScore'
 import type { PublicBookCard } from '@/lib/db/queries'
 import { MAX_SEARCH_Q } from '@/lib/validations'
 
@@ -67,7 +67,7 @@ export function PublicReviewCard({ item }: Props) {
           </blockquote>
         )}
         <div className="mt-4 flex items-center justify-between gap-3">
-          <RatingStars value={item.rating} size="sm" />
+          <RatingScore value={item.rating} />
           <GenreBadge genre={item.genre} />
         </div>
         <div className="mt-4 pt-3 border-t border-[var(--color-border)] flex items-center justify-between text-[12px] text-[var(--color-text-weak)]">
