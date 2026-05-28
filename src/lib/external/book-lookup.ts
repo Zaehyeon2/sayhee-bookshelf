@@ -79,11 +79,22 @@ export async function lookupBookByIsbn(
   const item = data.items?.[0]
   if (!item) return null
 
-  const normalizedIsbn = pickIsbn13(item.isbn) || isbn
+  // Canonical 13-digit ISBN only — preserves dedup invariant with src/lib/external/books.ts.
+  // If neither Naver response nor input yields 13 digits, treat as not-found.
+  const naverIsbn13 = pickIsbn13(item.isbn)
+  const inputIsbn13 = /^\d{13}$/.test(isbn) ? isbn : ''
+  const normalizedIsbn = naverIsbn13 || inputIsbn13
+  if (!normalizedIsbn) return null
+
+  const title = stripBoldTags(item.title)
+  const author = stripBoldTags(item.author)
+  // Required fields — absence signals malformed upstream response.
+  if (!title || !author) return null
+
   return {
     isbn: normalizedIsbn,
-    title: stripBoldTags(item.title),
-    author: stripBoldTags(item.author),
+    title,
+    author,
     publisher: item.publisher?.trim() || undefined,
     year: parsePubYear(item.pubdate),
     coverUrl: safeCoverUrl(item.image),
