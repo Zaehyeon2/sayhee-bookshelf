@@ -4,11 +4,11 @@ import { isValidUsername } from './username-normalize'
 
 const dateRe = /^\d{4}-\d{2}-\d{2}$/
 
-const MAX_TAGS = 20
-const MAX_TAG_LEN = 30
-const MAX_CONTENT_LEN = 50_000
-const MAX_SEARCH_Q = 100
-const MAX_SLUG_LEN = 80
+export const MAX_TAGS = 20
+export const MAX_TAG_LEN = 30
+export const MAX_CONTENT_LEN = 50_000
+export const MAX_SEARCH_Q = 100
+export const MAX_SLUG_LEN = 80
 
 const tagsArraySchema = z
   .array(z.string().max(MAX_TAG_LEN, '태그는 최대 30자입니다'))
@@ -33,7 +33,7 @@ export const CreateBookSchema = z
       .max(150, '한줄평은 150자 이내로 입력해주세요')
       .optional()
       .transform((v) => (v && v.length > 0 ? v : null)),
-    isPublic: z.coerce.boolean().optional().default(true),
+    isPublic: z.boolean().optional().default(true),
   })
   .strict()
 
@@ -57,7 +57,7 @@ export const UpdateBookSchema = z
       .max(150, '한줄평은 150자 이내로 입력해주세요')
       .optional()
       .transform((v) => (v === undefined ? undefined : v.length > 0 ? v : null)),
-    isPublic: z.coerce.boolean().optional(),
+    isPublic: z.boolean().optional(),
   })
   .strict()
 
@@ -82,7 +82,7 @@ export const CreateMovieSchema = z
       .max(150, '한줄평은 150자 이내로 입력해주세요')
       .optional()
       .transform((v) => (v && v.length > 0 ? v : null)),
-    isPublic: z.coerce.boolean().optional().default(true),
+    isPublic: z.boolean().optional().default(true),
   })
   .strict()
 
@@ -105,7 +105,7 @@ export const UpdateMovieSchema = z
       .max(150, '한줄평은 150자 이내로 입력해주세요')
       .optional()
       .transform((v) => (v === undefined ? undefined : v.length > 0 ? v : null)),
-    isPublic: z.coerce.boolean().optional(),
+    isPublic: z.boolean().optional(),
   })
   .strict()
 

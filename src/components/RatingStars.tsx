@@ -20,14 +20,17 @@ function formatHalfStars(v: number): string {
 
 export function RatingStars({ value, onChange, size = 'md' }: Props) {
   const editable = !!onChange
+  // 1-10 정수가 prop 계약이지만 외부에서 비정수/범위초과를 넘기더라도 시각적으로 깨지지 않도록
+  // 0-10 정수로 clamp + round. (Math.round(1.3)=1, Math.round(7.5)=8 → 4 full stars)
+  const v = Math.max(0, Math.min(10, Math.round(value)))
   return (
     <div
       className={`inline-flex font-tabular ${SIZE[size]}`}
-      aria-label={`별점 ${formatHalfStars(value)}/5`}
+      aria-label={`별점 ${formatHalfStars(v)}/5`}
     >
       {[1, 2, 3, 4, 5].map((n) => {
         // 이 별 슬롯의 채움 정도: 0 (empty), 1 (half), 2 (full)
-        const fill = Math.max(0, Math.min(2, value - (n - 1) * 2))
+        const fill = Math.max(0, Math.min(2, v - (n - 1) * 2))
         const fillPct = fill === 2 ? 100 : fill === 1 ? 50 : 0
 
         const starVisual = (

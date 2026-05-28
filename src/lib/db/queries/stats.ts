@@ -13,9 +13,11 @@ export interface UserStats {
 /**
  * 모든 사용자 통계를 단일 쿼리로 계산. 책/글 row를 가져오지 않고 인덱스 위에서 COUNT/AVG만 수행.
  *
- * year 비교는 `strftime('%Y', ..., 'unixepoch', 'localtime')`를 사용 — SQLite에 'localtime'
- * modifier를 명시해 UTC가 아닌 서버 로컬 타임존에서 연도를 계산한다. 이렇게 해야 JS의
- * `new Date().getFullYear()` (역시 로컬)와 일관된다.
+ * year 비교:
+ * - books.readDate / movies.watchedDate는 user-typed `YYYY-MM-DD` 텍스트 — `LIKE 'YYYY-%'`로 TZ-free 비교.
+ * - writings.createdAt은 ms epoch — UTC 연도 경계(`Date.UTC(year, 0, 1)`)로 결정론적 범위 비교.
+ *   배포 환경 TZ에 무관하게 동일 결과 보장. (이전 strftime+'localtime' 방식은 서버 TZ에 따라
+ *   bucket이 어긋남.)
  */
 export async function getUserStats(
   db: Db,
@@ -23,7 +25,8 @@ export async function getUserStats(
   year: number = new Date().getFullYear(),
 ): Promise<UserStats> {
   const yearPrefix = `${year}-%`
-  const yearStr = String(year)
+  const yearStartMs = Date.UTC(year, 0, 1)
+  const yearEndMs = Date.UTC(year + 1, 0, 1)
 
   const rows = await db.all(sql`
     SELECT
@@ -37,7 +40,8 @@ export async function getUserStats(
          WHERE ${writings.authorUserId} = ${authorUserId}) AS writings_total,
       (SELECT COUNT(*) FROM ${writings}
          WHERE ${writings.authorUserId} = ${authorUserId}
-           AND strftime('%Y', ${writings.createdAt} / 1000, 'unixepoch', 'localtime') = ${yearStr})
+           AND ${writings.createdAt} >= ${yearStartMs}
+           AND ${writings.createdAt} < ${yearEndMs})
         AS writings_year
   `)
 

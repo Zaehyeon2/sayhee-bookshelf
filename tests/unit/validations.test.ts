@@ -102,17 +102,17 @@ describe('CreateBookSchema — public feed fields', () => {
     if (r.success) expect(r.data.isPublic).toBe(true)
   })
 
-  it('isPublic: boolean false stays false, string "false" coerces to true', () => {
+  it('isPublic: boolean only — string values rejected to prevent silent publish leak', () => {
     const r1 = CreateBookSchema.safeParse({ ...validBase, isPublic: false })
     const r2 = CreateBookSchema.safeParse({ ...validBase, isPublic: 'false' })
+    const r3 = CreateBookSchema.safeParse({ ...validBase, isPublic: true })
     expect(r1.success).toBe(true)
-    expect(r2.success).toBe(true)
-    // z.coerce.boolean()은 "false" 문자열도 truthy로 처리 — 명시적 boolean false만 거짓이 됨.
-    // 폼은 boolean을 보내므로 실용적으로 OK.
     if (r1.success) expect(r1.data.isPublic).toBe(false)
-    // z.coerce.boolean() converts the string 'false' to true (Boolean('false') === true).
-    // 폼은 boolean을 보내므로 실용적으로 OK.
-    if (r2.success) expect(r2.data.isPublic).toBe(true)
+    expect(r3.success).toBe(true)
+    if (r3.success) expect(r3.data.isPublic).toBe(true)
+    // 문자열 'false'는 거부 — `z.coerce.boolean()`은 비빈 문자열을 truthy로 변환해
+    // privacy 침해로 이어지므로 strict boolean만 허용한다.
+    expect(r2.success).toBe(false)
   })
 })
 

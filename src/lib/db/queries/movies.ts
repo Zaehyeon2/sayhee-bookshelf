@@ -96,13 +96,13 @@ export async function updateMovie(
 
     const now = Date.now()
 
-    // isPublic transition 판정: 0 → 1만 publishedAt 갱신.
-    // 1 → 0 또는 1 → 1 또는 0 → 0은 publishedAt 보존.
+    // isPublic transition 판정: `publishedAt`은 **최초 1회만** 설정(처음 공개되는 시점).
+    // 이후 재공개에서도 보존 — 토글 spam으로 피드 상단을 점유하는 vanity attack 방지.
     let nextIsPublic: number | undefined
     let nextPublishedAt: number | null | undefined
     if (input.isPublic !== undefined) {
       nextIsPublic = input.isPublic ? 1 : 0
-      if (prev.isPublic === 0 && nextIsPublic === 1) {
+      if (nextIsPublic === 1 && prev.publishedAt === null) {
         nextPublishedAt = now
       }
       // else: nextPublishedAt 그대로 undefined → SET에서 제외돼 기존 값 보존
@@ -201,14 +201,19 @@ export async function listMovies(
     if (tagRows.length === 0) return []
     const tagId = tagRows[0].id
 
-    const joinCondition = and(eq(movieTags.movieId, movies.id), eq(movieTags.tagId, tagId))
-
     let q = db
       .select({ movie: movies })
       .from(movies)
-      .innerJoin(movieTags, joinCondition!)
+      .innerJoin(
+        movieTags,
+        sql`${movieTags.movieId} = ${movies.id} AND ${movieTags.tagId} = ${tagId}`,
+      )
       .where(and(...conditions))
-      .orderBy(filters.sort === 'rating' ? desc(movies.rating) : desc(movies.watchedDate))
+      .orderBy(
+        ...(filters.sort === 'rating'
+          ? [desc(movies.rating), desc(movies.watchedDate), desc(movies.id)]
+          : [desc(movies.watchedDate), desc(movies.id)]),
+      )
       .$dynamic()
     if (filters.limit !== undefined) q = q.limit(filters.limit)
     if (filters.offset !== undefined) q = q.offset(filters.offset)
@@ -225,7 +230,11 @@ export async function listMovies(
     .select()
     .from(movies)
     .where(and(...conditions))
-    .orderBy(filters.sort === 'rating' ? desc(movies.rating) : desc(movies.watchedDate))
+    .orderBy(
+      ...(filters.sort === 'rating'
+        ? [desc(movies.rating), desc(movies.watchedDate), desc(movies.id)]
+        : [desc(movies.watchedDate), desc(movies.id)]),
+    )
     .$dynamic()
   if (filters.limit !== undefined) q = q.limit(filters.limit)
   if (filters.offset !== undefined) q = q.offset(filters.offset)
@@ -368,7 +377,10 @@ export async function countMovies(
     const rows = await db
       .select({ n: sql<number>`COUNT(*)` })
       .from(movies)
-      .innerJoin(movieTags, and(eq(movieTags.movieId, movies.id), eq(movieTags.tagId, tagId))!)
+      .innerJoin(
+        movieTags,
+        sql`${movieTags.movieId} = ${movies.id} AND ${movieTags.tagId} = ${tagId}`,
+      )
       .where(and(...conditions))
     return Number(rows[0]?.n ?? 0)
   }

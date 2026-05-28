@@ -12,16 +12,26 @@ interface Props {
 
 export function Toggle({ checked, onChange, label, description, disabled }: Props) {
   const id = useId()
+  const labelId = `${id}-label`
   const descId = description ? `${id}-desc` : undefined
+  // <label htmlFor>는 form control(input/select/...)에만 표준 페어링. 비-form 요소인 <button>에
+  // htmlFor를 가리키면 Firefox/Safari가 라벨 클릭을 전달하지 않을 수 있다.
+  // → aria-labelledby로 a11y 페어링, 라벨 클릭은 직접 onChange로 처리.
+  const toggle = () => {
+    if (!disabled) onChange(!checked)
+  }
   return (
     <div className="flex items-start justify-between gap-4">
-      <div className="flex-1 min-w-0">
-        <label
-          htmlFor={id}
-          className="block text-[14px] font-semibold text-[var(--color-text-strong)] cursor-pointer"
+      <div
+        className={['flex-1 min-w-0', disabled ? 'cursor-not-allowed' : 'cursor-pointer'].join(' ')}
+        onClick={toggle}
+      >
+        <span
+          id={labelId}
+          className="block text-[14px] font-semibold text-[var(--color-text-strong)]"
         >
           {label}
-        </label>
+        </span>
         {description && (
           <p
             id={descId}
@@ -36,9 +46,10 @@ export function Toggle({ checked, onChange, label, description, disabled }: Prop
         type="button"
         role="switch"
         aria-checked={checked}
+        aria-labelledby={labelId}
         aria-describedby={descId}
         disabled={disabled}
-        onClick={() => !disabled && onChange(!checked)}
+        onClick={toggle}
         className={[
           'relative shrink-0 inline-flex w-11 h-[26px] rounded-full transition outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50',
           checked ? 'bg-[var(--color-toss-blue)]' : 'bg-[var(--color-border)]',

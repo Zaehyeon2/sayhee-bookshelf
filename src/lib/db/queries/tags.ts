@@ -132,7 +132,8 @@ export async function replaceMovieTagsTx(
 
 export async function suggestTags(db: Db, authorUserId: number, q: string): Promise<string[]> {
   const pattern = `${escapeLikePattern(q)}%`
-  // 본인 풀(책 + 글 + 영화)의 태그 합집합에서 자동완성
+  // 본인 풀(책 + 글 + 영화)의 태그 합집합에서 자동완성. ORDER BY로 결과 안정화 — prefix 매칭은
+  // 길이가 짧을수록 더 정확한 매칭일 가능성이 높으므로 length ASC, 동률은 이름 사전순.
   const rows = await db.all(sql`
     SELECT DISTINCT t.name
     FROM ${tags} t
@@ -154,6 +155,7 @@ export async function suggestTags(db: Db, authorUserId: number, q: string): Prom
           WHERE mt.tag_id = t.id AND m.author_user_id = ${authorUserId}
         )
       )
+    ORDER BY length(t.name) ASC, t.name ASC
     LIMIT 8
   `)
   return (rows as { name: string }[]).map((r) => r.name)
@@ -165,4 +167,8 @@ export async function listTagsForBook(db: Db, bookId: number): Promise<string[]>
 
 export async function listTagsForWriting(db: Db, writingId: number): Promise<string[]> {
   return attachWritingTags(db, writingId)
+}
+
+export async function listTagsForMovie(db: Db, movieId: number): Promise<string[]> {
+  return attachMovieTags(db, movieId)
 }

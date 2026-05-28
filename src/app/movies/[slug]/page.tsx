@@ -59,7 +59,7 @@ export default async function MovieDetailPage({ params }: { params: Promise<{ sl
             {movie.isPublic === 1 && (
               <span
                 className="inline-flex items-center text-[12px] font-semibold text-[var(--color-toss-blue)]"
-                title="모두의 서재에 공개됨"
+                title="모두의 영화관에 공개됨"
               >
                 🌐 공개
               </span>

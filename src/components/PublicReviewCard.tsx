@@ -1,3 +1,8 @@
+'use client'
+
+// 'use client' 필요 이유: `formatRelative`는 `Date.now()`로 현재 시각 기준 상대 시간을 계산.
+// RSC로 두면 `/`·`/feed`의 Next.js RSC payload 캐시에 의해 "X분 전" 문자열이 freeze되어
+// 시간이 지나도 갱신되지 않음. 클라이언트에서 wall-clock 기준으로 평가하도록 강제한다.
 import { GenreBadge } from './GenreBadge'
 import { RatingStars } from './RatingStars'
 import type { PublicBookCard } from '@/lib/db/queries'

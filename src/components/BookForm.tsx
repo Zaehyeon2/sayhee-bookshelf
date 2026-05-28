@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { BOOK_GENRES } from '@/lib/genres'
+import { MAX_CONTENT_LEN } from '@/lib/validations'
 import { RatingStars } from './RatingStars'
 import { TagInput } from './TagInput'
 import { MarkdownEditor, type MarkdownEditorHandle } from './MarkdownEditor'
@@ -64,6 +65,10 @@ export function BookForm({ initial, mode }: Props) {
       const content = editor?.getMarkdown()
       if (content == null) {
         toast.error('에디터가 준비되지 않았습니다. 다시 시도해주세요.')
+        return
+      }
+      if (content.length > MAX_CONTENT_LEN) {
+        toast.error(`본문이 너무 깁니다 (${content.length.toLocaleString()} / ${MAX_CONTENT_LEN.toLocaleString()}자)`)
         return
       }
       const payload = {
@@ -205,7 +210,11 @@ export function BookForm({ initial, mode }: Props) {
       </section>
 
       <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-2 shadow-[var(--shadow-toss)] overflow-hidden">
-        <MarkdownEditor ref={editorRef} initialValue={initial?.content ?? ''} maxLength={50_000} />
+        <MarkdownEditor
+          ref={editorRef}
+          initialValue={initial?.content ?? ''}
+          maxLength={MAX_CONTENT_LEN}
+        />
       </section>
 
       <div className="flex flex-wrap items-center gap-3">

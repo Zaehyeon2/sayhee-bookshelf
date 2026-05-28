@@ -243,7 +243,7 @@ describe('updateBook publishedAt transitions', () => {
     expect(updated?.publishedAt).toBe(originalPublishedAt)
   })
 
-  it('0→1→0→1 sequence: publishedAt updates on each 0→1', async () => {
+  it('0→1→0→1 sequence: publishedAt set once on first publish, preserved on republish (no vanity bump)', async () => {
     const { updateBook, createBook: queryCreateBook } = await import('@/lib/db/queries')
     const { a } = await setup()
     const book = await queryCreateBook(db3, a.id, {
@@ -261,6 +261,7 @@ describe('updateBook publishedAt transitions', () => {
     await new Promise((r) => setTimeout(r, 5))
     const r1 = await updateBook(db3, a.id, book.id, { isPublic: true, oneLineReview: null })
     const t1 = r1!.publishedAt!
+    expect(t1).toBeGreaterThan(0)
 
     await new Promise((r) => setTimeout(r, 5))
     await updateBook(db3, a.id, book.id, { isPublic: false, oneLineReview: null })
@@ -269,7 +270,9 @@ describe('updateBook publishedAt transitions', () => {
     const r3 = await updateBook(db3, a.id, book.id, { isPublic: true, oneLineReview: null })
     const t3 = r3!.publishedAt!
 
-    expect(t3).toBeGreaterThan(t1)
+    // publishedAt은 최초 공개 시점에 한 번만 설정되고 재공개에서는 보존된다 — 사용자가
+    // 토글 spam으로 피드 상단을 점유하는 vanity attack을 막기 위함.
+    expect(t3).toBe(t1)
   })
 
   it('updates oneLineReview without changing isPublic/publishedAt', async () => {

@@ -11,20 +11,9 @@ import { excerpt } from '@/lib/excerpt'
 import { EmptyState } from '@/components/EmptyState'
 import { getCurrentUser } from '@/lib/auth'
 import { MOVIE_GENRES } from '@/lib/genres'
+import { ListMoviesQuerySchema } from '@/lib/validations'
 
 const PAGE_SIZE = 24
-
-function parseYear(value: string | undefined): number | undefined {
-  if (!value) return undefined
-  const n = Number(value)
-  return Number.isFinite(n) ? n : undefined
-}
-
-function parsePage(value: string | undefined): number {
-  if (!value) return 1
-  const n = Number(value)
-  return Number.isFinite(n) && n >= 1 ? Math.floor(n) : 1
-}
 
 interface SP {
   searchParams: Promise<{
@@ -41,8 +30,12 @@ export default async function MoviesPage({ searchParams }: SP) {
   const me = await getCurrentUser()
   if (!me) redirect('/login?next=/movies')
   const sp = await searchParams
-  const page = parsePage(sp.page)
-  const q = sp.q?.trim() ?? ''
+  // ListMoviesQuerySchema로 검증 — 잘못된 genre/year/page 등은 무시하고 기본값으로 fallback해
+  // 페이지가 빈 결과로 깨지지 않게 한다. /api/movies와 검증 경계 일치.
+  const parsed = ListMoviesQuerySchema.safeParse(sp)
+  const validated = parsed.success ? parsed.data : {}
+  const page = validated.page ?? 1
+  const q = validated.q?.trim() ?? ''
   const isSearch = q.length > 0
   const offset = (page - 1) * PAGE_SIZE
 
@@ -58,10 +51,10 @@ export default async function MoviesPage({ searchParams }: SP) {
     total = count
   } else {
     const filters = {
-      genre: sp.genre,
-      tag: sp.tag,
-      year: parseYear(sp.year),
-      sort: sp.sort === 'rating' ? ('rating' as const) : ('date' as const),
+      genre: validated.genre,
+      tag: validated.tag,
+      year: validated.year,
+      sort: validated.sort ?? ('date' as const),
     }
     const [list, count] = await Promise.all([
       listMovies(db, me.id, { ...filters, limit: PAGE_SIZE, offset }),
@@ -72,12 +65,12 @@ export default async function MoviesPage({ searchParams }: SP) {
   }
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
-  const title = sp.q
-    ? `"${sp.q}" 검색 결과`
-    : sp.genre
-      ? `장르 · ${sp.genre}`
-      : sp.tag
-        ? `태그 · ${sp.tag}`
+  const title = isSearch
+    ? `"${q}" 검색 결과`
+    : validated.genre
+      ? `장르 · ${validated.genre}`
+      : validated.tag
+        ? `태그 · ${validated.tag}`
         : '전체 영화'
 
   return (
@@ -138,10 +131,10 @@ export default async function MoviesPage({ searchParams }: SP) {
             totalPages={totalPages}
             basePath="/movies"
             preservedQuery={{
-              genre: sp.genre,
-              tag: sp.tag,
-              year: sp.year,
-              sort: sp.sort,
+              genre: validated.genre,
+              tag: validated.tag,
+              year: validated.year !== undefined ? String(validated.year) : undefined,
+              sort: validated.sort,
               q: isSearch ? q : undefined,
             }}
           />

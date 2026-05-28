@@ -1,3 +1,7 @@
+'use client'
+
+// 'use client' 필요 이유: PublicReviewCard와 동일. Date.now() 기반 상대 시간은 클라이언트에서
+// 평가해야 RSC payload 캐시로 "X분 전"이 freeze되는 문제를 피할 수 있다.
 import { GenreBadge } from './GenreBadge'
 import { RatingStars } from './RatingStars'
 import type { PublicMovieCard as PublicMovieCardItem } from '@/lib/db/queries'
