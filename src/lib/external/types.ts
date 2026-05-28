@@ -26,3 +26,13 @@ export interface BookLookupResult {
   coverUrl: string | undefined
   description: string | undefined
 }
+
+export interface MovieLookupResult {
+  tmdbId: number
+  title: string
+  originalTitle: string | undefined
+  year: number | undefined
+  coverUrl: string | undefined
+  description: string | undefined
+  externalRating: number | undefined // TMDB vote_average (0–10)
+}
