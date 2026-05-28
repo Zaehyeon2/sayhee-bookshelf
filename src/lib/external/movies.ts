@@ -1,12 +1,12 @@
 import type { MovieSearchItem } from './types'
+import type { MovieGenre } from '@/lib/genres'
 
 const TMDB_BASE = 'https://api.themoviedb.org/3'
 const POSTER_PREFIX = 'https://image.tmdb.org/t/p/w185'
 
-// TMDB genre id → MOVIE_GENRES (src/lib/genres.ts) 매핑.
-// MOVIE_GENRES에 verbatim으로 존재하는 한국어만 매핑 — 없는 장르(모험/범죄/판타지/역사/음악/
-// 미스터리/전쟁/서부/가족)는 omit하여 downstream `isMovieGenre` 가드가 깨지지 않게 함.
-const TMDB_GENRE_MAP: Record<number, string> = {
+// TMDB genre id → MOVIE_GENRES verbatim 매칭만 (매핑 없으면 omit).
+// MovieGenre union으로 컴파일 타임에 드리프트 차단.
+const TMDB_GENRE_MAP: Readonly<Record<number, MovieGenre>> = {
   28: '액션',
   16: '애니메이션',
   35: '코미디',
@@ -37,12 +37,25 @@ export async function searchMoviesExternal(
   if (!key) throw new Error('TMDB_API_KEY env var not set')
 
   const url = new URL(`${TMDB_BASE}/search/movie`)
-  url.searchParams.set('api_key', key)
   url.searchParams.set('query', query)
   url.searchParams.set('language', 'ko-KR')
   url.searchParams.set('include_adult', 'false')
 
-  const res = await fetch(url, { signal: opts.signal })
+  const res = await fetch(url, {
+    signal: opts.signal,
+    headers: {
+      Authorization: `Bearer ${key}`,
+      accept: 'application/json',
+    },
+  })
+  if (res.status === 429) {
+    throw new Error(
+      `TMDB rate limited (retry-after=${res.headers.get('retry-after') ?? 'n/a'})`,
+    )
+  }
+  if (res.status === 401 || res.status === 403) {
+    throw new Error(`TMDB auth ${res.status}`)
+  }
   if (res.status >= 500) {
     throw new Error(`TMDB upstream ${res.status}`)
   }
@@ -56,8 +69,7 @@ export async function searchMoviesExternal(
       r.release_date && /^\d{4}-/.test(r.release_date)
         ? Number(r.release_date.slice(0, 4))
         : undefined
-    const genreId = r.genre_ids?.[0]
-    const genre = genreId != null ? TMDB_GENRE_MAP[genreId] : undefined
+    const genre = r.genre_ids?.map((id) => TMDB_GENRE_MAP[id]).find(Boolean)
     const subtitle =
       r.original_title && r.original_title !== r.title ? r.original_title : undefined
     return {

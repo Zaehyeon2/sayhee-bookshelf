@@ -74,4 +74,42 @@ describe('searchMoviesExternal', () => {
     delete process.env.TMDB_API_KEY
     await expect(searchMoviesExternal('x', { limit: 1 })).rejects.toThrow(/TMDB_API_KEY/)
   })
+
+  it('throws on 429 (rate limit) with retry-after info', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      new Response('{}', { status: 429, headers: { 'retry-after': '7' } }),
+    )
+    await expect(searchMoviesExternal('x', { limit: 1 })).rejects.toThrow(/retry-after=7/)
+  })
+
+  it('throws on 401/403 (auth error)', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue(new Response('{}', { status: 401 }))
+    await expect(searchMoviesExternal('x', { limit: 1 })).rejects.toThrow(/auth 401/)
+  })
+
+  it('picks first mapped genre id when [0] is unmapped', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          results: [{ id: 1, title: 't', genre_ids: [12, 28], release_date: '' }],
+        }),
+        { status: 200 },
+      ),
+    )
+    const r = await searchMoviesExternal('x', { limit: 1 })
+    // 12 (모험) is not in our map; 28 (액션) is — should pick 액션.
+    expect(r[0].genre).toBe('액션')
+  })
+
+  it('sends Authorization Bearer header instead of api_key query param', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ results: [] }), { status: 200 }),
+    )
+    globalThis.fetch = fetchMock
+    await searchMoviesExternal('test', { limit: 1 })
+    const [calledUrl, init] = fetchMock.mock.calls[0]
+    const url = calledUrl instanceof URL ? calledUrl : new URL(String(calledUrl))
+    expect(url.searchParams.get('api_key')).toBeNull()
+    expect(init?.headers?.Authorization).toBe('Bearer test-key')
+  })
 })
