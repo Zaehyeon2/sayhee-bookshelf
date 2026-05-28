@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface Props {
@@ -11,13 +11,16 @@ interface Props {
 export function WorksSearchBar({ type, initialQuery }: Props) {
   const router = useRouter()
   const [q, setQ] = useState(initialQuery)
+  const [isPending, startTransition] = useTransition()
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     const trimmed = q.trim()
     if (!trimmed) return
     const params = new URLSearchParams({ type, q: trimmed })
-    router.push(`/works?${params.toString()}`)
+    startTransition(() => {
+      router.push(`/works?${params.toString()}`)
+    })
   }
 
   return (
@@ -33,9 +36,18 @@ export function WorksSearchBar({ type, initialQuery }: Props) {
       />
       <button
         type="submit"
-        className="h-11 px-5 rounded-[var(--radius-toss)] bg-[var(--color-toss-blue)] text-white text-[14px] font-semibold hover:opacity-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+        disabled={isPending}
+        aria-busy={isPending}
+        className="h-11 px-5 min-w-[72px] rounded-[var(--radius-toss)] bg-[var(--color-toss-blue)] text-white text-[14px] font-semibold hover:opacity-90 transition disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50 inline-flex items-center justify-center gap-1"
       >
-        검색
+        {isPending ? (
+          <span
+            aria-hidden
+            className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin"
+          />
+        ) : (
+          '검색'
+        )}
       </button>
     </form>
   )

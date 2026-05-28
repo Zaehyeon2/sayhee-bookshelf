@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { db } from '@/lib/db/client'
@@ -13,6 +14,7 @@ import {
 import { WorksSearchBar } from '@/components/works/WorksSearchBar'
 import { WorksSearchCard } from '@/components/works/WorksSearchCard'
 import { EmptyState } from '@/components/EmptyState'
+import { CardGridSkeleton } from '@/components/CardGridSkeleton'
 
 type SP = { searchParams: Promise<{ type?: string; q?: string; page?: string }> }
 
@@ -50,17 +52,21 @@ export default async function WorksSearchPage({ searchParams }: SP) {
 
       <WorksSearchBar type={type} initialQuery={q} />
 
-      {!q ? (
-        <EmptyState
-          emoji="🔍"
-          title="키워드로 검색해보세요"
-          description={type === 'book' ? '제목이나 저자를 입력해보세요' : '영화 제목을 입력해보세요'}
-        />
-      ) : type === 'book' ? (
-        <BookResults q={q} />
-      ) : (
-        <MovieResults q={q} />
-      )}
+      <Suspense fallback={<CardGridSkeleton />} key={`${type}-${q}`}>
+        {!q ? (
+          <EmptyState
+            emoji="🔍"
+            title="키워드로 검색해보세요"
+            description={
+              type === 'book' ? '제목이나 저자를 입력해보세요' : '영화 제목을 입력해보세요'
+            }
+          />
+        ) : type === 'book' ? (
+          <BookResults q={q} />
+        ) : (
+          <MovieResults q={q} />
+        )}
+      </Suspense>
     </div>
   )
 }

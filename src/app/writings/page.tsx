@@ -7,6 +7,8 @@ import { WritingCard } from '@/components/WritingCard'
 import { EmptyState } from '@/components/EmptyState'
 import { Pagination } from '@/components/Pagination'
 import { SearchBox } from '@/components/SearchBox'
+import { CardGridSkeleton } from '@/components/CardGridSkeleton'
+import { Skeleton } from '@/components/Skeleton'
 import { excerpt } from '@/lib/excerpt'
 import { getCurrentUser } from '@/lib/auth'
 
@@ -26,6 +28,38 @@ export default async function WritingsPage({ searchParams }: SP) {
   const me = await getCurrentUser()
   if (!me) redirect('/login?next=/writings')
   const sp = await searchParams
+
+  return (
+    <div className="space-y-6">
+      <Suspense fallback={null}>
+        <SearchBox basePath="/writings" placeholder="제목·본문 검색" />
+      </Suspense>
+      <Suspense fallback={<WritingsResultsSkeleton />} key={JSON.stringify(sp)}>
+        <WritingsResults sp={sp} userId={me.id} />
+      </Suspense>
+    </div>
+  )
+}
+
+function WritingsResultsSkeleton() {
+  return (
+    <>
+      <div className="flex items-baseline justify-between">
+        <Skeleton className="h-8 w-32" />
+        <Skeleton className="h-5 w-10" />
+      </div>
+      <CardGridSkeleton cardHeight="h-[140px]" />
+    </>
+  )
+}
+
+async function WritingsResults({
+  sp,
+  userId,
+}: {
+  sp: Awaited<SP['searchParams']>
+  userId: number
+}) {
   const page = parsePage(sp.page)
   const q = sp.q?.trim() ?? ''
   const isSearch = q.length > 0
@@ -36,15 +70,15 @@ export default async function WritingsPage({ searchParams }: SP) {
 
   if (isSearch) {
     const [list, count] = await Promise.all([
-      searchWritings(db, me.id, q, { limit: PAGE_SIZE, offset }),
-      countSearchWritings(db, me.id, q),
+      searchWritings(db, userId, q, { limit: PAGE_SIZE, offset }),
+      countSearchWritings(db, userId, q),
     ])
     writings = list
     total = count
   } else {
     const [list, count] = await Promise.all([
-      listWritings(db, me.id, { limit: PAGE_SIZE, offset }),
-      countWritings(db, me.id),
+      listWritings(db, userId, { limit: PAGE_SIZE, offset }),
+      countWritings(db, userId),
     ])
     writings = list
     total = count
@@ -52,10 +86,7 @@ export default async function WritingsPage({ searchParams }: SP) {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   return (
-    <div className="space-y-6">
-      <Suspense fallback={null}>
-        <SearchBox basePath="/writings" placeholder="제목·본문 검색" />
-      </Suspense>
+    <>
       <div className="flex items-baseline justify-between">
         <h1 className="text-[28px] font-bold tracking-tight text-[var(--color-text-strong)]">
           {isSearch ? `"${q}" 검색 결과` : '글방'}
@@ -112,6 +143,6 @@ export default async function WritingsPage({ searchParams }: SP) {
           />
         </>
       )}
-    </div>
+    </>
   )
 }

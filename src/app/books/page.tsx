@@ -9,6 +9,8 @@ import { Filters } from '@/components/Filters'
 import { Pagination } from '@/components/Pagination'
 import { excerpt } from '@/lib/excerpt'
 import { EmptyState } from '@/components/EmptyState'
+import { CardGridSkeleton } from '@/components/CardGridSkeleton'
+import { Skeleton } from '@/components/Skeleton'
 import { getCurrentUser } from '@/lib/auth'
 import { BOOK_GENRES } from '@/lib/genres'
 import { ListBooksQuerySchema } from '@/lib/validations'
@@ -30,8 +32,33 @@ export default async function BooksPage({ searchParams }: SP) {
   const me = await getCurrentUser()
   if (!me) redirect('/login?next=/books')
   const sp = await searchParams
-  // ListBooksQuerySchema로 검증 — 잘못된 genre/year/page 등은 무시하고 기본값으로 fallback해
-  // 페이지가 빈 결과로 깨지지 않게 한다. /api/books와 검증 경계 일치.
+
+  return (
+    <div className="space-y-6">
+      <Suspense fallback={null}>
+        <SearchBox />
+        <Filters basePath="/books" genres={BOOK_GENRES} />
+      </Suspense>
+      <Suspense fallback={<BooksResultsSkeleton />} key={JSON.stringify(sp)}>
+        <BooksResults sp={sp} userId={me.id} />
+      </Suspense>
+    </div>
+  )
+}
+
+function BooksResultsSkeleton() {
+  return (
+    <>
+      <div className="flex items-baseline justify-between">
+        <Skeleton className="h-7 w-32" />
+        <Skeleton className="h-5 w-10" />
+      </div>
+      <CardGridSkeleton />
+    </>
+  )
+}
+
+async function BooksResults({ sp, userId }: { sp: Awaited<SP['searchParams']>; userId: number }) {
   const parsed = ListBooksQuerySchema.safeParse(sp)
   const validated = parsed.success ? parsed.data : {}
   const page = validated.page ?? 1
@@ -44,8 +71,8 @@ export default async function BooksPage({ searchParams }: SP) {
 
   if (isSearch) {
     const [list, count] = await Promise.all([
-      searchBooks(db, me.id, q, { limit: PAGE_SIZE, offset }),
-      countSearchBooks(db, me.id, q),
+      searchBooks(db, userId, q, { limit: PAGE_SIZE, offset }),
+      countSearchBooks(db, userId, q),
     ])
     books = list
     total = count
@@ -57,8 +84,8 @@ export default async function BooksPage({ searchParams }: SP) {
       sort: validated.sort ?? ('date' as const),
     }
     const [list, count] = await Promise.all([
-      listBooks(db, me.id, { ...filters, limit: PAGE_SIZE, offset }),
-      countBooks(db, me.id, { genre: filters.genre, tag: filters.tag, year: filters.year }),
+      listBooks(db, userId, { ...filters, limit: PAGE_SIZE, offset }),
+      countBooks(db, userId, { genre: filters.genre, tag: filters.tag, year: filters.year }),
     ])
     books = list
     total = count
@@ -74,11 +101,7 @@ export default async function BooksPage({ searchParams }: SP) {
         : '전체 책'
 
   return (
-    <div className="space-y-6">
-      <Suspense fallback={null}>
-        <SearchBox />
-        <Filters basePath="/books" genres={BOOK_GENRES} />
-      </Suspense>
+    <>
       <div className="flex items-baseline justify-between">
         <h2 className="text-[22px] font-bold text-[var(--color-text-strong)]">{title}</h2>
         <div className="flex items-center gap-3">
@@ -135,6 +158,6 @@ export default async function BooksPage({ searchParams }: SP) {
           />
         </>
       )}
-    </div>
+    </>
   )
 }
