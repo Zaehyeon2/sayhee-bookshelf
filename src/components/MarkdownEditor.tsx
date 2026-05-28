@@ -27,10 +27,11 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, Props>(
   ({ initialValue, maxLength }, ref) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const editorRef = useRef<any>(null)
-    // 마운트 시점 테마. key prop으로 사용하지 않는다 — 테마 토글 시 unmount/remount는
-    // 사용자가 작성 중인 본문을 잃을 수 있으므로, 한 번 마운트한 인스턴스를 유지.
-    // 다음 페이지 진입 시 새 테마가 자연스럽게 반영된다.
-    const [theme] = useState<'light' | 'dark'>(readTheme)
+    // Toast UI Editor v3는 runtime setTheme을 지원하지 않으므로 theme 변경 시 `key`로 강제
+    // remount해야 한다. unmount 직전 본문을 캡처해 새 initialValue로 넘기면 사용자 작성 중인
+    // 본문이 손실되지 않는다.
+    const [theme, setTheme] = useState<'light' | 'dark'>(readTheme)
+    const [content, setContent] = useState(initialValue)
     const [length, setLength] = useState(initialValue.length)
 
     useImperativeHandle(ref, () => ({
@@ -43,10 +44,24 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, Props>(
       },
     }))
 
-    // mount 후에는 theme이 바뀌어도 시각적 차이만 남으며 데이터는 안전.
-    // 향후 Toast UI가 runtime setTheme을 지원하면 여기서 호출하면 됨.
+    // 다크모드 토글 감지 — `document.documentElement.dataset.theme` 변화를 MutationObserver로
+    // 관찰해 새 theme 반영 전 현재 본문을 캡처한다. MarkdownViewer와 동일한 패턴.
     useEffect(() => {
-      /* no-op: 테마 동기화는 page reload/nav에 의존 */
+      const sync = () => {
+        const next = readTheme()
+        setTheme((prev) => {
+          if (prev === next) return prev
+          const inst = editorRef.current?.getInstance()
+          if (inst) {
+            const md = (inst.getMarkdown() as string | undefined) ?? ''
+            setContent(md)
+          }
+          return next
+        })
+      }
+      const obs = new MutationObserver(sync)
+      obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+      return () => obs.disconnect()
     }, [])
 
     const handleChange = () => {
@@ -64,8 +79,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, Props>(
     return (
       <div>
         <Editor
+          key={theme}
           ref={editorRef}
-          initialValue={initialValue || ' '}
+          initialValue={content || ' '}
           previewStyle="vertical"
           height="clamp(280px, 50vh, 480px)"
           initialEditType="wysiwyg"
