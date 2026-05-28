@@ -49,7 +49,7 @@ export function PublicReviewCard({ item }: Props) {
               className="flex-shrink-0 rounded-sm object-cover"
             />
           )}
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 flex flex-col">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-[16px] font-bold leading-snug text-[var(--color-text-strong)] line-clamp-2">
                 {item.title}
@@ -59,7 +59,7 @@ export function PublicReviewCard({ item }: Props) {
             <p className="mt-1 text-[13px] text-[var(--color-text-muted)] line-clamp-1">
               {item.author}
             </p>
-            <div className="mt-2">
+            <div className="mt-auto pt-2">
               <RatingStars value={item.rating} size="sm" />
             </div>
           </div>
