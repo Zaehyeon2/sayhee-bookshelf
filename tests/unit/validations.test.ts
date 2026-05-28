@@ -12,6 +12,9 @@ import {
   FeedQuerySchema,
   ExternalIdsQuerySchema,
   ExternalSearchQuerySchema,
+  WorksSearchQuerySchema,
+  IsbnParamSchema,
+  TmdbIdParamSchema,
 } from '@/lib/validations'
 
 describe('LoginSchema', () => {
@@ -336,5 +339,59 @@ describe('ExternalIdsQuerySchema', () => {
   it('caps at 50 ids', () => {
     const many = Array.from({ length: 51 }, (_, i) => `id${i}`).join(',')
     expect(() => ExternalIdsQuerySchema.parse({ ids: many })).toThrow()
+  })
+})
+
+describe('WorksSearchQuerySchema', () => {
+  test('type defaults to book', () => {
+    const parsed = WorksSearchQuerySchema.parse({ q: '어린왕자' })
+    expect(parsed.type).toBe('book')
+  })
+  test('q is required and trimmed', () => {
+    expect(WorksSearchQuerySchema.safeParse({ q: '  ' }).success).toBe(false)
+    expect(WorksSearchQuerySchema.parse({ q: '  어린왕자  ' }).q).toBe('어린왕자')
+  })
+  test('q max length 100', () => {
+    expect(WorksSearchQuerySchema.safeParse({ q: 'a'.repeat(101) }).success).toBe(false)
+  })
+  test('type=movie accepted', () => {
+    expect(WorksSearchQuerySchema.parse({ q: 'x', type: 'movie' }).type).toBe('movie')
+  })
+  test('unknown type rejected', () => {
+    expect(WorksSearchQuerySchema.safeParse({ q: 'x', type: 'foo' }).success).toBe(false)
+  })
+  test('page coerced from string', () => {
+    expect(WorksSearchQuerySchema.parse({ q: 'x', page: '3' }).page).toBe(3)
+  })
+})
+
+describe('IsbnParamSchema', () => {
+  test('accepts ISBN-13', () => {
+    expect(IsbnParamSchema.safeParse('9788937462788').success).toBe(true)
+  })
+  test('accepts ISBN-10', () => {
+    expect(IsbnParamSchema.safeParse('8937462788').success).toBe(true)
+  })
+  test('rejects non-digit', () => {
+    expect(IsbnParamSchema.safeParse('978-8937462788').success).toBe(false)
+    expect(IsbnParamSchema.safeParse('abc').success).toBe(false)
+  })
+  test('rejects wrong length', () => {
+    expect(IsbnParamSchema.safeParse('123').success).toBe(false)
+    expect(IsbnParamSchema.safeParse('12345678901234').success).toBe(false)
+  })
+})
+
+describe('TmdbIdParamSchema', () => {
+  test('coerces digit string to positive integer', () => {
+    expect(TmdbIdParamSchema.parse('157336')).toBe(157336)
+  })
+  test('rejects zero/negative', () => {
+    expect(TmdbIdParamSchema.safeParse('0').success).toBe(false)
+    expect(TmdbIdParamSchema.safeParse('-5').success).toBe(false)
+  })
+  test('rejects non-integer', () => {
+    expect(TmdbIdParamSchema.safeParse('1.5').success).toBe(false)
+    expect(TmdbIdParamSchema.safeParse('abc').success).toBe(false)
   })
 })

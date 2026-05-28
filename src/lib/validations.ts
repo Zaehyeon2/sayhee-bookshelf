@@ -147,6 +147,15 @@ export const FeedQuerySchema = z.object({
   page: z.coerce.number().int().min(1).max(10_000).optional(),
 })
 
+export const WorksSearchQuerySchema = z.object({
+  type: z.enum(['book', 'movie']).default('book'),
+  q: z.string().trim().min(1).max(100),
+  page: z.coerce.number().int().min(1).max(10_000).optional(),
+})
+
+export const IsbnParamSchema = z.string().regex(/^\d{10}(\d{3})?$/)
+export const TmdbIdParamSchema = z.coerce.number().int().positive()
+
 export const LoginSchema = z
   .object({
     username: z.string().trim().min(2).max(20),
