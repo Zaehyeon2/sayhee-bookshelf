@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 function ChipButton({
@@ -101,6 +101,7 @@ export function Filters({ basePath, genres }: FiltersProps) {
   const currentGenre = sp.get('genre') ?? ''
   const currentSort = sp.get('sort') ?? 'date'
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [isPending, startTransition] = useTransition()
   useDragScroll(scrollRef)
 
   function setParam(key: string, value: string | null) {
@@ -111,11 +112,13 @@ export function Filters({ basePath, genres }: FiltersProps) {
     // 식의 죽은 페이지를 보여주지 않도록.
     params.delete('page')
     const qs = params.toString()
-    router.push(qs ? `${basePath}?${qs}` : basePath)
+    startTransition(() => {
+      router.push(qs ? `${basePath}?${qs}` : basePath)
+    })
   }
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3" aria-busy={isPending}>
       <div ref={scrollRef} className="flex-1 -mx-1 -my-1.5 scroll-x-touch cursor-grab">
         <div className="flex gap-2 px-1 py-1.5">
           <ChipButton

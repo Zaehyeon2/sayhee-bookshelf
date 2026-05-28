@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 
 interface Props {
   basePath?: string
@@ -12,6 +12,7 @@ export function SearchBox({ basePath = '/books', placeholder = '제목·작가·
   const router = useRouter()
   const sp = useSearchParams()
   const [q, setQ] = useState(sp.get('q') ?? '')
+  const [isPending, startTransition] = useTransition()
 
   function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -22,7 +23,9 @@ export function SearchBox({ basePath = '/books', placeholder = '제목·작가·
     // 검색어 변경 시 page는 1로 리셋
     params.delete('page')
     const qs = params.toString()
-    router.push(qs ? `${basePath}?${qs}` : basePath)
+    startTransition(() => {
+      router.push(qs ? `${basePath}?${qs}` : basePath)
+    })
   }
 
   return (
@@ -42,9 +45,18 @@ export function SearchBox({ basePath = '/books', placeholder = '제목·작가·
       />
       <button
         type="submit"
-        className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 px-4 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[14px] font-semibold hover:bg-[var(--color-toss-blue-hover)] active:scale-[0.97] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+        disabled={isPending}
+        aria-busy={isPending}
+        className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 px-4 min-w-[64px] rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[14px] font-semibold hover:bg-[var(--color-toss-blue-hover)] active:scale-[0.97] transition disabled:opacity-70 disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50 inline-flex items-center justify-center gap-1"
       >
-        검색
+        {isPending ? (
+          <span
+            aria-hidden
+            className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin"
+          />
+        ) : (
+          '검색'
+        )}
       </button>
     </form>
   )
