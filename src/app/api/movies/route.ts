@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { db } from '@/lib/db/client'
 import {
   countMovies,
@@ -9,6 +10,8 @@ import {
 } from '@/lib/db/queries'
 import { CreateMovieSchema, ListMoviesQuerySchema } from '@/lib/validations'
 import { requireUser, HttpError } from '@/lib/auth-helpers'
+import { PUBLIC_FEED_TAGS } from '@/lib/public-feed-cache'
+import { WORKS_MOVIE_TAG } from '@/lib/works-detail-cache'
 
 const PAGE_SIZE = 24
 
@@ -55,6 +58,8 @@ export async function POST(req: Request) {
       )
     }
     const movie = await createMovie(db, user.id, parsed.data)
+    revalidateTag(PUBLIC_FEED_TAGS.movies, 'max')
+    revalidateTag(WORKS_MOVIE_TAG, 'max')
     return NextResponse.json({ id: movie.id, slug: movie.slug }, { status: 201 })
   } catch (e) {
     if (e instanceof HttpError) return e.toResponse()

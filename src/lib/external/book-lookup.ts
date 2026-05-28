@@ -79,6 +79,8 @@ export async function lookupBookByIsbn(
 
   // ISBN은 immutable identifier — 24h cache로 detail page 진입 latency 제거.
   // 같은 ISBN을 보는 모든 사용자가 첫 요청 이후 cache hit.
+  // diagnostic: 같은 ISBN 연속 진입 시 이 로그가 안 찍히면 Data Cache HIT.
+  console.log('[diag] naver-book lookup fetch', isbn)
   const res = await fetch(url, {
     signal: opts.signal,
     headers: {

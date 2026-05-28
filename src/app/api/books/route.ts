@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { db } from '@/lib/db/client'
 import { countBooks, countSearchBooks, createBook, listBooks, searchBooks } from '@/lib/db/queries'
 import { CreateBookSchema, ListBooksQuerySchema } from '@/lib/validations'
 import { requireUser, HttpError } from '@/lib/auth-helpers'
+import { PUBLIC_FEED_TAGS } from '@/lib/public-feed-cache'
+import { WORKS_BOOK_TAG } from '@/lib/works-detail-cache'
 
 const PAGE_SIZE = 24
 
@@ -49,6 +52,8 @@ export async function POST(req: Request) {
       )
     }
     const book = await createBook(db, user.id, parsed.data)
+    revalidateTag(PUBLIC_FEED_TAGS.books, 'max')
+    revalidateTag(WORKS_BOOK_TAG, 'max')
     return NextResponse.json({ id: book.id, slug: book.slug }, { status: 201 })
   } catch (e) {
     if (e instanceof HttpError) return e.toResponse()

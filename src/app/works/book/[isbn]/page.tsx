@@ -4,12 +4,12 @@ import { getCurrentUser } from '@/lib/auth'
 import { IsbnParamSchema, PageParamSchema } from '@/lib/validations'
 import { lookupBookByIsbn } from '@/lib/external/book-lookup'
 import { logAdapterError } from '@/lib/external/log-error'
+import { getPublicBookFallbackByIsbn } from '@/lib/db/queries'
 import {
-  listBookReviewsByIsbn,
-  countBookReviewsByIsbn,
-  getBookRatingDistributionByIsbn,
-  getPublicBookFallbackByIsbn,
-} from '@/lib/db/queries'
+  getBookReviewsCached,
+  getBookReviewsCountCached,
+  getBookDistributionCached,
+} from '@/lib/works-detail-cache'
 import { WorksDetailHeader } from '@/components/works/WorksDetailHeader'
 import { RatingDistribution } from '@/components/works/RatingDistribution'
 import { ReviewListItem } from '@/components/works/ReviewListItem'
@@ -38,9 +38,9 @@ export default async function WorksBookDetailPage({ params, searchParams }: SP) 
 
   const [meta, items, total, distribution] = await Promise.all([
     safeBookLookup(isbn),
-    listBookReviewsByIsbn(db, isbn, { limit: PAGE_SIZE, offset }),
-    countBookReviewsByIsbn(db, isbn),
-    getBookRatingDistributionByIsbn(db, isbn),
+    getBookReviewsCached(isbn, PAGE_SIZE, offset),
+    getBookReviewsCountCached(isbn),
+    getBookDistributionCached(isbn),
   ])
   // 외부 lookup 실패 시에만 DB fallback 조회 — 정상 케이스의 불필요한 DB hit 회피.
   const fallback = meta ? null : await getPublicBookFallbackByIsbn(db, isbn)

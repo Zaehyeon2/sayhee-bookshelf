@@ -4,12 +4,12 @@ import { getCurrentUser } from '@/lib/auth'
 import { TmdbIdParamSchema, PageParamSchema } from '@/lib/validations'
 import { lookupMovieByTmdbId } from '@/lib/external/movie-lookup'
 import { logAdapterError } from '@/lib/external/log-error'
+import { getPublicMovieFallbackByTmdbId } from '@/lib/db/queries'
 import {
-  listMovieReviewsByTmdbId,
-  countMovieReviewsByTmdbId,
-  getMovieRatingDistributionByTmdbId,
-  getPublicMovieFallbackByTmdbId,
-} from '@/lib/db/queries'
+  getMovieReviewsCached,
+  getMovieReviewsCountCached,
+  getMovieDistributionCached,
+} from '@/lib/works-detail-cache'
 import { WorksDetailHeader } from '@/components/works/WorksDetailHeader'
 import { RatingDistribution } from '@/components/works/RatingDistribution'
 import { ReviewListItem } from '@/components/works/ReviewListItem'
@@ -38,9 +38,9 @@ export default async function WorksMovieDetailPage({ params, searchParams }: SP)
 
   const [meta, items, total, distribution] = await Promise.all([
     safeMovieLookup(tmdbId),
-    listMovieReviewsByTmdbId(db, tmdbId, { limit: PAGE_SIZE, offset }),
-    countMovieReviewsByTmdbId(db, tmdbId),
-    getMovieRatingDistributionByTmdbId(db, tmdbId),
+    getMovieReviewsCached(tmdbId, PAGE_SIZE, offset),
+    getMovieReviewsCountCached(tmdbId),
+    getMovieDistributionCached(tmdbId),
   ])
   // 외부 lookup 실패 시에만 DB fallback 조회 — 정상 케이스의 불필요한 DB hit 회피.
   const fallback = meta ? null : await getPublicMovieFallbackByTmdbId(db, tmdbId)

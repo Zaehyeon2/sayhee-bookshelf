@@ -42,7 +42,7 @@ export async function POST(_req: Request, { params }: Params) {
       `[audit] admin id=${admin.id} reset password for user id=${userId} username=${result[0].username}`,
     )
     // tokenVersion bump으로 대상 user의 모든 세션 즉시 무효 — cached lookup도 invalidate.
-    revalidateTag(SESSION_CACHE_TAG)
+    revalidateTag(SESSION_CACHE_TAG, 'max')
     return NextResponse.json({ ok: true })
   } catch (e) {
     if (e instanceof HttpError) return e.toResponse()

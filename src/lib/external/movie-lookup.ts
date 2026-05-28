@@ -25,6 +25,8 @@ export async function lookupMovieByTmdbId(
   url.searchParams.set('language', 'ko-KR')
 
   // TMDB id는 immutable — 24h cache로 detail page 외부 왕복 제거.
+  // diagnostic: 같은 tmdbId 연속 진입 시 안 찍히면 Data Cache HIT.
+  console.log('[diag] tmdb-movie lookup fetch', tmdbId)
   const res = await fetch(url, {
     signal: opts.signal,
     headers: {

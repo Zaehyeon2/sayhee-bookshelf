@@ -59,7 +59,7 @@ export async function POST(req: Request) {
       maxAge: SESSION.maxAge,
     })
     // tokenVersion 증가로 이전 토큰 모두 무효 — cached user lookup도 즉시 stale로 표시.
-    revalidateTag(SESSION_CACHE_TAG)
+    revalidateTag(SESSION_CACHE_TAG, 'max')
     return NextResponse.json({ ok: true })
   } catch (e) {
     if (e instanceof HttpError) return e.toResponse()

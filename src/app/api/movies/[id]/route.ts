@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { db } from '@/lib/db/client'
 import { deleteMovie, getMovieById, updateMovie } from '@/lib/db/queries'
 import { UpdateMovieSchema } from '@/lib/validations'
 import { requireOwnMovie, HttpError } from '@/lib/auth-helpers'
+import { PUBLIC_FEED_TAGS } from '@/lib/public-feed-cache'
+import { WORKS_MOVIE_TAG } from '@/lib/works-detail-cache'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -41,6 +44,8 @@ export async function PATCH(req: Request, { params }: Params) {
     }
     const updated = await updateMovie(db, user.id, movieId, parsed.data)
     if (!updated) return NextResponse.json({ error: 'not found' }, { status: 404 })
+    revalidateTag(PUBLIC_FEED_TAGS.movies, 'max')
+    revalidateTag(WORKS_MOVIE_TAG, 'max')
     return NextResponse.json({ id: updated.id, slug: updated.slug })
   } catch (e) {
     if (e instanceof HttpError) return e.toResponse()
@@ -57,6 +62,8 @@ export async function DELETE(_req: Request, { params }: Params) {
     const { user } = await requireOwnMovie(movieId)
     const ok = await deleteMovie(db, user.id, movieId)
     if (!ok) return NextResponse.json({ error: 'not found' }, { status: 404 })
+    revalidateTag(PUBLIC_FEED_TAGS.movies, 'max')
+    revalidateTag(WORKS_MOVIE_TAG, 'max')
     return NextResponse.json({ ok: true })
   } catch (e) {
     if (e instanceof HttpError) return e.toResponse()
