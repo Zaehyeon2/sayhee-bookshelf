@@ -24,12 +24,15 @@ export async function lookupMovieByTmdbId(
   const url = new URL(`${TMDB_BASE}/movie/${tmdbId}`)
   url.searchParams.set('language', 'ko-KR')
 
+  // TMDB id는 immutable — 24h cache로 detail page 외부 왕복 제거.
   const res = await fetch(url, {
     signal: opts.signal,
     headers: {
       Authorization: `Bearer ${key}`,
       accept: 'application/json',
     },
+    cache: 'force-cache',
+    next: { revalidate: 86400, tags: ['tmdb-movie-lookup'] },
   })
 
   if (res.status === 404) return null

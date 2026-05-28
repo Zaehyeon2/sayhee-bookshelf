@@ -70,12 +70,15 @@ export async function searchBooksExternal(
   url.searchParams.set('query', query)
   url.searchParams.set('display', String(Math.min(opts.limit, 30)))
 
+  // 외부 검색 결과는 query 기반 cache — 1h revalidate (신간 반영 + 외부 왕복 절감).
   const res = await fetch(url, {
     signal: opts.signal,
     headers: {
       'X-Naver-Client-Id': clientId,
       'X-Naver-Client-Secret': clientSecret,
     },
+    cache: 'force-cache',
+    next: { revalidate: 3600, tags: ['naver-book-search'] },
   })
 
   if (res.status === 429) {

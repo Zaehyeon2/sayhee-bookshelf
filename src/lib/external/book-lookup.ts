@@ -77,12 +77,16 @@ export async function lookupBookByIsbn(
   url.searchParams.set('d_isbn', isbn)
   url.searchParams.set('display', '1')
 
+  // ISBN은 immutable identifier — 24h cache로 detail page 진입 latency 제거.
+  // 같은 ISBN을 보는 모든 사용자가 첫 요청 이후 cache hit.
   const res = await fetch(url, {
     signal: opts.signal,
     headers: {
       'X-Naver-Client-Id': clientId,
       'X-Naver-Client-Secret': clientSecret,
     },
+    cache: 'force-cache',
+    next: { revalidate: 86400, tags: ['naver-book-lookup'] },
   })
 
   if (res.status === 429)

@@ -1,12 +1,7 @@
 import Link from 'next/link'
 import { db } from '@/lib/db/client'
-import {
-  listRecentPublicBooks,
-  listRecentPublicMovies,
-  listWritings,
-  getUserStats,
-  getUserMovieStats,
-} from '@/lib/db/queries'
+import { listWritings, getUserStats, getUserMovieStats } from '@/lib/db/queries'
+import { getPublicBooksFeed, getPublicMoviesFeed } from '@/lib/public-feed-cache'
 import { PublicReviewCard } from '@/components/PublicReviewCard'
 import { PublicMovieCard } from '@/components/PublicMovieCard'
 import { WritingCard } from '@/components/WritingCard'
@@ -40,8 +35,8 @@ export default async function HomePage() {
     await Promise.all([
       getUserStats(db, me.id, thisYear),
       getUserMovieStats(db, me.id, thisYear),
-      listRecentPublicBooks(db, { limit: 6 }),
-      listRecentPublicMovies(db, { limit: 6 }),
+      getPublicBooksFeed(6, 0),
+      getPublicMoviesFeed(6, 0),
       listWritings(db, me.id, { limit: 6 }),
     ])
 

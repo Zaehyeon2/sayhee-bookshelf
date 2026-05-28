@@ -1,12 +1,11 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { db } from '@/lib/db/client'
 import {
-  listRecentPublicBooks,
-  countPublicBooks,
-  listRecentPublicMovies,
-  countPublicMovies,
-} from '@/lib/db/queries'
+  getPublicBooksFeed,
+  getPublicBooksFeedCount,
+  getPublicMoviesFeed,
+  getPublicMoviesFeedCount,
+} from '@/lib/public-feed-cache'
 import { PublicReviewCard } from '@/components/PublicReviewCard'
 import { PublicMovieCard } from '@/components/PublicMovieCard'
 import { Pagination } from '@/components/Pagination'
@@ -62,8 +61,8 @@ export default async function FeedPage({ searchParams }: SP) {
 
 async function BookFeedContent({ page, offset }: { page: number; offset: number }) {
   const [items, total] = await Promise.all([
-    listRecentPublicBooks(db, { limit: PAGE_SIZE, offset }),
-    countPublicBooks(db),
+    getPublicBooksFeed(PAGE_SIZE, offset),
+    getPublicBooksFeedCount(),
   ])
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
   if (items.length === 0) {
@@ -96,8 +95,8 @@ async function BookFeedContent({ page, offset }: { page: number; offset: number 
 
 async function MovieFeedContent({ page, offset }: { page: number; offset: number }) {
   const [items, total] = await Promise.all([
-    listRecentPublicMovies(db, { limit: PAGE_SIZE, offset }),
-    countPublicMovies(db),
+    getPublicMoviesFeed(PAGE_SIZE, offset),
+    getPublicMoviesFeedCount(),
   ])
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
   if (items.length === 0) {

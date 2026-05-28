@@ -42,12 +42,15 @@ export async function searchMoviesExternal(
   url.searchParams.set('language', 'ko-KR')
   url.searchParams.set('include_adult', 'false')
 
+  // 외부 검색 결과는 query 기반 cache — 1h revalidate (신규 등록 반영 + 외부 왕복 절감).
   const res = await fetch(url, {
     signal: opts.signal,
     headers: {
       Authorization: `Bearer ${key}`,
       accept: 'application/json',
     },
+    cache: 'force-cache',
+    next: { revalidate: 3600, tags: ['tmdb-movie-search'] },
   })
   if (res.status === 429) {
     throw new Error(
