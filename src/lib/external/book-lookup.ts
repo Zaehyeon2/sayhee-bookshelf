@@ -1,6 +1,8 @@
 import type { BookLookupResult } from './types'
 
-const NAVER_ENDPOINT = 'https://openapi.naver.com/v1/search/book.json'
+// Detail search 파라미터(`d_isbn`, `d_titl` 등)는 advanced endpoint에서만 동작.
+// 일반 `/book.json`은 `query=` 자유어 검색 전용이라 `d_isbn`을 무시하고 빈 결과를 반환한다.
+const NAVER_ENDPOINT = 'https://openapi.naver.com/v1/search/book_adv.json'
 
 function stripBoldTags(s: string | undefined): string {
   if (!s) return ''
