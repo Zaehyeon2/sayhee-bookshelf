@@ -44,7 +44,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             >
               📚 {siteTitle}
             </Link>
-            <div className="flex items-center gap-1">
+            {/* Desktop nav — md 이상 */}
+            <div className="hidden md:flex items-center gap-1">
               {me ? (
                 <>
                   <Link
@@ -83,6 +84,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               )}
               <ThemeToggle />
             </div>
+
+            {/* Mobile nav — md 미만 */}
+            <div className="flex md:hidden items-center gap-1">
+              <ThemeToggle />
+              {me ? (
+                <MobileMenu displayName={me.displayName} role={me.role as 'admin' | 'member'} />
+              ) : (
+                <Link
+                  href="/login"
+                  className="px-3 h-11 inline-flex items-center text-[14px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)] transition"
+                >
+                  로그인
+                </Link>
+              )}
+            </div>
           </nav>
         </header>
         <main className="mx-auto max-w-5xl px-5 py-8">{children}</main>
@@ -91,6 +107,73 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <SpeedInsights />
       </body>
     </html>
+  )
+}
+
+function MobileMenu({
+  displayName,
+  role,
+}: {
+  displayName: string
+  role: 'admin' | 'member'
+}) {
+  return (
+    <details className="relative">
+      <summary
+        aria-label="메뉴 열기"
+        className="list-none cursor-pointer h-11 w-11 inline-flex items-center justify-center rounded-[var(--radius-toss-sm)] text-[20px] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+      >
+        <span aria-hidden>☰</span>
+      </summary>
+      <div className="absolute right-0 mt-1 w-56 rounded-[var(--radius-toss)] bg-[var(--color-surface)] shadow-[var(--shadow-toss)] border border-[var(--color-border-subtle)] py-1 text-[14px]">
+        <Link href="/books" className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]">
+          📚 내 책장
+        </Link>
+        <Link href="/movies" className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]">
+          🎬 내 영화관
+        </Link>
+        <Link href="/works" className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]">
+          🔍 작품 검색
+        </Link>
+        <Link href="/writings" className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]">
+          ✏️ 글방
+        </Link>
+        <div className="border-t border-[var(--color-border-subtle)] my-1" />
+        <div className="px-4 py-2 text-[12px] text-[var(--color-text-muted)]">{displayName}</div>
+        <Link
+          href="/settings/profile"
+          className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]"
+        >
+          프로필 변경
+        </Link>
+        <Link
+          href="/settings/password"
+          className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]"
+        >
+          비밀번호 변경
+        </Link>
+        {role === 'admin' && (
+          <Link
+            href="/admin/users"
+            className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]"
+          >
+            사용자 관리
+          </Link>
+        )}
+        <form
+          action="/api/logout"
+          method="POST"
+          className="border-t border-[var(--color-border-subtle)] mt-1 pt-1"
+        >
+          <button
+            type="submit"
+            className="w-full text-left px-4 py-2.5 hover:bg-[var(--color-surface-2)]"
+          >
+            로그아웃
+          </button>
+        </form>
+      </div>
+    </details>
   )
 }
 
