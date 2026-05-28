@@ -4,9 +4,13 @@ import {
   listBookReviewsByIsbn,
   countBookReviewsByIsbn,
   getBookRatingDistributionByIsbn,
+  getMovieAggregatesByTmdbIds,
+  listMovieReviewsByTmdbId,
+  countMovieReviewsByTmdbId,
+  getMovieRatingDistributionByTmdbId,
 } from '@/lib/db/queries'
 import { makeTestDb, type TestDb } from '../setup-db'
-import { createUser, createBook } from '../factories'
+import { createUser, createBook, createMovie } from '../factories'
 
 describe('books works aggregation', () => {
   let db: TestDb
@@ -93,5 +97,41 @@ describe('books works aggregation', () => {
     expect(d.buckets[1]).toBe(1)
     expect(d.buckets[2]).toBe(0)
     expect(d.avg).toBeCloseTo(7.14, 1)
+  })
+})
+
+describe('movies works aggregation', () => {
+  let db: TestDb
+  beforeEach(async () => {
+    ;({ db } = await makeTestDb())
+  })
+
+  it('aggregates published items by tmdbId', async () => {
+    const a = await createUser(db, { username: 'alice' })
+    const b = await createUser(db, { username: 'bob' })
+    await createMovie(db, a.id, { tmdbId: 157336, rating: 10, isPublic: 1, publishedAt: Date.now() })
+    await createMovie(db, b.id, { tmdbId: 157336, rating: 8, isPublic: 1, publishedAt: Date.now() - 1000 })
+
+    const map = await getMovieAggregatesByTmdbIds(db, [157336])
+    expect(map.get(157336)?.cnt).toBe(2)
+    expect(map.get(157336)?.avg).toBe(9)
+  })
+
+  it('INCLUDES published movies with null oneLineReview (regression guard)', async () => {
+    const a = await createUser(db, { username: 'alice' })
+    await createMovie(db, a.id, { tmdbId: 27205, rating: 9, oneLineReview: null, isPublic: 1, publishedAt: Date.now() })
+    await createMovie(db, a.id, { tmdbId: 27205, rating: 7, oneLineReview: '인셉션 굿', isPublic: 1, publishedAt: Date.now() })
+
+    const d = await getMovieRatingDistributionByTmdbId(db, 27205)
+    expect(d.cnt).toBe(2)
+    expect(d.avg).toBe(8)
+  })
+
+  it('listMovieReviewsByTmdbId joins username and orders DESC', async () => {
+    const a = await createUser(db, { username: 'alice', displayName: '앨리스' })
+    await createMovie(db, a.id, { tmdbId: 99999, rating: 10, oneLineReview: '★', isPublic: 1, publishedAt: Date.now() })
+    const rows = await listMovieReviewsByTmdbId(db, 99999, { limit: 10 })
+    expect(rows[0].authorDisplayName).toBe('앨리스')
+    expect(rows[0].authorUsername).toBe('alice')
   })
 })

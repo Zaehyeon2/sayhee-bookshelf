@@ -2,6 +2,7 @@ import { and, desc, eq, inArray, like, sql } from 'drizzle-orm'
 import { movies, movieTags, tags, users } from '../schema'
 import { toSlug } from '@/lib/slug'
 import type { CreateMovieInput, UpdateMovieInput } from '@/lib/validations'
+import type { RatingDistribution } from './books'
 import { escapeLikePattern, isMovieSlugUniqueViolation } from './shared'
 import type { Db, MovieWithTags } from './shared'
 import { attachMovieTags, attachTagsToMoviesBatch, replaceMovieTagsTx } from './tags'
@@ -423,4 +424,128 @@ export async function countMoviesByExternalIds(
     if (r.tmdbId != null) counts.set(r.tmdbId, Number(r.n))
   }
   return counts
+}
+
+// ─── works (external-id aggregation) ─────────────────────────────────────────
+// MULTITENANT INVARIANT EXCEPTION: 아래 4개 함수는 authorUserId 필터가 없는
+// cross-user read 경로 — /works 작품별 별점·한줄평 묶음용.
+// 한줄평 유무와 무관하게 published 항목 모두 포함 (별점 집계 왜곡 방지).
+// 다른 모든 user-scoped 쿼리는 본인 스코프 유지.
+
+export type MovieSiteAggregate = { avg: number; cnt: number }
+
+export async function getMovieAggregatesByTmdbIds(
+  db: Db,
+  tmdbIds: number[],
+): Promise<Map<number, MovieSiteAggregate>> {
+  const out = new Map<number, MovieSiteAggregate>()
+  if (tmdbIds.length === 0) return out
+  const rows = await db
+    .select({
+      tmdbId: movies.tmdbId,
+      avg: sql<number>`AVG(${movies.rating})`,
+      cnt: sql<number>`COUNT(*)`,
+    })
+    .from(movies)
+    .where(
+      and(
+        eq(movies.isPublic, 1),
+        sql`${movies.publishedAt} IS NOT NULL`,
+        inArray(movies.tmdbId, tmdbIds),
+      ),
+    )
+    .groupBy(movies.tmdbId)
+  for (const r of rows) {
+    if (r.tmdbId != null) out.set(r.tmdbId, { avg: Number(r.avg), cnt: Number(r.cnt) })
+  }
+  return out
+}
+
+export type MovieReviewItem = {
+  id: number
+  slug: string
+  oneLineReview: string | null
+  rating: number
+  publishedAt: number
+  authorUsername: string
+  authorDisplayName: string
+}
+
+export async function listMovieReviewsByTmdbId(
+  db: Db,
+  tmdbId: number,
+  opts: { limit: number; offset?: number },
+): Promise<MovieReviewItem[]> {
+  let q = db
+    .select({
+      id: movies.id,
+      slug: movies.slug,
+      oneLineReview: movies.oneLineReview,
+      rating: movies.rating,
+      publishedAt: movies.publishedAt,
+      authorUsername: users.username,
+      authorDisplayName: users.displayName,
+    })
+    .from(movies)
+    .innerJoin(users, eq(movies.authorUserId, users.id))
+    .where(
+      and(
+        eq(movies.isPublic, 1),
+        sql`${movies.publishedAt} IS NOT NULL`,
+        eq(movies.tmdbId, tmdbId),
+      ),
+    )
+    .orderBy(desc(movies.publishedAt))
+    .$dynamic()
+  q = q.limit(opts.limit)
+  if (opts.offset !== undefined) q = q.offset(opts.offset)
+  const rows = await q
+  // publishedAt은 위 WHERE로 NOT NULL 보장 — 타입을 number로 narrow
+  return rows.map((r) => ({ ...r, publishedAt: r.publishedAt as number }))
+}
+
+export async function countMovieReviewsByTmdbId(db: Db, tmdbId: number): Promise<number> {
+  const rows = await db
+    .select({ n: sql<number>`COUNT(*)` })
+    .from(movies)
+    .where(
+      and(
+        eq(movies.isPublic, 1),
+        sql`${movies.publishedAt} IS NOT NULL`,
+        eq(movies.tmdbId, tmdbId),
+      ),
+    )
+  return Number(rows[0]?.n ?? 0)
+}
+
+export async function getMovieRatingDistributionByTmdbId(
+  db: Db,
+  tmdbId: number,
+): Promise<RatingDistribution> {
+  const rows = await db
+    .select({
+      rating: movies.rating,
+      cnt: sql<number>`COUNT(*)`,
+    })
+    .from(movies)
+    .where(
+      and(
+        eq(movies.isPublic, 1),
+        sql`${movies.publishedAt} IS NOT NULL`,
+        eq(movies.tmdbId, tmdbId),
+      ),
+    )
+    .groupBy(movies.rating)
+  const buckets: Record<number, number> = {}
+  for (let r = 1; r <= 10; r++) buckets[r] = 0
+  let total = 0
+  let weightedSum = 0
+  for (const row of rows) {
+    const r = Number(row.rating)
+    const c = Number(row.cnt)
+    buckets[r] = c
+    total += c
+    weightedSum += r * c
+  }
+  return { avg: total === 0 ? 0 : weightedSum / total, cnt: total, buckets }
 }
