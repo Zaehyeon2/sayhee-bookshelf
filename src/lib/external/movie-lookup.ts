@@ -1,7 +1,10 @@
+import { cacheLife, cacheTag } from 'next/cache'
 import type { MovieLookupResult } from './types'
 
 const TMDB_BASE = 'https://api.themoviedb.org/3'
 const POSTER_PREFIX = 'https://image.tmdb.org/t/p/w342'
+
+export const TMDB_MOVIE_LOOKUP_TAG = 'tmdb-movie-lookup'
 
 interface TmdbMovieDetail {
   id?: number
@@ -13,28 +16,23 @@ interface TmdbMovieDetail {
   vote_average?: number
 }
 
-export async function lookupMovieByTmdbId(
-  tmdbId: number,
-  opts: { signal?: AbortSignal } = {},
-): Promise<MovieLookupResult | null> {
+async function fetchTmdbMovie(tmdbId: number): Promise<TmdbMovieDetail | null> {
+  'use cache: remote'
+  cacheTag(TMDB_MOVIE_LOOKUP_TAG)
+  cacheLife('days')
+
   const key = process.env.TMDB_API_KEY
   if (!key) throw new Error('TMDB_API_KEY env var not set')
-  if (!Number.isInteger(tmdbId) || tmdbId <= 0) return null
 
   const url = new URL(`${TMDB_BASE}/movie/${tmdbId}`)
   url.searchParams.set('language', 'ko-KR')
 
-  // TMDB id는 immutable — 24h cache로 detail page 외부 왕복 제거.
-  // diagnostic: 같은 tmdbId 연속 진입 시 안 찍히면 Data Cache HIT.
   console.log('[diag] tmdb-movie lookup fetch', tmdbId)
   const res = await fetch(url, {
-    signal: opts.signal,
     headers: {
       Authorization: `Bearer ${key}`,
       accept: 'application/json',
     },
-    cache: 'force-cache',
-    next: { revalidate: 86400, tags: ['tmdb-movie-lookup'] },
   })
 
   if (res.status === 404) return null
@@ -44,8 +42,16 @@ export async function lookupMovieByTmdbId(
   if (res.status >= 500) throw new Error(`TMDB upstream ${res.status}`)
   if (res.status >= 400) return null
 
-  const data = (await res.json()) as TmdbMovieDetail
-  if (!data.id || !data.title) return null
+  return (await res.json()) as TmdbMovieDetail
+}
+
+export async function lookupMovieByTmdbId(
+  tmdbId: number,
+  _opts: { signal?: AbortSignal } = {},
+): Promise<MovieLookupResult | null> {
+  if (!Number.isInteger(tmdbId) || tmdbId <= 0) return null
+  const data = await fetchTmdbMovie(tmdbId)
+  if (!data || !data.id || !data.title) return null
 
   const year =
     data.release_date && /^\d{4}-/.test(data.release_date)

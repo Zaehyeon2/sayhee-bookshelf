@@ -1,4 +1,7 @@
+import { cacheLife, cacheTag } from 'next/cache'
 import type { BookLookupResult } from './types'
+
+export const NAVER_BOOK_LOOKUP_TAG = 'naver-book-lookup'
 
 // Detail search 파라미터(`d_isbn`, `d_titl` 등)는 advanced endpoint에서만 동작.
 // 일반 `/book.json`은 `query=` 자유어 검색 전용이라 `d_isbn`을 무시하고 빈 결과를 반환한다.
@@ -62,33 +65,28 @@ interface NaverSearchResponse {
   items?: NaverBookItem[]
 }
 
-export async function lookupBookByIsbn(
-  isbn: string,
-  opts: { signal?: AbortSignal } = {},
-): Promise<BookLookupResult | null> {
+// 'use cache: remote' inner — isbn만 인자, signal/opts는 cache key에 안 포함.
+// Vercel Runtime Cache로 첫 hit 이후 모든 region에서 공유.
+async function fetchNaverBookItem(isbn: string): Promise<NaverBookItem | null> {
+  'use cache: remote'
+  cacheTag(NAVER_BOOK_LOOKUP_TAG)
+  cacheLife('days')
+
   const clientId = process.env.NAVER_CLIENT_ID
   const clientSecret = process.env.NAVER_CLIENT_SECRET
   if (!clientId || !clientSecret) {
     throw new Error('NAVER_CLIENT_ID / NAVER_CLIENT_SECRET env vars not set')
   }
-  if (!/^\d{10}(\d{3})?$/.test(isbn)) return null
-
   const url = new URL(NAVER_ENDPOINT)
   url.searchParams.set('d_isbn', isbn)
   url.searchParams.set('display', '1')
 
-  // ISBN은 immutable identifier — 24h cache로 detail page 진입 latency 제거.
-  // 같은 ISBN을 보는 모든 사용자가 첫 요청 이후 cache hit.
-  // diagnostic: 같은 ISBN 연속 진입 시 이 로그가 안 찍히면 Data Cache HIT.
   console.log('[diag] naver-book lookup fetch', isbn)
   const res = await fetch(url, {
-    signal: opts.signal,
     headers: {
       'X-Naver-Client-Id': clientId,
       'X-Naver-Client-Secret': clientSecret,
     },
-    cache: 'force-cache',
-    next: { revalidate: 86400, tags: ['naver-book-lookup'] },
   })
 
   if (res.status === 429)
@@ -98,7 +96,15 @@ export async function lookupBookByIsbn(
   if (res.status >= 400) return null
 
   const data = (await res.json()) as NaverSearchResponse
-  const item = data.items?.[0]
+  return data.items?.[0] ?? null
+}
+
+export async function lookupBookByIsbn(
+  isbn: string,
+  _opts: { signal?: AbortSignal } = {},
+): Promise<BookLookupResult | null> {
+  if (!/^\d{10}(\d{3})?$/.test(isbn)) return null
+  const item = await fetchNaverBookItem(isbn)
   if (!item) return null
 
   // Canonical 13-digit ISBN only — preserves dedup invariant with src/lib/external/books.ts.

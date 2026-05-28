@@ -1,6 +1,9 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  // Next 16 Cache Components — 'use cache: remote' directive 활성화 위해 필수.
+  // 기본 dynamic page는 그대로 dynamic, 명시적 'use cache' 함수만 cache.
+  cacheComponents: true,
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'image.tmdb.org' },
