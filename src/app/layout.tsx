@@ -45,7 +45,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               📚 {siteTitle}
             </Link>
             {/* Desktop nav — md 이상 */}
-            <div className="hidden md:flex items-center gap-1">
+            <div data-testid="desktop-nav" className="hidden md:flex items-center gap-1">
               {me ? (
                 <>
                   <Link
@@ -86,7 +86,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </div>
 
             {/* Mobile nav — md 미만 */}
-            <div className="flex md:hidden items-center gap-1">
+            <div data-testid="mobile-nav" className="flex md:hidden items-center gap-1">
               <ThemeToggle />
               {me ? (
                 <MobileMenu displayName={me.displayName} role={me.role as 'admin' | 'member'} />
@@ -123,9 +123,9 @@ function MobileMenu({
         aria-label="메뉴 열기"
         className="list-none cursor-pointer h-11 w-11 inline-flex items-center justify-center rounded-[var(--radius-toss-sm)] text-[20px] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
       >
-        <span aria-hidden>☰</span>
+        <span aria-hidden="true">☰</span>
       </summary>
-      <div className="absolute right-0 mt-1 w-56 rounded-[var(--radius-toss)] bg-[var(--color-surface)] shadow-[var(--shadow-toss)] border border-[var(--color-border-subtle)] py-1 text-[14px]">
+      <div className="absolute right-0 mt-1 w-56 max-w-[calc(100vw-2rem)] rounded-[var(--radius-toss)] bg-[var(--color-surface)] shadow-[var(--shadow-toss)] border border-[var(--color-border-subtle)] py-1 text-[14px] z-50">
         <Link href="/books" className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]">
           📚 내 책장
         </Link>
