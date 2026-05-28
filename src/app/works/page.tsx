@@ -21,9 +21,11 @@ export default async function WorksSearchPage({ searchParams }: SP) {
   if (!me) redirect('/login?next=/works')
 
   const sp = await searchParams
-  const parsed = WorksSearchQuerySchema.safeParse({ type: sp.type, q: sp.q ?? '', page: sp.page })
-  const type = parsed.success ? parsed.data.type : 'book'
-  const q = parsed.success ? parsed.data.q : ''
+  // type은 q 유무와 독립적으로 결정 — 빈 q로 탭만 전환하는 경우 지원.
+  // q가 있을 때만 WorksSearchQuerySchema로 검증(min 1, max 100, trim).
+  const type: 'book' | 'movie' = sp.type === 'movie' ? 'movie' : 'book'
+  const parsedQ = WorksSearchQuerySchema.safeParse({ type, q: sp.q ?? '', page: sp.page })
+  const q = parsedQ.success ? parsedQ.data.q : ''
 
   return (
     <div className="space-y-6">
