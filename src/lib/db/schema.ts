@@ -45,6 +45,10 @@ export const books = sqliteTable(
     isPublic: integer('is_public').notNull().default(1),
     publishedAt: integer('published_at'),
     slug: text('slug').notNull(),
+    // 신규: 외부 API 메타데이터 (모두 nullable)
+    isbn: text('isbn'),
+    coverUrl: text('cover_url'),
+    externalSource: text('external_source'),
     createdAt: integer('created_at').notNull(),
     updatedAt: integer('updated_at').notNull(),
   },
@@ -59,6 +63,8 @@ export const books = sqliteTable(
       t.isPublic,
       sql`${t.publishedAt} DESC`,
     ),
+    isbnIdx: index('idx_books_isbn').on(t.isbn),
+    publicIsbnIdx: index('idx_books_public_isbn').on(t.isPublic, t.isbn),
     ratingCheck: check('rating_range', sql`${t.rating} BETWEEN 1 AND 10`),
   }),
 )
@@ -165,6 +171,10 @@ export const movies = sqliteTable(
     isPublic: integer('is_public').notNull().default(1),
     publishedAt: integer('published_at'),
     slug: text('slug').notNull(),
+    // 신규: 외부 API 메타데이터 (모두 nullable)
+    tmdbId: integer('tmdb_id'),
+    coverUrl: text('cover_url'),
+    externalSource: text('external_source'),
     createdAt: integer('created_at').notNull(),
     updatedAt: integer('updated_at').notNull(),
   },
@@ -178,6 +188,8 @@ export const movies = sqliteTable(
       t.isPublic,
       sql`${t.publishedAt} DESC`,
     ),
+    tmdbIdx: index('idx_movies_tmdb').on(t.tmdbId),
+    publicTmdbIdx: index('idx_movies_public_tmdb').on(t.isPublic, t.tmdbId),
     ratingCheck: check('movies_rating_range', sql`${t.rating} BETWEEN 1 AND 10`),
   }),
 )
