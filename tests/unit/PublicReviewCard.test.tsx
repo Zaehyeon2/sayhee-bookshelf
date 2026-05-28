@@ -11,6 +11,7 @@ const baseProps = {
   rating: 5,
   oneLineReview: '인생 책',
   coverUrl: null,
+  isbn: '9788937460449',
   publishedAt: Date.now(),
   authorDisplayName: '앨리스',
 }
@@ -33,12 +34,18 @@ describe('PublicReviewCard', () => {
     expect(screen.queryByText('인생 책')).not.toBeInTheDocument()
   })
 
-  it('is clickable — wraps in anchor with /works book search href', () => {
+  it('clickable — navigates to detail page when isbn is present', () => {
     const { container } = render(<PublicReviewCard item={baseProps} />)
     const anchor = container.querySelector('a')
     expect(anchor).not.toBeNull()
+    expect(anchor!.getAttribute('href')).toBe('/works/book/9788937460449')
+  })
+
+  it('clickable — falls back to /works search when isbn is null', () => {
+    const { container } = render(<PublicReviewCard item={{ ...baseProps, isbn: null }} />)
+    const anchor = container.querySelector('a')
     expect(anchor!.getAttribute('href')).toBe(
-      `/works?type=book&q=${encodeURIComponent('데미안')}`
+      `/works?type=book&q=${encodeURIComponent('데미안')}`,
     )
   })
 

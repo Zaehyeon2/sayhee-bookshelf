@@ -132,6 +132,7 @@ describe('PublicMovieCard', () => {
     rating: 9,
     oneLineReview: '꿈 안의 꿈',
     coverUrl: null,
+    tmdbId: 27205,
     publishedAt: Date.now() - 60_000,
     authorDisplayName: '앨리스',
   }

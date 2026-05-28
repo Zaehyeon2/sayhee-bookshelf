@@ -16,6 +16,7 @@ export type PublicMovieCard = {
   rating: number
   oneLineReview: string | null
   coverUrl: string | null
+  tmdbId: number | null
   publishedAt: number
   authorDisplayName: string
 }
@@ -339,6 +340,7 @@ export async function listRecentPublicMovies(
       rating: movies.rating,
       oneLineReview: movies.oneLineReview,
       coverUrl: movies.coverUrl,
+      tmdbId: movies.tmdbId,
       publishedAt: movies.publishedAt,
       authorDisplayName: users.displayName,
     })

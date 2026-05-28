@@ -31,7 +31,11 @@ function formatRelative(ts: number): string {
 export function PublicReviewCard({ item }: Props) {
   return (
     <Link
-      href={`/works?type=book&q=${encodeURIComponent(item.title.slice(0, MAX_SEARCH_Q))}`}
+      href={
+        item.isbn
+          ? `/works/book/${item.isbn}`
+          : `/works?type=book&q=${encodeURIComponent(item.title.slice(0, MAX_SEARCH_Q))}`
+      }
       className="block rounded-[var(--radius-toss)] active:scale-[0.99] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
     >
       <article className="bg-[var(--color-surface)] p-5 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] rounded-[var(--radius-toss)] transition">
@@ -55,16 +59,8 @@ export function PublicReviewCard({ item }: Props) {
           </div>
         </div>
         {item.oneLineReview && (
-          <blockquote
-            aria-label={`${item.authorDisplayName}의 한줄평`}
-            className="mt-4 border-l-4 border-[var(--color-toss-blue)] pl-3 py-1 flex items-start gap-1"
-          >
-            <span
-              aria-hidden
-              className="text-[24px] text-[var(--color-text-weak)] leading-none select-none"
-            >
-              &ldquo;
-            </span>
+          <blockquote className="mt-4 border-l-4 border-[var(--color-toss-blue)] pl-3 py-1">
+            <span className="sr-only">{item.authorDisplayName}의 한줄평: </span>
             <p className="text-[15px] leading-relaxed font-medium text-[var(--color-text-strong)] line-clamp-3">
               {item.oneLineReview}
             </p>
