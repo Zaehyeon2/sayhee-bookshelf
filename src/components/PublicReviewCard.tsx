@@ -72,11 +72,13 @@ export function PublicReviewCard({ item }: Props) {
             </p>
           </blockquote>
         )}
-        <div className="mt-auto pt-3 border-t border-[var(--color-border)] flex items-center justify-between text-[12px] text-[var(--color-text-weak)]">
-          <span className="font-semibold text-[var(--color-text-muted)]">
-            {item.authorDisplayName}
-          </span>
-          <time className="font-tabular tabular-nums">{formatRelative(item.publishedAt)}</time>
+        <div className="mt-auto pt-4">
+          <div className="pt-3 border-t border-[var(--color-border)] flex items-center justify-between text-[12px] text-[var(--color-text-weak)]">
+            <span className="font-semibold text-[var(--color-text-muted)]">
+              {item.authorDisplayName}
+            </span>
+            <time className="font-tabular tabular-nums">{formatRelative(item.publishedAt)}</time>
+          </div>
         </div>
       </article>
     </Link>
