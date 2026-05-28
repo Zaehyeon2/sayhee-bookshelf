@@ -96,7 +96,7 @@ describe('GET /api/external/books/search', () => {
     const r = await booksSearch(req('https://x/api/external/books/search?q=책방'))
     expect(r.status).toBe(200)
     const body = await r.json()
-    expect(body.source).toBe('nl-kr')
+    expect(body.source).toBe('naver')
     expect(body.items).toHaveLength(1)
     expect(body.items[0].externalId).toBe('9781')
     expect(r.headers.get('cache-control')).toContain('private')

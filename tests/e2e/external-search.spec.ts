@@ -31,7 +31,7 @@ async function stubExternalApis(
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        source: 'nl-kr',
+        source: 'naver',
         items: [item],
       }),
     })

@@ -23,6 +23,7 @@ export type PublicBookCard = {
   genre: string
   rating: number
   oneLineReview: string | null
+  coverUrl: string | null
   publishedAt: number
   authorDisplayName: string
 }
@@ -336,6 +337,7 @@ export async function listRecentPublicBooks(
       genre: books.genre,
       rating: books.rating,
       oneLineReview: books.oneLineReview,
+      coverUrl: books.coverUrl,
       publishedAt: books.publishedAt,
       authorDisplayName: users.displayName,
     })

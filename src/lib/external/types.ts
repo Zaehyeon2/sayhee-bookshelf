@@ -11,7 +11,7 @@ export interface ExternalSearchItem<TId extends string | number> {
 
 export interface ExternalSearchResponse<TId extends string | number> {
   items: ExternalSearchItem<TId>[]
-  source: 'nl-kr' | 'tmdb'
+  source: 'naver' | 'tmdb'
 }
 
 export type BookSearchItem = ExternalSearchItem<string>

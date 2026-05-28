@@ -14,6 +14,7 @@ export type PublicMovieCard = {
   genre: string
   rating: number
   oneLineReview: string | null
+  coverUrl: string | null
   publishedAt: number
   authorDisplayName: string
 }
@@ -336,6 +337,7 @@ export async function listRecentPublicMovies(
       genre: movies.genre,
       rating: movies.rating,
       oneLineReview: movies.oneLineReview,
+      coverUrl: movies.coverUrl,
       publishedAt: movies.publishedAt,
       authorDisplayName: users.displayName,
     })

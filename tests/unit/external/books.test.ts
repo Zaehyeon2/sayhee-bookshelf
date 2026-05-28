@@ -68,6 +68,14 @@ describe('searchBooksExternal (Naver)', () => {
     expect(r).toEqual([])
   })
 
+  it('drops items with only ISBN10 (no canonical 13-digit form)', async () => {
+    globalThis.fetch = jsonStub({
+      items: [{ title: 'isbn10-only', author: 'a', isbn: '8983920777' }],
+    })
+    const r = await searchBooksExternal('x', { limit: 1 })
+    expect(r).toEqual([])
+  })
+
   it('rejects javascript: scheme in image', async () => {
     globalThis.fetch = jsonStub({
       items: [

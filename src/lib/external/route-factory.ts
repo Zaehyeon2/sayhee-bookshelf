@@ -7,7 +7,7 @@ import type { ExternalSearchItem, ExternalSearchResponse } from './types'
 const TIMEOUT_MS = 5000
 const SEARCH_LIMIT = 10
 
-type Source = 'nl-kr' | 'tmdb'
+type Source = 'naver' | 'tmdb'
 
 interface FactoryOpts<TId extends string | number> {
   source: Source

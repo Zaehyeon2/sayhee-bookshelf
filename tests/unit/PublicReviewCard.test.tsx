@@ -10,6 +10,7 @@ const baseProps = {
   genre: '소설',
   rating: 5,
   oneLineReview: '인생 책',
+  coverUrl: null,
   publishedAt: Date.now(),
   authorDisplayName: '앨리스',
 }

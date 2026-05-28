@@ -46,7 +46,7 @@ export const CreateBookSchema = z
     isPublic: z.boolean().optional().default(true),
     isbn: z.string().trim().max(40).nullable().optional(),
     coverUrl: coverUrlSchema,
-    externalSource: z.enum(['nl-kr']).nullable().optional(),
+    externalSource: z.enum(['naver']).nullable().optional(),
   })
   .strict()
 
@@ -73,7 +73,7 @@ export const UpdateBookSchema = z
     isPublic: z.boolean().optional(),
     isbn: z.string().trim().max(40).nullable().optional(),
     coverUrl: coverUrlSchema,
-    externalSource: z.enum(['nl-kr']).nullable().optional(),
+    externalSource: z.enum(['naver']).nullable().optional(),
   })
   .strict()
 

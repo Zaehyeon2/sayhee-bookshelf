@@ -26,7 +26,7 @@ export interface BookFormValues {
   // New external metadata (all nullable):
   isbn: string | null
   coverUrl: string | null
-  externalSource: 'nl-kr' | null
+  externalSource: 'naver' | null
 }
 
 interface Props {
@@ -61,7 +61,7 @@ export function BookForm({ initial, mode }: Props) {
   )
   const [isbn, setIsbn] = useState<string | null>(initial?.isbn ?? null)
   const [coverUrl, setCoverUrl] = useState<string | null>(initial?.coverUrl ?? null)
-  const [externalSource, setExternalSource] = useState<'nl-kr' | null>(
+  const [externalSource, setExternalSource] = useState<'naver' | null>(
     initial?.externalSource ?? null,
   )
   const editorRef = useRef<MarkdownEditorHandle>(null)
@@ -154,7 +154,7 @@ export function BookForm({ initial, mode }: Props) {
               if (sel.genre) setGenre(sel.genre)
               setIsbn(sel.externalId)
               setCoverUrl(sel.coverUrl ?? null)
-              setExternalSource('nl-kr')
+              setExternalSource('naver')
             }}
             onClear={() => {
               setIsbn(null)

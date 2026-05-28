@@ -45,6 +45,7 @@ export function ExternalBookSearchBar({ initial, onSelect, onClear }: Props) {
           onClear()
         }}
         onReopen={() => {
+          onClear()
           setShowChip(false)
           reset()
         }}

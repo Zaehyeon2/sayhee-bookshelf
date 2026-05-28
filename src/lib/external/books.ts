@@ -9,10 +9,10 @@ function stripBoldTags(s: string | undefined): string {
 
 function pickIsbn13(raw: string | undefined): string {
   if (!raw) return ''
-  // Naver "isbn" 필드는 "ISBN10 ISBN13" 형식인 경우가 많음 — 13자리 선호.
   const parts = raw.trim().split(/\s+/)
-  const isbn13 = parts.find((p) => p.length === 13)
-  return isbn13 ?? parts[0] ?? ''
+  // Strict: only canonical 13-digit ISBN. ISBN10-only or non-numeric tokens
+  // are rejected so the dedup invariant (countBooksByExternalIds) holds.
+  return parts.find((p) => /^\d{13}$/.test(p)) ?? ''
 }
 
 function parsePubYear(s: string | undefined): number | undefined {

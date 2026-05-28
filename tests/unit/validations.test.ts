@@ -247,10 +247,10 @@ describe('external metadata fields', () => {
       ...baseBook,
       isbn: '9781234567890',
       coverUrl: 'https://example.com/x.jpg',
-      externalSource: 'nl-kr',
+      externalSource: 'naver',
     })
     expect(r.isbn).toBe('9781234567890')
-    expect(r.externalSource).toBe('nl-kr')
+    expect(r.externalSource).toBe('naver')
   })
 
   it('rejects non-http coverUrl', () => {

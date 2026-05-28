@@ -45,6 +45,7 @@ export function ExternalMovieSearchBar({ initial, onSelect, onClear }: Props) {
           onClear()
         }}
         onReopen={() => {
+          onClear()
           setShowChip(false)
           reset()
         }}
