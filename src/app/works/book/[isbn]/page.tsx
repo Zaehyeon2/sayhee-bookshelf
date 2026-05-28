@@ -8,6 +8,7 @@ import {
   listBookReviewsByIsbn,
   countBookReviewsByIsbn,
   getBookRatingDistributionByIsbn,
+  getPublicBookFallbackByIsbn,
 } from '@/lib/db/queries'
 import { WorksDetailHeader } from '@/components/works/WorksDetailHeader'
 import { RatingDistribution } from '@/components/works/RatingDistribution'
@@ -35,11 +36,12 @@ export default async function WorksBookDetailPage({ params, searchParams }: SP) 
   const page = PageParamSchema.parse(sp.page ?? '1')
   const offset = (page - 1) * PAGE_SIZE
 
-  const [meta, items, total, distribution] = await Promise.all([
+  const [meta, items, total, distribution, fallback] = await Promise.all([
     safeBookLookup(isbn),
     listBookReviewsByIsbn(db, isbn, { limit: PAGE_SIZE, offset }),
     countBookReviewsByIsbn(db, isbn),
     getBookRatingDistributionByIsbn(db, isbn),
+    getPublicBookFallbackByIsbn(db, isbn),
   ])
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -47,9 +49,9 @@ export default async function WorksBookDetailPage({ params, searchParams }: SP) 
   return (
     <div className="space-y-8">
       <WorksDetailHeader
-        title={meta?.title ?? `ISBN ${isbn}`}
-        byline={meta?.author}
-        coverUrl={meta?.coverUrl}
+        title={meta?.title ?? fallback?.title ?? `ISBN ${isbn}`}
+        byline={meta?.author ?? fallback?.author ?? undefined}
+        coverUrl={meta?.coverUrl ?? fallback?.coverUrl ?? undefined}
         description={meta?.description}
         siteAvg={distribution.avg}
         siteCnt={distribution.cnt}

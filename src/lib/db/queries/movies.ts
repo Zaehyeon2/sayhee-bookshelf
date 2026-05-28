@@ -364,6 +364,32 @@ export async function countPublicMovies(db: Db): Promise<number> {
   return Number(rows[0]?.n ?? 0)
 }
 
+// /works/movie/[tmdbId]에서 외부 lookup이 실패할 때(TMDB 오류, 삭제된 id 등)
+// 표시할 최소 메타데이터. 같은 tmdbId를 가진 공개 영화 중 가장 최근
+// publishedAt 한 건의 사용자 입력값을 신뢰.
+export async function getPublicMovieFallbackByTmdbId(
+  db: Db,
+  tmdbId: number,
+): Promise<{ title: string; director: string; coverUrl: string | null } | null> {
+  const rows = await db
+    .select({
+      title: movies.title,
+      director: movies.director,
+      coverUrl: movies.coverUrl,
+    })
+    .from(movies)
+    .where(
+      and(
+        eq(movies.isPublic, 1),
+        sql`${movies.publishedAt} IS NOT NULL`,
+        eq(movies.tmdbId, tmdbId),
+      ),
+    )
+    .orderBy(desc(movies.publishedAt))
+    .limit(1)
+  return rows[0] ?? null
+}
+
 /**
  * 사용자의 영화 총 개수 (페이지네이션용). genre/year/tag 필터를 적용한 count도 지원해
  * 필터 활성화 시 totalPages가 정확하게 계산되도록 한다.

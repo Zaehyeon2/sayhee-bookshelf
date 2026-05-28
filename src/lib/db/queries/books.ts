@@ -363,6 +363,32 @@ export async function countPublicBooks(db: Db): Promise<number> {
   return Number(rows[0]?.n ?? 0)
 }
 
+// /works/book/[isbn]에서 외부 lookup이 실패할 때(외서, 절판, 자비출판 등)
+// 표시할 최소 메타데이터. 같은 ISBN을 가진 공개 책 중 가장 최근 publishedAt
+// 한 건의 사용자 입력값을 신뢰. 평균 평점/리뷰 수는 별도 distribution 쿼리가 담당.
+export async function getPublicBookFallbackByIsbn(
+  db: Db,
+  isbn: string,
+): Promise<{ title: string; author: string; coverUrl: string | null } | null> {
+  const rows = await db
+    .select({
+      title: books.title,
+      author: books.author,
+      coverUrl: books.coverUrl,
+    })
+    .from(books)
+    .where(
+      and(
+        eq(books.isPublic, 1),
+        sql`${books.publishedAt} IS NOT NULL`,
+        eq(books.isbn, isbn),
+      ),
+    )
+    .orderBy(desc(books.publishedAt))
+    .limit(1)
+  return rows[0] ?? null
+}
+
 /**
  * 사용자의 책 총 개수 (페이지네이션용). genre/year/tag 필터를 적용한 count도 지원해
  * 필터 활성화 시 totalPages가 정확하게 계산되도록 한다.

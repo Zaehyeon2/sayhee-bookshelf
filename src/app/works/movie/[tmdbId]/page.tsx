@@ -8,6 +8,7 @@ import {
   listMovieReviewsByTmdbId,
   countMovieReviewsByTmdbId,
   getMovieRatingDistributionByTmdbId,
+  getPublicMovieFallbackByTmdbId,
 } from '@/lib/db/queries'
 import { WorksDetailHeader } from '@/components/works/WorksDetailHeader'
 import { RatingDistribution } from '@/components/works/RatingDistribution'
@@ -35,11 +36,12 @@ export default async function WorksMovieDetailPage({ params, searchParams }: SP)
   const page = PageParamSchema.parse(sp.page ?? '1')
   const offset = (page - 1) * PAGE_SIZE
 
-  const [meta, items, total, distribution] = await Promise.all([
+  const [meta, items, total, distribution, fallback] = await Promise.all([
     safeMovieLookup(tmdbId),
     listMovieReviewsByTmdbId(db, tmdbId, { limit: PAGE_SIZE, offset }),
     countMovieReviewsByTmdbId(db, tmdbId),
     getMovieRatingDistributionByTmdbId(db, tmdbId),
+    getPublicMovieFallbackByTmdbId(db, tmdbId),
   ])
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -47,9 +49,9 @@ export default async function WorksMovieDetailPage({ params, searchParams }: SP)
   return (
     <div className="space-y-8">
       <WorksDetailHeader
-        title={meta?.title ?? `TMDB ${tmdbId}`}
+        title={meta?.title ?? fallback?.title ?? `TMDB ${tmdbId}`}
         subtitle={meta?.originalTitle}
-        coverUrl={meta?.coverUrl}
+        coverUrl={meta?.coverUrl ?? fallback?.coverUrl ?? undefined}
         description={meta?.description}
         externalRating={meta?.externalRating}
         siteAvg={distribution.avg}
