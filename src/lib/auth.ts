@@ -3,9 +3,12 @@ import { eq } from 'drizzle-orm'
 import bcrypt from 'bcryptjs'
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
+import { unstable_cache } from 'next/cache'
 import { db } from '@/lib/db/client'
 import { users, type User } from '@/lib/db/schema'
 import { normalizeUsername } from '@/lib/username-normalize'
+
+export const SESSION_CACHE_TAG = 'user-session'
 
 const SESSION_COOKIE = 'session'
 const SESSION_TTL_SEC = 60 * 60 * 24 * 7 // 7일
@@ -81,23 +84,36 @@ export async function getSessionUser(token: string | undefined): Promise<Session
   }
 }
 
+// Token 기반 user lookup. token이 cache key 일부 → user별 자동 분리.
+// stale 10s — 비번 변경 시 password endpoint가 revalidateTag로 invalidate.
+// 사용자 삭제 같은 드문 케이스는 10s window 안에 stale user 객체가 잠시 노출될 수 있음.
+const cachedUserByToken = unstable_cache(
+  async (token: string): Promise<User | null> => {
+    const session = await getSessionUser(token)
+    if (!session) return null
+    const rows = await db.select().from(users).where(eq(users.id, session.sub)).limit(1)
+    const user = rows[0]
+    if (!user) return null
+    if (session.tv !== (user.tokenVersion ?? 0)) return null
+    return user
+  },
+  ['current-user-by-token'],
+  { revalidate: 10, tags: [SESSION_CACHE_TAG] },
+)
+
 /**
- * 서버 컴포넌트/route handler에서 현재 사용자 조회 (DB hit).
+ * 서버 컴포넌트/route handler에서 현재 사용자 조회.
  *
- * React.cache로 감싸 같은 request 내 중복 호출은 한 번만 DB를 조회한다.
- * JWT의 tv 클레임이 user.tokenVersion과 다르면 세션 무효화 — 비밀번호 변경/관리자 리셋 후
- * 이전에 발급된 토큰은 자동으로 거절된다.
+ * 두 단계 cache: React.cache로 same-request dedup + unstable_cache로
+ * 잇따른 navigation에서 DB hit 회피 (10s revalidate).
+ * tokenVersion 검증은 cache 안에서 — 비번 변경 후 revalidateTag('user-session')
+ * 호출 시 즉시 다음 요청부터 새 DB lookup.
  */
 export const getCurrentUser = cache(async (): Promise<User | null> => {
   const store = await cookies()
   const token = store.get(SESSION_COOKIE)?.value
-  const session = await getSessionUser(token)
-  if (!session) return null
-  const rows = await db.select().from(users).where(eq(users.id, session.sub)).limit(1)
-  const user = rows[0]
-  if (!user) return null
-  if (session.tv !== (user.tokenVersion ?? 0)) return null
-  return user
+  if (!token) return null
+  return cachedUserByToken(token)
 })
 
 export const SESSION = {

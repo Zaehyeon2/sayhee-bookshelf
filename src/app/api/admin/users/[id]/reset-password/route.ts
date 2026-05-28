@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { eq, sql } from 'drizzle-orm'
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db/client'
 import { users } from '@/lib/db/schema'
 import { requireAdmin, HttpError } from '@/lib/auth-helpers'
+import { SESSION_CACHE_TAG } from '@/lib/auth'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -39,6 +41,8 @@ export async function POST(_req: Request, { params }: Params) {
     console.warn(
       `[audit] admin id=${admin.id} reset password for user id=${userId} username=${result[0].username}`,
     )
+    // tokenVersion bump으로 대상 user의 모든 세션 즉시 무효 — cached lookup도 invalidate.
+    revalidateTag(SESSION_CACHE_TAG)
     return NextResponse.json({ ok: true })
   } catch (e) {
     if (e instanceof HttpError) return e.toResponse()

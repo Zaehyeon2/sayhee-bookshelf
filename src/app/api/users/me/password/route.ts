@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { revalidateTag } from 'next/cache'
 import { eq, sql } from 'drizzle-orm'
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db/client'
 import { users } from '@/lib/db/schema'
 import { ChangePasswordSchema } from '@/lib/validations'
 import { requireUser, HttpError } from '@/lib/auth-helpers'
-import { signSession, SESSION } from '@/lib/auth'
+import { signSession, SESSION, SESSION_CACHE_TAG } from '@/lib/auth'
 
 export async function POST(req: Request) {
   try {
@@ -57,6 +58,8 @@ export async function POST(req: Request) {
       path: '/',
       maxAge: SESSION.maxAge,
     })
+    // tokenVersion 증가로 이전 토큰 모두 무효 — cached user lookup도 즉시 stale로 표시.
+    revalidateTag(SESSION_CACHE_TAG)
     return NextResponse.json({ ok: true })
   } catch (e) {
     if (e instanceof HttpError) return e.toResponse()
