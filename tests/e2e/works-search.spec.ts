@@ -31,3 +31,18 @@ test('works search → detail navigation', async ({ page }) => {
   await expect(page).toHaveURL(/\/works\/book\/\d{10,13}/)
   await expect(page.getByRole('heading', { name: /한줄평/i })).toBeVisible()
 })
+
+test('works tab switches with empty query', async ({ page }) => {
+  // 회귀 가드: 빈 q로 영화 탭 진입 시 type=book으로 폴백되던 버그 방지.
+  // WorksSearchQuerySchema는 q.min(1) 요구하지만 type은 q와 독립 파싱돼야 함.
+  test.setTimeout(60_000)
+  await login(page)
+
+  await page.goto('/works?type=movie')
+  await expect(page.getByPlaceholder('영화 제목 검색')).toBeVisible()
+  await expect(page).toHaveURL(/type=movie/)
+
+  // 책 탭으로 전환 (q 없는 상태) → placeholder 책용으로 바뀜
+  await page.getByRole('link', { name: /📚 책/ }).click()
+  await expect(page.getByPlaceholder('책 제목·저자 검색')).toBeVisible()
+})
