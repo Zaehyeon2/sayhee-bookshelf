@@ -38,7 +38,7 @@ export function PublicReviewCard({ item }: Props) {
       }
       className="block rounded-[var(--radius-toss)] active:scale-[0.99] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
     >
-      <article className="bg-[var(--color-surface)] p-5 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] rounded-[var(--radius-toss)] transition">
+      <article className="h-full flex flex-col bg-[var(--color-surface)] p-5 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] rounded-[var(--radius-toss)] transition">
         <div className="flex gap-3">
           {item.coverUrl && (
             <Image
@@ -72,7 +72,7 @@ export function PublicReviewCard({ item }: Props) {
             </p>
           </blockquote>
         )}
-        <div className="mt-4 pt-3 border-t border-[var(--color-border)] flex items-center justify-between text-[12px] text-[var(--color-text-weak)]">
+        <div className="mt-auto pt-3 border-t border-[var(--color-border)] flex items-center justify-between text-[12px] text-[var(--color-text-weak)]">
           <span className="font-semibold text-[var(--color-text-muted)]">
             {item.authorDisplayName}
           </span>
