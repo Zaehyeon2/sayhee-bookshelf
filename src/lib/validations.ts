@@ -149,7 +149,7 @@ export const FeedQuerySchema = z.object({
 
 export const WorksSearchQuerySchema = z.object({
   type: z.enum(['book', 'movie']).default('book'),
-  q: z.string().trim().min(1).max(100),
+  q: z.string().trim().min(1).max(MAX_SEARCH_Q),
   page: z.coerce.number().int().min(1).max(10_000).optional(),
 })
 

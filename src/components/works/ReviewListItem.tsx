@@ -33,7 +33,10 @@ export function ReviewListItem({ item }: Props) {
           {item.oneLineReview}
         </p>
       )}
-      <time className="mt-2 block text-[11px] text-[var(--color-text-weak)] font-tabular tabular-nums">
+      <time
+        dateTime={new Date(item.publishedAt).toISOString()}
+        className="mt-2 block text-[11px] text-[var(--color-text-weak)] font-tabular tabular-nums"
+      >
         {formatDate(item.publishedAt)}
       </time>
     </article>

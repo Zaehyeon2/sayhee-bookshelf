@@ -455,7 +455,7 @@ export async function getBookAggregatesByIsbns(
     )
     .groupBy(books.isbn)
   for (const r of rows) {
-    if (r.isbn) out.set(r.isbn, { avg: Number(r.avg), cnt: Number(r.cnt) })
+    if (r.isbn != null) out.set(r.isbn, { avg: Number(r.avg), cnt: Number(r.cnt) })
   }
   return out
 }
@@ -499,6 +499,7 @@ export async function listBookReviewsByIsbn(
   q = q.limit(opts.limit)
   if (opts.offset !== undefined) q = q.offset(opts.offset)
   const rows = await q
+  // publishedAt은 위 WHERE로 NOT NULL 보장 — 타입을 number로 narrow
   return rows.map((r) => ({ ...r, publishedAt: r.publishedAt as number }))
 }
 
@@ -548,6 +549,7 @@ export async function getBookRatingDistributionByIsbn(
   for (const row of rows) {
     const r = Number(row.rating)
     const c = Number(row.cnt)
+    if (r < 1 || r > 10 || !Number.isInteger(r)) continue
     buckets[r] = c
     total += c
     weightedSum += r * c

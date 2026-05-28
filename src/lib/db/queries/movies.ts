@@ -543,6 +543,7 @@ export async function getMovieRatingDistributionByTmdbId(
   for (const row of rows) {
     const r = Number(row.rating)
     const c = Number(row.cnt)
+    if (r < 1 || r > 10 || !Number.isInteger(r)) continue
     buckets[r] = c
     total += c
     weightedSum += r * c

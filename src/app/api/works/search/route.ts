@@ -41,6 +41,8 @@ export async function GET(req: Request) {
           ...it,
           siteAgg: agg.get(it.externalId) ?? { avg: 0, cnt: 0 },
         }))
+        // NOTE: external search is single-shot (no offset); pagination metadata is
+        // included for forward compat but total === items.length until cursor support lands.
         return NextResponse.json({ items, total: items.length, page, pageSize: PAGE_SIZE, type })
       }
       const externalItems = await searchMoviesExternal(q, { limit: PAGE_SIZE, signal: ctl.signal })

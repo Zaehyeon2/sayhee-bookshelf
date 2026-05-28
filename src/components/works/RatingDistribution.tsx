@@ -8,7 +8,11 @@ export function RatingDistribution({ distribution }: Props) {
   if (distribution.cnt === 0) return null
   const maxBucket = Math.max(...Object.values(distribution.buckets))
   return (
-    <div className="space-y-1.5">
+    <div
+      className="space-y-1.5"
+      role="img"
+      aria-label={`별점 분포: 평균 ${distribution.avg.toFixed(1)}점, 총 ${distribution.cnt}명`}
+    >
       {Array.from({ length: 10 }, (_, i) => 10 - i).map((rating) => {
         const count = distribution.buckets[rating] ?? 0
         const ratio = maxBucket === 0 ? 0 : (count / maxBucket) * 100
