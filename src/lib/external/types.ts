@@ -16,3 +16,13 @@ export interface ExternalSearchResponse<TId extends string | number> {
 
 export type BookSearchItem = ExternalSearchItem<string>
 export type MovieSearchItem = ExternalSearchItem<number>
+
+export interface BookLookupResult {
+  isbn: string
+  title: string
+  author: string
+  publisher: string | undefined
+  year: number | undefined
+  coverUrl: string | undefined
+  description: string | undefined
+}
