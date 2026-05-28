@@ -1,0 +1,42 @@
+import { NextResponse } from 'next/server'
+import { db } from '@/lib/db/client'
+import { requireUser, HttpError } from '@/lib/auth-helpers'
+import { TmdbIdParamSchema } from '@/lib/validations'
+import {
+  listMovieReviewsByTmdbId,
+  countMovieReviewsByTmdbId,
+  getMovieRatingDistributionByTmdbId,
+} from '@/lib/db/queries'
+
+const PAGE_SIZE = 24
+
+export async function GET(req: Request, { params }: { params: Promise<{ tmdbId: string }> }) {
+  try {
+    await requireUser()
+    const { tmdbId: rawTmdbId } = await params
+    const parsedTmdb = TmdbIdParamSchema.safeParse(rawTmdbId)
+    if (!parsedTmdb.success) {
+      return NextResponse.json({ error: 'invalid tmdbId' }, { status: 400 })
+    }
+    const url = new URL(req.url)
+    const pageRaw = Number(url.searchParams.get('page') ?? '1')
+    const page = Number.isFinite(pageRaw) && pageRaw >= 1 ? Math.floor(pageRaw) : 1
+    const offset = (page - 1) * PAGE_SIZE
+    const [items, total, distribution] = await Promise.all([
+      listMovieReviewsByTmdbId(db, parsedTmdb.data, { limit: PAGE_SIZE, offset }),
+      countMovieReviewsByTmdbId(db, parsedTmdb.data),
+      getMovieRatingDistributionByTmdbId(db, parsedTmdb.data),
+    ])
+    return NextResponse.json({
+      tmdbId: parsedTmdb.data,
+      items,
+      total,
+      page,
+      pageSize: PAGE_SIZE,
+      distribution,
+    })
+  } catch (e) {
+    if (e instanceof HttpError) return e.toResponse()
+    throw e
+  }
+}
