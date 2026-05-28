@@ -33,10 +33,13 @@ describe('PublicReviewCard', () => {
     expect(screen.queryByText('인생 책')).not.toBeInTheDocument()
   })
 
-  it('is non-clickable (no anchor, no onClick handler)', () => {
+  it('is clickable — wraps in anchor with /works book search href', () => {
     const { container } = render(<PublicReviewCard item={baseProps} />)
-    expect(container.querySelector('a')).toBeNull()
-    expect(container.querySelector('button')).toBeNull()
+    const anchor = container.querySelector('a')
+    expect(anchor).not.toBeNull()
+    expect(anchor!.getAttribute('href')).toBe(
+      `/works?type=book&q=${encodeURIComponent('데미안')}`
+    )
   })
 
   it('escapes HTML in oneLineReview (XSS guard)', () => {
