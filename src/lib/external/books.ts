@@ -1,42 +1,27 @@
-import { XMLParser } from 'fast-xml-parser'
-import type { BookGenre } from '@/lib/genres'
 import type { BookSearchItem } from './types'
 
-const SEOJI_ENDPOINT = 'https://www.nl.go.kr/seoji/SearchApi.do'
+const NAVER_ENDPOINT = 'https://openapi.naver.com/v1/search/book.json'
 
-// KDC 첫 자리 → BookGenre 매핑.
-// '2', '6', '9': BOOK_GENRES와 verbatim 일치 — 정확.
-// '8': 문학 → '소설' best-effort default (한국 단행본 대부분이 KDC 8x).
-//   시·에세이·판타지/SF는 사용자가 수동으로 수정. 잘못된 자동 매칭이 빈 자동 매칭보다 UX 우위.
-// 나머지(0/1/3/4/5/7): verbatim 매칭 없음, omit.
-const KDC_GENRE_MAP: Readonly<Record<string, BookGenre>> = {
-  '2': '종교',
-  '6': '예술',
-  '8': '소설', // KDC 8 = 문학 — fiction default; user can change to 시/에세이/판타지·SF
-  '9': '역사',
+function stripBoldTags(s: string | undefined): string {
+  if (!s) return ''
+  return s.replace(/<\/?b>/g, '').trim()
 }
 
-function mapKdcToGenre(kdc: string | undefined): BookGenre | undefined {
-  if (!kdc) return undefined
-  const head = kdc.trim()[0]
-  return head ? KDC_GENRE_MAP[head] : undefined
+function pickIsbn13(raw: string | undefined): string {
+  if (!raw) return ''
+  // Naver "isbn" 필드는 "ISBN10 ISBN13" 형식인 경우가 많음 — 13자리 선호.
+  const parts = raw.trim().split(/\s+/)
+  const isbn13 = parts.find((p) => p.length === 13)
+  return isbn13 ?? parts[0] ?? ''
 }
 
 function parsePubYear(s: string | undefined): number | undefined {
   if (!s) return undefined
-  const m = /^(\d{4})/.exec(s)
-  return m ? Number(m[1]) : undefined
+  const m = /^(\d{4})/.exec(s.trim())
+  if (!m) return undefined
+  const y = Number(m[1])
+  return y >= 1500 && y <= 2100 ? y : undefined
 }
-
-const parser = new XMLParser({
-  ignoreAttributes: true,
-  trimValues: true,
-  parseTagValue: false,
-  // Security hardening — explicit to survive dep upgrades:
-  processEntities: false,
-  allowBooleanAttributes: false,
-  htmlEntities: false,
-})
 
 function safeCoverUrl(raw: string | undefined): string | undefined {
   const u = raw?.trim()
@@ -50,73 +35,75 @@ function safeCoverUrl(raw: string | undefined): string | undefined {
   }
 }
 
-interface SeojiDoc {
-  TITLE?: string
-  AUTHOR?: string
-  PUBLISHER?: string
-  PUBLISH_PREDATE?: string
-  EA_ISBN?: string
-  SET_ISBN?: string
-  KDC?: string
-  TITLE_URL?: string
-  CONTROL_NO?: string
+interface NaverBookItem {
+  title?: string
+  link?: string
+  image?: string
+  author?: string
+  discount?: string
+  publisher?: string
+  pubdate?: string
+  isbn?: string
+  description?: string
 }
 
-interface SeojiResponse {
-  metadata?: {
-    docs?: { e?: SeojiDoc | SeojiDoc[] } | string
-  }
+interface NaverSearchResponse {
+  lastBuildDate?: string
+  total?: number
+  start?: number
+  display?: number
+  items?: NaverBookItem[]
 }
 
 export async function searchBooksExternal(
   query: string,
   opts: { limit: number; signal?: AbortSignal } = { limit: 10 },
 ): Promise<BookSearchItem[]> {
-  const key = process.env.NL_KR_API_KEY
-  if (!key) throw new Error('NL_KR_API_KEY env var not set')
+  const clientId = process.env.NAVER_CLIENT_ID
+  const clientSecret = process.env.NAVER_CLIENT_SECRET
+  if (!clientId || !clientSecret) {
+    throw new Error('NAVER_CLIENT_ID / NAVER_CLIENT_SECRET env vars not set')
+  }
   if (!query.trim()) return []
 
-  const url = new URL(SEOJI_ENDPOINT)
-  // NOTE: SeoJi API only supports query-string auth (no Authorization header).
-  // cert_key will appear in upstream access logs / Referer chains by design.
-  // Mitigation: proxy route (Task 6) MUST NOT log this URL on error.
-  url.searchParams.set('cert_key', key)
-  url.searchParams.set('result_style', 'xml')
-  url.searchParams.set('page_no', '1')
-  url.searchParams.set('page_size', String(Math.min(opts.limit, 30)))
-  url.searchParams.set('title', query)
+  const url = new URL(NAVER_ENDPOINT)
+  url.searchParams.set('query', query)
+  url.searchParams.set('display', String(Math.min(opts.limit, 30)))
 
-  const res = await fetch(url, { signal: opts.signal })
+  const res = await fetch(url, {
+    signal: opts.signal,
+    headers: {
+      'X-Naver-Client-Id': clientId,
+      'X-Naver-Client-Secret': clientSecret,
+    },
+  })
+
   if (res.status === 429) {
     throw new Error(
-      `NL-KR rate limited (retry-after=${res.headers.get('retry-after') ?? 'n/a'})`,
+      `Naver rate limited (retry-after=${res.headers.get('retry-after') ?? 'n/a'})`,
     )
   }
   if (res.status === 401 || res.status === 403) {
-    throw new Error(`NL-KR auth ${res.status}`)
+    throw new Error(`Naver auth ${res.status}`)
   }
-  if (res.status >= 500) throw new Error(`NL-KR upstream ${res.status}`)
+  if (res.status >= 500) throw new Error(`Naver upstream ${res.status}`)
   if (res.status >= 400) return []
 
-  const xml = await res.text()
-  const parsed = parser.parse(xml) as SeojiResponse
-  const docsRaw = parsed.metadata?.docs
-  if (!docsRaw || typeof docsRaw === 'string') return []
-  const eRaw = docsRaw.e
-  if (!eRaw) return []
-  const docs: SeojiDoc[] = Array.isArray(eRaw) ? eRaw : [eRaw]
+  const data = (await res.json()) as NaverSearchResponse
+  const items = data.items ?? []
 
-  return docs.slice(0, opts.limit).flatMap((d) => {
-    const isbn = d.EA_ISBN?.trim() || d.SET_ISBN?.trim() || d.CONTROL_NO?.trim()
+  return items.slice(0, opts.limit).flatMap((it) => {
+    const isbn = pickIsbn13(it.isbn)
     if (!isbn) return []
     return [
       {
         externalId: isbn,
-        title: d.TITLE?.trim() ?? '',
-        byline: d.AUTHOR?.trim() ?? '',
-        year: parsePubYear(d.PUBLISH_PREDATE),
-        genre: mapKdcToGenre(d.KDC),
-        coverUrl: safeCoverUrl(d.TITLE_URL),
+        title: stripBoldTags(it.title),
+        byline: stripBoldTags(it.author),
+        year: parsePubYear(it.pubdate),
+        // Naver는 장르 정보 미제공 — undefined.
+        genre: undefined,
+        coverUrl: safeCoverUrl(it.image),
       },
     ]
   })
