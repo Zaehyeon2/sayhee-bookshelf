@@ -5,6 +5,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Toaster } from 'sonner'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { MobileMenu } from '@/components/MobileMenu'
 import { getCurrentUser } from '@/lib/auth'
 import './globals.css'
 
@@ -110,72 +111,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   )
 }
 
-function MobileMenu({
-  displayName,
-  role,
-}: {
-  displayName: string
-  role: 'admin' | 'member'
-}) {
-  return (
-    <details className="relative">
-      <summary
-        aria-label="메뉴 열기"
-        className="list-none cursor-pointer h-11 w-11 inline-flex items-center justify-center rounded-[var(--radius-toss-sm)] text-[20px] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
-      >
-        <span aria-hidden="true">☰</span>
-      </summary>
-      <div className="absolute right-0 mt-1 w-56 max-w-[calc(100vw-2rem)] rounded-[var(--radius-toss)] bg-[var(--color-surface)] shadow-[var(--shadow-toss)] border border-[var(--color-border-subtle)] py-1 text-[14px] z-50">
-        <Link href="/books" className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]">
-          📚 내 책장
-        </Link>
-        <Link href="/movies" className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]">
-          🎬 내 영화관
-        </Link>
-        <Link href="/works" className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]">
-          🔍 작품 검색
-        </Link>
-        <Link href="/writings" className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]">
-          ✏️ 글방
-        </Link>
-        <div className="border-t border-[var(--color-border-subtle)] my-1" />
-        <div className="px-4 py-2 text-[12px] text-[var(--color-text-muted)]">{displayName}</div>
-        <Link
-          href="/settings/profile"
-          className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]"
-        >
-          프로필 변경
-        </Link>
-        <Link
-          href="/settings/password"
-          className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]"
-        >
-          비밀번호 변경
-        </Link>
-        {role === 'admin' && (
-          <Link
-            href="/admin/users"
-            className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]"
-          >
-            사용자 관리
-          </Link>
-        )}
-        <form
-          action="/api/logout"
-          method="POST"
-          className="border-t border-[var(--color-border-subtle)] mt-1 pt-1"
-        >
-          <button
-            type="submit"
-            className="w-full text-left px-4 py-2.5 hover:bg-[var(--color-surface-2)]"
-          >
-            로그아웃
-          </button>
-        </form>
-      </div>
-    </details>
-  )
-}
 
 function UserMenu({ displayName, role }: { displayName: string; role: 'admin' | 'member' }) {
   return (
