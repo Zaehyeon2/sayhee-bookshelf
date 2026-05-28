@@ -9,7 +9,7 @@ export function RatingDistribution({ distribution }: Props) {
   const maxBucket = Math.max(...Object.values(distribution.buckets))
   return (
     <div
-      className="space-y-1.5 max-w-sm"
+      className="space-y-1.5 max-w-md mx-auto"
       role="img"
       aria-label={`별점 분포: 평균 ${distribution.avg.toFixed(1)}점, 총 ${distribution.cnt}명`}
     >
