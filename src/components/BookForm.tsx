@@ -11,6 +11,7 @@ import { MarkdownEditor, type MarkdownEditorHandle } from './MarkdownEditor'
 import { ConfirmDialog } from './ConfirmDialog'
 import { Spinner } from './Spinner'
 import { Toggle } from './Toggle'
+import { ExternalBookSearchBar, type BookSelection } from './ExternalBookSearchBar'
 
 export interface BookFormValues {
   title: string
@@ -22,6 +23,10 @@ export interface BookFormValues {
   tags: string[]
   oneLineReview: string
   isPublic: boolean
+  // New external metadata (all nullable):
+  isbn: string | null
+  coverUrl: string | null
+  externalSource: 'nl-kr' | null
 }
 
 interface Props {
@@ -54,6 +59,11 @@ export function BookForm({ initial, mode }: Props) {
   const [isPublic, setIsPublic] = useState(
     initial?.isPublic !== undefined ? initial.isPublic : mode === 'create',
   )
+  const [isbn, setIsbn] = useState<string | null>(initial?.isbn ?? null)
+  const [coverUrl, setCoverUrl] = useState<string | null>(initial?.coverUrl ?? null)
+  const [externalSource, setExternalSource] = useState<'nl-kr' | null>(
+    initial?.externalSource ?? null,
+  )
   const editorRef = useRef<MarkdownEditorHandle>(null)
 
   async function submit(e: React.FormEvent) {
@@ -81,6 +91,9 @@ export function BookForm({ initial, mode }: Props) {
         tags,
         oneLineReview,
         isPublic,
+        isbn,
+        coverUrl,
+        externalSource,
       }
       const url = mode === 'create' ? '/api/books' : `/api/books/${initial?.id}`
       const res = await fetch(url, {
@@ -123,6 +136,33 @@ export function BookForm({ initial, mode }: Props) {
   return (
     <form onSubmit={submit} className="space-y-6">
       <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-toss)] space-y-5">
+        <div>
+          <label className={labelCls}>
+            작품 검색{' '}
+            <span className="text-[var(--color-text-weak)] font-normal">(선택)</span>
+          </label>
+          <ExternalBookSearchBar
+            initial={{
+              isbn,
+              title,
+              byline: author,
+              coverUrl,
+            }}
+            onSelect={(sel: BookSelection) => {
+              setTitle(sel.title)
+              if (sel.byline) setAuthor(sel.byline)
+              if (sel.genre) setGenre(sel.genre)
+              setIsbn(sel.externalId)
+              setCoverUrl(sel.coverUrl ?? null)
+              setExternalSource('nl-kr')
+            }}
+            onClear={() => {
+              setIsbn(null)
+              setCoverUrl(null)
+              setExternalSource(null)
+            }}
+          />
+        </div>
         <div>
           <label className={labelCls}>제목</label>
           <input

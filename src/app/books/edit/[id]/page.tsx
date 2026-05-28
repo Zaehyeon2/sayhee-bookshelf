@@ -22,6 +22,7 @@ export default async function EditBookPage({ params }: { params: Promise<{ id: s
           tags,
           oneLineReview: book.oneLineReview ?? '',
           isPublic: book.isPublic === 1,
+          externalSource: book.externalSource === 'nl-kr' ? 'nl-kr' : null,
         }}
       />
     </div>
