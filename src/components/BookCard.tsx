@@ -22,8 +22,8 @@ export function BookCard({ book, snippet, query }: Props) {
           <Image
             src={book.coverUrl}
             alt=""
-            width={40}
-            height={60}
+            width={80}
+            height={120}
             className="flex-shrink-0 rounded-sm object-cover"
           />
         )}
