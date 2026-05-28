@@ -76,7 +76,7 @@ export default async function WorksBookDetailPage({ params, searchParams }: SP) 
           />
         ) : (
           <>
-            <ul>
+            <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
               {items.map((it) => (
                 <li key={it.id}>
                   <ReviewListItem item={it} />

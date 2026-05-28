@@ -20,7 +20,7 @@ function formatDate(ts: number): string {
 
 export function ReviewListItem({ item }: Props) {
   return (
-    <article className="py-4 border-b border-[var(--color-border-subtle)]">
+    <article className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] transition h-full flex flex-col">
       <div className="flex items-center justify-between gap-3">
         <RatingStars value={item.rating} size="sm" />
         {/* TODO: link to /u/<username> when that route exists */}
@@ -29,13 +29,16 @@ export function ReviewListItem({ item }: Props) {
         </span>
       </div>
       {item.oneLineReview && (
-        <p className="mt-2 text-[14px] leading-relaxed text-[var(--color-text-strong)]">
-          {item.oneLineReview}
-        </p>
+        <blockquote className="mt-3 border-l-4 border-[var(--color-toss-blue)] pl-3 py-1 flex-1">
+          <span className="sr-only">{item.authorDisplayName}의 한줄평: </span>
+          <p className="text-[14px] leading-relaxed text-[var(--color-text-strong)]">
+            {item.oneLineReview}
+          </p>
+        </blockquote>
       )}
       <time
         dateTime={new Date(item.publishedAt).toISOString()}
-        className="mt-2 block text-[11px] text-[var(--color-text-weak)] font-tabular tabular-nums"
+        className="mt-3 block text-[11px] text-[var(--color-text-weak)] font-tabular tabular-nums"
       >
         {formatDate(item.publishedAt)}
       </time>
