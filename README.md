@@ -57,6 +57,15 @@ pnpm exec dotenv -e .env.local -- pnpm run migrate:existing-books
 admin으로 로그인 → 우측 메뉴 → "사용자 관리" → "신규 사용자" 또는 "비번 reset".
 새/reset된 사용자는 `DEFAULT_USER_PASSWORD`로 첫 로그인 후 강제 변경됩니다.
 
+### 외부 작품 검색 API (선택)
+
+리뷰 작성 시 책·영화 메타데이터 자동 채우기를 사용하려면:
+
+- `NL_KR_API_KEY` — [국립중앙도서관 SeoJi](https://www.nl.go.kr/seoji) 인증키
+- `TMDB_API_KEY` — [TMDB v3](https://www.themoviedb.org/settings/api)의 **API Read Access Token (v4)** (Bearer 헤더로 전송하므로 짧은 v3 키가 아닌 긴 JWT 형식 사용)
+
+키 없이도 사이트는 정상 작동합니다 — 검색 바에서만 503 에러 toast가 표시되고, 사용자는 폼 필드를 직접 입력할 수 있습니다.
+
 ## 테스트
 
 ```bash
