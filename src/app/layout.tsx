@@ -51,13 +51,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     href="/books"
                     className="px-3 h-11 inline-flex items-center text-[14px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
                   >
-                    📚 책장
+                    📚 내 책장
                   </Link>
                   <Link
                     href="/movies"
                     className="px-3 h-11 inline-flex items-center text-[14px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
                   >
-                    🎬 영화관
+                    🎬 내 영화관
                   </Link>
                   <Link
                     href="/works"
