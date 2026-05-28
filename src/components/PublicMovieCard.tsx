@@ -37,7 +37,7 @@ export function PublicMovieCard({ item }: Props) {
       }
       className="block rounded-[var(--radius-toss)] active:scale-[0.99] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
     >
-      <article className="h-full bg-[var(--color-surface)] p-5 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] rounded-[var(--radius-toss)] transition">
+      <article className="h-full flex flex-col bg-[var(--color-surface)] p-5 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] rounded-[var(--radius-toss)] transition">
         <div className="flex gap-3">
           {item.coverUrl && (
             <Image
@@ -48,7 +48,7 @@ export function PublicMovieCard({ item }: Props) {
               className="flex-shrink-0 rounded-sm object-cover"
             />
           )}
-          <div className="min-w-0 flex-1 flex flex-col">
+          <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <h3 className="text-[16px] font-bold leading-snug text-[var(--color-text-strong)] line-clamp-2">
                 {item.title}
@@ -58,7 +58,7 @@ export function PublicMovieCard({ item }: Props) {
             <p className="mt-1 text-[13px] text-[var(--color-text-muted)] line-clamp-1">
               {item.director}
             </p>
-            <div className="mt-auto pt-2">
+            <div className="mt-2">
               <RatingStars value={item.rating} size="sm" />
             </div>
           </div>
@@ -71,7 +71,7 @@ export function PublicMovieCard({ item }: Props) {
             </p>
           </blockquote>
         )}
-        <div className="mt-4 pt-3 border-t border-[var(--color-border)] flex items-center justify-between text-[12px] text-[var(--color-text-weak)]">
+        <div className="mt-auto pt-3 border-t border-[var(--color-border)] flex items-center justify-between text-[12px] text-[var(--color-text-weak)]">
           <span className="font-semibold text-[var(--color-text-muted)]">
             {item.authorDisplayName}
           </span>

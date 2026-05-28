@@ -33,9 +33,9 @@ export function WorksSearchCard(props: Props) {
   return (
     <Link
       href={href}
-      className="block rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] transition"
+      className="h-full flex flex-col rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] transition"
     >
-      <div className="flex gap-3">
+      <div className="flex gap-3 flex-1">
         {props.coverUrl ? (
           // alt="" — cover is decorative; <h3>{title}</h3> below carries the semantic label
           <Image
@@ -48,7 +48,7 @@ export function WorksSearchCard(props: Props) {
         ) : (
           <div className="w-14 h-21 flex-shrink-0 rounded-sm bg-[var(--color-surface-2)]" />
         )}
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 flex flex-col">
           <h3 className="text-[15px] font-bold text-[var(--color-text-strong)] line-clamp-2">
             {props.title}
           </h3>
@@ -56,7 +56,7 @@ export function WorksSearchCard(props: Props) {
             {props.byline}
             {props.year ? ` · ${props.year}` : ''}
           </p>
-          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]">
+          <div className="mt-auto pt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]">
             {typeof props.externalRating === 'number' && (
               <span className="text-[var(--color-text-weak)] font-tabular tabular-nums">
                 외부 ★ {props.externalRating.toFixed(1)}
