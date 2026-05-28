@@ -4,6 +4,7 @@ import { requireUser, HttpError } from '@/lib/auth-helpers'
 import { WorksSearchQuerySchema } from '@/lib/validations'
 import { searchBooksExternal } from '@/lib/external/books'
 import { searchMoviesExternal } from '@/lib/external/movies'
+import { checkRateLimit } from '@/lib/external/rate-limit'
 import {
   getBookAggregatesByIsbns,
   getMovieAggregatesByTmdbIds,
@@ -14,13 +15,20 @@ const TIMEOUT_MS = 5000
 
 export async function GET(req: Request) {
   try {
-    await requireUser()
+    const user = await requireUser()
     const url = new URL(req.url)
     const parsed = WorksSearchQuerySchema.safeParse(Object.fromEntries(url.searchParams))
     if (!parsed.success) {
       return NextResponse.json({ error: 'invalid query' }, { status: 400 })
     }
     const { type, q, page = 1 } = parsed.data
+    const limited = checkRateLimit(user.id)
+    if (!limited.ok) {
+      return NextResponse.json(
+        { error: '잠시만요, 검색이 너무 많아요' },
+        { status: 429, headers: { 'Retry-After': String(limited.retryAfterSeconds) } },
+      )
+    }
     const ctl = new AbortController()
     const timeout = setTimeout(() => ctl.abort(), TIMEOUT_MS)
     try {
