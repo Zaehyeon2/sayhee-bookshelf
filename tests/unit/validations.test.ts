@@ -10,6 +10,8 @@ import {
   UpdateMovieSchema,
   ListMoviesQuerySchema,
   FeedQuerySchema,
+  ExternalIdsQuerySchema,
+  ExternalSearchQuerySchema,
 } from '@/lib/validations'
 
 describe('LoginSchema', () => {
@@ -221,5 +223,98 @@ describe('FeedQuerySchema', () => {
   })
   test('unknown type rejected', () => {
     expect(FeedQuerySchema.safeParse({ type: 'foo' }).success).toBe(false)
+  })
+})
+
+describe('external metadata fields', () => {
+  const baseBook = {
+    title: '책',
+    author: '저자',
+    genre: '소설',
+    readDate: '2026-01-01',
+    rating: 8,
+  }
+  const baseMovie = {
+    title: '영화',
+    director: '감독',
+    genre: '드라마',
+    watchedDate: '2026-01-01',
+    rating: 8,
+  }
+
+  it('accepts isbn/coverUrl/externalSource on CreateBookSchema', () => {
+    const r = CreateBookSchema.parse({
+      ...baseBook,
+      isbn: '9781234567890',
+      coverUrl: 'https://example.com/x.jpg',
+      externalSource: 'nl-kr',
+    })
+    expect(r.isbn).toBe('9781234567890')
+    expect(r.externalSource).toBe('nl-kr')
+  })
+
+  it('rejects non-http coverUrl', () => {
+    expect(() =>
+      CreateBookSchema.parse({ ...baseBook, coverUrl: 'javascript:alert(1)' }),
+    ).toThrow()
+    expect(() =>
+      CreateBookSchema.parse({ ...baseBook, coverUrl: 'ftp://x/y.jpg' }),
+    ).toThrow()
+  })
+
+  it('rejects invalid externalSource enum', () => {
+    expect(() =>
+      CreateBookSchema.parse({ ...baseBook, externalSource: 'tmdb' }),
+    ).toThrow()
+  })
+
+  it('accepts null to clear coverUrl in update', () => {
+    const r = UpdateBookSchema.parse({ coverUrl: null, isbn: null })
+    expect(r.coverUrl).toBeNull()
+  })
+
+  it('accepts tmdbId positive integer on CreateMovieSchema', () => {
+    const r = CreateMovieSchema.parse({ ...baseMovie, tmdbId: 12345, externalSource: 'tmdb' })
+    expect(r.tmdbId).toBe(12345)
+  })
+
+  it('rejects non-positive tmdbId', () => {
+    expect(() => CreateMovieSchema.parse({ ...baseMovie, tmdbId: 0 })).toThrow()
+    expect(() => CreateMovieSchema.parse({ ...baseMovie, tmdbId: -1 })).toThrow()
+  })
+
+  it('UpdateMovieSchema accepts null tmdbId', () => {
+    const r = UpdateMovieSchema.parse({ tmdbId: null })
+    expect(r.tmdbId).toBeNull()
+  })
+})
+
+describe('ExternalSearchQuerySchema', () => {
+  it('accepts q with 2-80 chars', () => {
+    expect(ExternalSearchQuerySchema.parse({ q: '해리포터' }).q).toBe('해리포터')
+  })
+  it('rejects q under 2 chars', () => {
+    expect(() => ExternalSearchQuerySchema.parse({ q: 'a' })).toThrow()
+  })
+  it('rejects q over 80 chars', () => {
+    expect(() => ExternalSearchQuerySchema.parse({ q: 'x'.repeat(81) })).toThrow()
+  })
+})
+
+describe('ExternalIdsQuerySchema', () => {
+  it('parses comma-separated string ids', () => {
+    const r = ExternalIdsQuerySchema.parse({ ids: 'isbn1,isbn2,isbn3' })
+    expect(r.ids).toEqual(['isbn1', 'isbn2', 'isbn3'])
+  })
+  it('trims and dedupes', () => {
+    const r = ExternalIdsQuerySchema.parse({ ids: ' a , b ,a, ' })
+    expect(r.ids).toEqual(['a', 'b'])
+  })
+  it('rejects empty', () => {
+    expect(() => ExternalIdsQuerySchema.parse({ ids: '' })).toThrow()
+  })
+  it('caps at 50 ids', () => {
+    const many = Array.from({ length: 51 }, (_, i) => `id${i}`).join(',')
+    expect(() => ExternalIdsQuerySchema.parse({ ids: many })).toThrow()
   })
 })
