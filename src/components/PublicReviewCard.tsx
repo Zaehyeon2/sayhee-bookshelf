@@ -54,7 +54,10 @@ export function PublicReviewCard({ item }: Props) {
           </div>
         </div>
         {item.oneLineReview && (
-          <blockquote className="mt-4 border-l-4 border-[var(--color-toss-blue)] pl-3 py-1 flex gap-1">
+          <blockquote
+            aria-label={`${item.authorDisplayName}의 한줄평`}
+            className="mt-4 border-l-4 border-[var(--color-toss-blue)] pl-3 py-1 flex items-start gap-1"
+          >
             <span
               aria-hidden
               className="text-[24px] text-[var(--color-text-weak)] leading-none select-none"
