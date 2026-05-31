@@ -14,19 +14,27 @@ const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
  * Origin 헤더가 같은 출처인지 확인. 외부 사이트의 form POST는 Origin이 다르므로 차단된다.
  * Browser fetch/XHR은 항상 Origin을 보내고, 일부 navigation POST는 안 보낼 수 있으므로
  * Origin이 없으면 Referer로 fallback. 둘 다 없으면 거절.
+ *
+ * host만 비교한다(scheme 제외). req.nextUrl.protocol은 TLS 종단 프록시 뒤에서 'http:'로
+ * 보일 수 있어, 브라우저 Origin('https://host')과 scheme이 어긋나 정상 요청이 403되는 것을
+ * 막기 위함. CSRF same-origin 판정에는 host 일치로 충분하다.
  */
 function isSameOrigin(req: NextRequest): boolean {
-  const origin = req.headers.get('origin')
   const host = req.headers.get('host')
   if (!host) return false
-  const expected = `${req.nextUrl.protocol}//${host}`
-  if (origin) return origin === expected
+  const origin = req.headers.get('origin')
+  if (origin) {
+    try {
+      return new URL(origin).host === host
+    } catch {
+      return false
+    }
+  }
   // Origin 없는 경우 Referer로 폴백
   const referer = req.headers.get('referer')
   if (!referer) return false
   try {
-    const refUrl = new URL(referer)
-    return refUrl.host === host
+    return new URL(referer).host === host
   } catch {
     return false
   }
@@ -94,6 +102,7 @@ export const config = {
     '/books/:path*',
     '/movies/:path*',
     '/writings/:path*',
+    '/works/:path*',
     '/admin/:path*',
     '/settings/:path*',
     '/api/:path*',
