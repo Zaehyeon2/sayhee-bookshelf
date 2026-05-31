@@ -62,17 +62,19 @@ describe('GET /api/books/by-external', () => {
     const userA = await createUser(testDb!, { username: 'aaaa' })
     const userB = await createUser(testDb!, { username: 'bbbb' })
 
-    await createBook(testDb!, userA.id, { isbn: '9781', title: 'A1' })
-    await createBook(testDb!, userA.id, { isbn: '9781', title: 'A2' })
-    await createBook(testDb!, userB.id, { isbn: '9781', title: 'B' })
+    await createBook(testDb!, userA.id, { isbn: '9788901234567', title: 'A1' })
+    await createBook(testDb!, userA.id, { isbn: '9788901234567', title: 'A2' })
+    await createBook(testDb!, userB.id, { isbn: '9788901234567', title: 'B' })
 
     vi.mocked(requireUser).mockResolvedValue(asTestUser(userA))
 
-    const r = await booksByExternal(req('https://x/api/books/by-external?ids=9781,9999'))
+    const r = await booksByExternal(
+      req('https://x/api/books/by-external?ids=9788901234567,9780000000000'),
+    )
     expect(r.status).toBe(200)
     const body = await r.json()
-    expect(body.counts['9781']).toBe(2)
-    expect(body.counts['9999']).toBeUndefined()
+    expect(body.counts['9788901234567']).toBe(2)
+    expect(body.counts['9780000000000']).toBeUndefined()
   })
 
   it('returns empty counts when no matches', async () => {
@@ -95,13 +97,15 @@ describe('GET /api/books/by-external', () => {
 
   it('dedupes repeated ids in counts result', async () => {
     const user = await createUser(testDb!, { username: 'dup1' })
-    await createBook(testDb!, user.id, { isbn: '9781', title: 'A1' })
+    await createBook(testDb!, user.id, { isbn: '9788901234567', title: 'A1' })
     vi.mocked(requireUser).mockResolvedValue(asTestUser(user))
 
-    const r = await booksByExternal(req('https://x/api/books/by-external?ids=9781,9781,9781'))
+    const r = await booksByExternal(
+      req('https://x/api/books/by-external?ids=9788901234567,9788901234567,9788901234567'),
+    )
     expect(r.status).toBe(200)
     const body = await r.json()
-    expect(body.counts['9781']).toBe(1)
+    expect(body.counts['9788901234567']).toBe(1)
   })
 })
 
