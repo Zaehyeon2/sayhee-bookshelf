@@ -41,15 +41,16 @@ export async function POST(req: Request) {
         tokenVersion: sql`${users.tokenVersion} + 1`,
       })
       .where(eq(users.id, user.id))
-      .returning({ tokenVersion: users.tokenVersion })
+      .returning()
 
-    const newUser = {
-      ...user,
-      passwordHash: newHash,
-      mustChangePassword: 0,
-      tokenVersion: updated?.tokenVersion ?? user.tokenVersion + 1,
+    // 토큰은 DB의 권위 있는 행으로 서명한다. user는 10s 캐시 출신이라 tokenVersion이 stale일 수
+    // 있고, 추정값(user.tokenVersion + 1)으로 서명하면 tv 불일치로 다음 요청에 즉시 로그아웃된다.
+    const authoritative =
+      updated ?? (await db.select().from(users).where(eq(users.id, user.id)).limit(1))[0]
+    if (!authoritative) {
+      return NextResponse.json({ error: '사용자를 찾을 수 없습니다' }, { status: 404 })
     }
-    const token = await signSession(newUser)
+    const token = await signSession(authoritative)
     const store = await cookies()
     store.set(SESSION.name, token, {
       httpOnly: true,

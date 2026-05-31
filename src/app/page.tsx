@@ -30,7 +30,11 @@ export default async function HomePage() {
     )
   }
 
-  const thisYear = new Date().getFullYear()
+  // 서버 로컬(UTC일 수 있음) 대신 KST 기준 연도 — 사용자가 입력하는 날짜는 KST 달력 기준이라
+  // 신년 경계에서 서버 TZ 차이로 "올해" 버킷이 어긋나는 것을 막는다.
+  const thisYear = Number(
+    new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Seoul', year: 'numeric' }).format(new Date()),
+  )
   const [stats, movieStats, recentPublicBooks, recentPublicMovies, recentWritings] =
     await Promise.all([
       getUserStats(db, me.id, thisYear),

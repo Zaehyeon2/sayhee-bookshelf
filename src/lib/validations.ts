@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { BOOK_GENRES, MOVIE_GENRES } from './genres'
 import { isValidUsername } from './username-normalize'
+import { canonicalIsbn } from './isbn'
 
 const dateRe = /^\d{4}-\d{2}-\d{2}$/
 
@@ -24,6 +25,15 @@ const coverUrlSchema = z
   .nullable()
   .optional()
 
+// 저장 전 canonical 13자리로 정규화 — 수동 입력 10자리가 works 집계 버킷을 가르지 않게 함.
+const isbnSchema = z
+  .string()
+  .trim()
+  .max(40)
+  .nullable()
+  .optional()
+  .transform((v) => (v ? canonicalIsbn(v) : v))
+
 export const CreateBookSchema = z
   .object({
     title: z.string().trim().min(1, '제목을 입력하세요').max(200),
@@ -44,7 +54,7 @@ export const CreateBookSchema = z
       .optional()
       .transform((v) => (v && v.length > 0 ? v : null)),
     isPublic: z.boolean().optional().default(true),
-    isbn: z.string().trim().max(40).nullable().optional(),
+    isbn: isbnSchema,
     coverUrl: coverUrlSchema,
     externalSource: z.enum(['naver']).nullable().optional(),
   })
@@ -71,7 +81,7 @@ export const UpdateBookSchema = z
       .optional()
       .transform((v) => (v === undefined ? undefined : v.length > 0 ? v : null)),
     isPublic: z.boolean().optional(),
-    isbn: z.string().trim().max(40).nullable().optional(),
+    isbn: isbnSchema,
     coverUrl: coverUrlSchema,
     externalSource: z.enum(['naver']).nullable().optional(),
   })

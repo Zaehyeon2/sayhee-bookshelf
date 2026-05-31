@@ -19,13 +19,23 @@ export function excerpt(content: string, q: string, ctx = 80): string | null {
     .replace(/\s+/g, ' ')
     .trim()
 
+  // content에서 제거한 것과 동일한 마크다운 punctuation을 q에서도 제거한 뒤 매칭.
+  // 안 하면 q에 *, _, ` 등이 포함될 때 stripped content와 매칭 실패 → 매칭된 결과인데도
+  // 스니펫이 조용히 사라진다(DB LIKE는 raw content로 매칭하므로 카드 자체는 노출됨).
+  const normalizedQ = q
+    .replace(/[#*_~`>]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+  if (!normalizedQ) return null
+
   const lower = stripped.toLowerCase()
-  const idx = lower.indexOf(q.toLowerCase())
+  const idx = lower.indexOf(normalizedQ)
   if (idx === -1) return null
 
   const half = Math.floor(ctx / 2)
   const start = Math.max(0, idx - half)
-  const end = Math.min(stripped.length, idx + q.length + half)
+  const end = Math.min(stripped.length, idx + normalizedQ.length + half)
   const head = start > 0 ? '…' : ''
   const tail = end < stripped.length ? '…' : ''
   return head + stripped.slice(start, end).trim() + tail

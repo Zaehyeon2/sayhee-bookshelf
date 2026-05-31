@@ -1,7 +1,15 @@
 import { cacheLife, cacheTag } from 'next/cache'
 import type { BookLookupResult } from './types'
+import { isbn10to13 } from '@/lib/isbn'
 
 export const NAVER_BOOK_LOOKUP_TAG = 'naver-book-lookup'
+
+/**
+ * Naver가 해당 ISBN을 찾지 못한 경우(4xx 또는 빈 결과)를 나타내는 sentinel.
+ * 'use cache' 함수 안에서 throw하면 결과가 캐시되지 않으므로, 일시적 빈 응답이
+ * cacheLife('days') 동안 not-found로 굳는 것을 방지한다. 실제 발견된 항목만 캐시된다.
+ */
+class NaverBookNotFound extends Error {}
 
 // Detail search 파라미터(`d_isbn`, `d_titl` 등)는 advanced endpoint에서만 동작.
 // 일반 `/book.json`은 `query=` 자유어 검색 전용이라 `d_isbn`을 무시하고 빈 결과를 반환한다.
@@ -16,19 +24,6 @@ function pickIsbn13(raw: string | undefined): string {
   if (!raw) return ''
   const parts = raw.trim().split(/\s+/)
   return parts.find((p) => /^\d{13}$/.test(p)) ?? ''
-}
-
-// ISBN-10 → ISBN-13 변환 (Bookland EAN). Naver 응답에 ISBN-10만 포함되거나
-// 사용자가 ISBN-10으로 검색한 경우에도 13자리 canonical form으로 정규화해
-// dedup invariant(src/lib/external/books.ts)와 호환.
-function isbn10to13(isbn10: string): string {
-  const body = `978${isbn10.slice(0, 9)}`
-  let sum = 0
-  for (let i = 0; i < 12; i++) {
-    sum += Number(body[i]) * (i % 2 === 0 ? 1 : 3)
-  }
-  const check = (10 - (sum % 10)) % 10
-  return body + check
 }
 
 function parsePubYear(s: string | undefined): number | undefined {
@@ -67,7 +62,7 @@ interface NaverSearchResponse {
 
 // 'use cache: remote' inner — isbn만 인자, signal/opts는 cache key에 안 포함.
 // Vercel Runtime Cache로 첫 hit 이후 모든 region에서 공유.
-async function fetchNaverBookItem(isbn: string): Promise<NaverBookItem | null> {
+async function fetchNaverBookItem(isbn: string): Promise<NaverBookItem> {
   'use cache: remote'
   cacheTag(NAVER_BOOK_LOOKUP_TAG)
   cacheLife('days')
@@ -81,7 +76,6 @@ async function fetchNaverBookItem(isbn: string): Promise<NaverBookItem | null> {
   url.searchParams.set('d_isbn', isbn)
   url.searchParams.set('display', '1')
 
-  console.log('[diag] naver-book lookup fetch', isbn)
   const res = await fetch(url, {
     headers: {
       'X-Naver-Client-Id': clientId,
@@ -93,10 +87,13 @@ async function fetchNaverBookItem(isbn: string): Promise<NaverBookItem | null> {
     throw new Error(`Naver rate limited (retry-after=${res.headers.get('retry-after') ?? 'n/a'})`)
   if (res.status === 401 || res.status === 403) throw new Error(`Naver auth ${res.status}`)
   if (res.status >= 500) throw new Error(`Naver upstream ${res.status}`)
-  if (res.status >= 400) return null
+  // 4xx / 빈 결과는 throw → 캐시되지 않음(일시적 빈 응답이 days 동안 굳는 것 방지).
+  if (res.status >= 400) throw new NaverBookNotFound()
 
   const data = (await res.json()) as NaverSearchResponse
-  return data.items?.[0] ?? null
+  const item = data.items?.[0]
+  if (!item) throw new NaverBookNotFound()
+  return item
 }
 
 export async function lookupBookByIsbn(
@@ -104,8 +101,14 @@ export async function lookupBookByIsbn(
   _opts: { signal?: AbortSignal } = {},
 ): Promise<BookLookupResult | null> {
   if (!/^\d{10}(\d{3})?$/.test(isbn)) return null
-  const item = await fetchNaverBookItem(isbn)
-  if (!item) return null
+  let item: NaverBookItem
+  try {
+    item = await fetchNaverBookItem(isbn)
+  } catch (e) {
+    // not-found는 정상 null 반환(상위 safeBookLookup이 에러 로깅하지 않게).
+    if (e instanceof NaverBookNotFound) return null
+    throw e
+  }
 
   // Canonical 13-digit ISBN only — preserves dedup invariant with src/lib/external/books.ts.
   // Naver isbn 필드는 "ISBN10 ISBN13" 또는 한쪽만 올 수 있다.

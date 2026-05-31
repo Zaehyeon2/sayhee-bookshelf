@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { db } from '@/lib/db/client'
 import { getCurrentUser } from '@/lib/auth'
 import { IsbnParamSchema, PageParamSchema } from '@/lib/validations'
+import { canonicalIsbn } from '@/lib/isbn'
 import { lookupBookByIsbn } from '@/lib/external/book-lookup'
 import { logAdapterError } from '@/lib/external/log-error'
 import { getPublicBookFallbackByIsbn } from '@/lib/db/queries'
@@ -30,7 +31,8 @@ export default async function WorksBookDetailPage({ params, searchParams }: SP) 
   const { isbn: rawIsbn } = await params
   const parsedIsbn = IsbnParamSchema.safeParse(rawIsbn)
   if (!parsedIsbn.success) notFound()
-  const isbn = parsedIsbn.data
+  // 10자리로 들어와도 저장 시 canonical 13자리이므로 동일 형태로 조회.
+  const isbn = canonicalIsbn(parsedIsbn.data)
 
   const sp = await searchParams
   const page = PageParamSchema.parse(sp.page ?? '1')
