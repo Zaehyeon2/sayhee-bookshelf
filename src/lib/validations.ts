@@ -26,13 +26,15 @@ const coverUrlSchema = z
   .optional()
 
 // 저장 전 canonical 13자리로 정규화 — 수동 입력 10자리가 works 집계 버킷을 가르지 않게 함.
+// .optional()을 .transform() 뒤에 둬야 최상위가 ZodOptional로 유지돼 추론 시 키가 optional이 됨.
+// (.optional().transform() 순서면 ZodEffects가 최상위라 키가 required로 잘못 추론됨)
 const isbnSchema = z
   .string()
   .trim()
   .max(40)
   .nullable()
-  .optional()
   .transform((v) => (v ? canonicalIsbn(v) : v))
+  .optional()
 
 export const CreateBookSchema = z
   .object({
