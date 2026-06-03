@@ -7,6 +7,7 @@ import { TagInput } from './TagInput'
 import { MarkdownEditor, type MarkdownEditorHandle } from './MarkdownEditor'
 import { ConfirmDialog } from './ConfirmDialog'
 import { Spinner } from './Spinner'
+import { focusNextOnEnter } from '@/lib/focus-next-on-enter'
 
 export interface WritingFormValues {
   title: string
@@ -87,7 +88,7 @@ export function WritingForm({ initial, mode }: Props) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-6">
+    <form onSubmit={submit} onKeyDown={focusNextOnEnter} className="space-y-6">
       <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-toss)] space-y-5">
         <div>
           <label className={labelCls}>제목</label>

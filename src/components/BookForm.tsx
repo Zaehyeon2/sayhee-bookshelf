@@ -12,6 +12,7 @@ import { ConfirmDialog } from './ConfirmDialog'
 import { Spinner } from './Spinner'
 import { Toggle } from './Toggle'
 import { ExternalBookSearchBar, type BookSelection } from './ExternalBookSearchBar'
+import { focusNextOnEnter } from '@/lib/focus-next-on-enter'
 
 export interface BookFormValues {
   title: string
@@ -134,7 +135,7 @@ export function BookForm({ initial, mode }: Props) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-6">
+    <form onSubmit={submit} onKeyDown={focusNextOnEnter} className="space-y-6">
       <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-toss)] space-y-5">
         <div>
           <label className={labelCls}>
