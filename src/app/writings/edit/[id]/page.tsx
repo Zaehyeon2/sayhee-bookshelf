@@ -18,6 +18,7 @@ export default async function EditWritingPage({ params }: { params: Promise<{ id
         글 수정
       </h1>
       <WritingForm
+        key={`writing-edit-${writing.id}`}
         mode="edit"
         initial={{ id: writing.id, title: writing.title, body: writing.body, tags }}
       />

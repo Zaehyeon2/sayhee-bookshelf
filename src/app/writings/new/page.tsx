@@ -12,7 +12,8 @@ export default async function NewWritingPage() {
       <h1 className="text-[28px] font-bold tracking-tight text-[var(--color-text-strong)]">
         새 글
       </h1>
-      <WritingForm mode="create" />
+      {/* key로 네비게이션 시 강제 remount — 이전 글 입력값 잔존 방지 (BookForm과 동일 사유) */}
+      <WritingForm key="writing-create" mode="create" />
     </div>
   )
 }

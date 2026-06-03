@@ -16,6 +16,7 @@ export default async function EditBookPage({ params }: { params: Promise<{ id: s
         독후감 수정
       </h1>
       <BookForm
+        key={`book-edit-${book.id}`}
         mode="edit"
         initial={{
           ...book,
