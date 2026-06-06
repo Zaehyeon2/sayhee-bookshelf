@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { BOOK_GENRES, MOVIE_GENRES } from './genres'
 import { isValidUsername } from './username-normalize'
 import { canonicalIsbn } from './isbn'
+import { isManagedBlobUrl } from './image-constraints'
 
 const dateRe = /^\d{4}-\d{2}-\d{2}$/
 
@@ -33,16 +34,7 @@ const writingCoverUrlSchema = z
   .trim()
   .max(500)
   .url()
-  .refine(
-    (u) => {
-      try {
-        return /\.public\.blob\.vercel-storage\.com$/i.test(new URL(u).hostname)
-      } catch {
-        return false
-      }
-    },
-    { message: '업로드된 이미지만 사용할 수 있습니다' },
-  )
+  .refine((u) => isManagedBlobUrl(u), { message: '업로드된 이미지만 사용할 수 있습니다' })
   .nullable()
   .optional()
 

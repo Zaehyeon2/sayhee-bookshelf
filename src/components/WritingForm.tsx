@@ -8,6 +8,7 @@ import { MarkdownEditor, type MarkdownEditorHandle } from './MarkdownEditor'
 import { ConfirmDialog } from './ConfirmDialog'
 import { Spinner } from './Spinner'
 import { focusNextOnEnter } from '@/lib/focus-next-on-enter'
+import { MAX_IMAGE_BYTES, ALLOWED_IMAGE_MIME } from '@/lib/image-constraints'
 
 export interface WritingFormValues {
   title: string
@@ -47,23 +48,29 @@ export function WritingForm({ initial, mode }: Props) {
   function onPickCover(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (!file.type.startsWith('image/')) {
-      toast.error('이미지 파일만 첨부할 수 있어요')
+    if (!ALLOWED_IMAGE_MIME.includes(file.type)) {
+      toast.error('이미지 파일(jpg/png/webp/gif)만 첨부할 수 있어요')
       return
     }
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_IMAGE_BYTES) {
       toast.error('이미지는 최대 5MB까지 첨부할 수 있어요')
       return
     }
     setCoverFile(file)
     setCoverRemoved(false)
-    setCoverPreview(URL.createObjectURL(file))
+    setCoverPreview((prev) => {
+      if (prev?.startsWith('blob:')) URL.revokeObjectURL(prev)
+      return URL.createObjectURL(file)
+    })
   }
 
   function onRemoveCover() {
     setCoverFile(null)
     setCoverRemoved(true)
-    setCoverPreview(null)
+    setCoverPreview((prev) => {
+      if (prev?.startsWith('blob:')) URL.revokeObjectURL(prev)
+      return null
+    })
     if (coverInputRef.current) coverInputRef.current.value = ''
   }
 
@@ -80,6 +87,8 @@ export function WritingForm({ initial, mode }: Props) {
       }
       // cover 결정: 새 파일 → 업로드 후 URL / 제거 버튼 → null / 변경 없음 → 키 생략
       let coverUrl: string | null | undefined
+      // 이번 submit에서 새로 업로드한 URL — 저장 실패 시 보상 삭제에 사용.
+      let uploadedUrl: string | null = null
       if (coverFile) {
         const fd = new FormData()
         fd.append('file', coverFile)
@@ -90,6 +99,7 @@ export function WritingForm({ initial, mode }: Props) {
           return
         }
         coverUrl = (await up.json()).url as string
+        uploadedUrl = coverUrl
       } else if (coverRemoved) {
         coverUrl = null
       }
@@ -109,6 +119,14 @@ export function WritingForm({ initial, mode }: Props) {
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
         toast.error(data.error || '저장 실패')
+        // 이번 submit에서 업로드한 blob이 있으면 고아가 되지 않도록 best-effort 삭제.
+        if (uploadedUrl) {
+          await fetch('/api/uploads', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: uploadedUrl }),
+          }).catch(() => {})
+        }
         return
       }
       const data = await res.json()
@@ -186,7 +204,7 @@ export function WritingForm({ initial, mode }: Props) {
           <input
             ref={coverInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
+            accept={ALLOWED_IMAGE_MIME.join(',')}
             onChange={onPickCover}
             className="hidden"
           />
