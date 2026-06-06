@@ -24,4 +24,12 @@ describe('writing schema coverUrl', () => {
   it('rejects a non-url coverUrl', () => {
     expect(CreateWritingSchema.safeParse({ title: 't', coverUrl: 'nope' }).success).toBe(false)
   })
+
+  it('rejects an external (non-blob) https coverUrl', () => {
+    const r = CreateWritingSchema.safeParse({
+      title: 't',
+      coverUrl: 'https://image.tmdb.org/x.png',
+    })
+    expect(r.success).toBe(false)
+  })
 })

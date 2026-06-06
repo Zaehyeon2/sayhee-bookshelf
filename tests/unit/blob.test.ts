@@ -22,6 +22,11 @@ describe('validateImageUpload', () => {
     const r = validateImageUpload({ type: 'image/png', size: MAX_IMAGE_BYTES + 1 })
     expect(r.ok).toBe(false)
   })
+
+  it('rejects a zero-byte file', () => {
+    const r = validateImageUpload({ type: 'image/png', size: 0 })
+    expect(r.ok).toBe(false)
+  })
 })
 
 describe('isManagedBlobUrl', () => {

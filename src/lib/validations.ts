@@ -25,6 +25,27 @@ const coverUrlSchema = z
   .nullable()
   .optional()
 
+// 글방 cover는 항상 업로드된 Vercel Blob URL — 외부 URL은 next/image allow-list 밖이라
+// 렌더 시 400. 직접 API 호출 방어를 위해 managed Blob host로 제한 (books/movies는
+// 외부 cover라 공유 coverUrlSchema 그대로 사용).
+const writingCoverUrlSchema = z
+  .string()
+  .trim()
+  .max(500)
+  .url()
+  .refine(
+    (u) => {
+      try {
+        return /\.public\.blob\.vercel-storage\.com$/i.test(new URL(u).hostname)
+      } catch {
+        return false
+      }
+    },
+    { message: '업로드된 이미지만 사용할 수 있습니다' },
+  )
+  .nullable()
+  .optional()
+
 // 저장 전 canonical 13자리로 정규화 — 수동 입력 10자리가 works 집계 버킷을 가르지 않게 함.
 // .optional()을 .transform() 뒤에 둬야 최상위가 ZodOptional로 유지돼 추론 시 키가 optional이 됨.
 // (.optional().transform() 순서면 ZodEffects가 최상위라 키가 required로 잘못 추론됨)
@@ -211,7 +232,7 @@ export const CreateWritingSchema = z
       .transform((arr) =>
         Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))),
       ),
-    coverUrl: coverUrlSchema,
+    coverUrl: writingCoverUrlSchema,
   })
   .strict()
 
@@ -224,7 +245,7 @@ export const UpdateWritingSchema = z
     tags: tagsArraySchema
       .transform((arr) => Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))))
       .optional(),
-    coverUrl: coverUrlSchema,
+    coverUrl: writingCoverUrlSchema,
   })
   .strict()
 

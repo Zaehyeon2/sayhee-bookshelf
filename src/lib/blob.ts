@@ -17,6 +17,7 @@ export type UploadValidation = { ok: true; ext: string } | { ok: false; error: s
 export function validateImageUpload(file: { type: string; size: number }): UploadValidation {
   const ext = EXT_BY_MIME[file.type]
   if (!ext) return { ok: false, error: '이미지 파일(jpg/png/webp/gif)만 업로드할 수 있어요' }
+  if (file.size === 0) return { ok: false, error: '빈 파일은 첨부할 수 없어요' }
   if (file.size > MAX_IMAGE_BYTES) {
     return { ok: false, error: '이미지는 최대 5MB까지 업로드할 수 있어요' }
   }
