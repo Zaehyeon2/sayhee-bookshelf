@@ -87,6 +87,8 @@ export function WritingForm({ initial, mode }: Props) {
       }
       // cover 결정: 새 파일 → 업로드 후 URL / 제거 버튼 → null / 변경 없음 → 키 생략
       let coverUrl: string | null | undefined
+      // 이번 submit에서 새로 업로드한 URL — 저장 실패 시 보상 삭제에 사용.
+      let uploadedUrl: string | null = null
       if (coverFile) {
         const fd = new FormData()
         fd.append('file', coverFile)
@@ -97,6 +99,7 @@ export function WritingForm({ initial, mode }: Props) {
           return
         }
         coverUrl = (await up.json()).url as string
+        uploadedUrl = coverUrl
       } else if (coverRemoved) {
         coverUrl = null
       }
@@ -116,6 +119,14 @@ export function WritingForm({ initial, mode }: Props) {
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
         toast.error(data.error || '저장 실패')
+        // 이번 submit에서 업로드한 blob이 있으면 고아가 되지 않도록 best-effort 삭제.
+        if (uploadedUrl) {
+          await fetch('/api/uploads', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: uploadedUrl }),
+          }).catch(() => {})
+        }
         return
       }
       const data = await res.json()
