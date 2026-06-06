@@ -68,4 +68,15 @@ describe('writing cover lifecycle', () => {
     expect(res).toBeNull()
     expect(deleteBlobIfManaged).not.toHaveBeenCalled()
   })
+
+  it('cross-user deleteWriting cannot delete another user writing or its blob', async () => {
+    const a = await createUser(db, { username: 'alice' })
+    const b = await createUser(db, { username: 'bob' })
+    const w = await createWriting(db, a.id, { title: '봄', coverUrl: `${BLOB}/1/x.png`, tags: [] })
+    expect(await deleteWriting(db, b.id, w.id)).toBe(false)
+    expect(deleteBlobIfManaged).not.toHaveBeenCalled()
+    // owner can still delete
+    expect(await deleteWriting(db, a.id, w.id)).toBe(true)
+    expect(deleteBlobIfManaged).toHaveBeenCalledWith(`${BLOB}/1/x.png`)
+  })
 })
