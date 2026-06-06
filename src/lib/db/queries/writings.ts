@@ -5,6 +5,7 @@ import type { CreateWritingInput, UpdateWritingInput } from '@/lib/validations'
 import { escapeLikePattern, isWritingSlugUniqueViolation } from './shared'
 import type { Db, WritingWithTags } from './shared'
 import { attachWritingTags, attachWritingTagsBatch, replaceWritingTagsTx } from './tags'
+import { deleteBlobIfManaged } from '@/lib/blob'
 
 export async function createWriting(
   db: Db,
@@ -24,6 +25,7 @@ export async function createWriting(
             authorUserId,
             title: input.title,
             body: input.body ?? '',
+            coverUrl: input.coverUrl ?? null,
             slug: candidate,
             createdAt: now,
             updatedAt: now,
@@ -54,13 +56,15 @@ export async function updateWriting(
   id: number,
   input: UpdateWritingInput,
 ): Promise<WritingWithTags | null> {
-  return db.transaction(async (tx) => {
+  let oldCover: string | null = null
+  const result = await db.transaction(async (tx) => {
     const existing = await tx
       .select()
       .from(writings)
       .where(and(eq(writings.id, id), eq(writings.authorUserId, authorUserId)))
       .limit(1)
     if (existing.length === 0) return null
+    oldCover = existing[0].coverUrl
 
     const now = Date.now()
     const updated = await tx
@@ -68,6 +72,7 @@ export async function updateWriting(
       .set({
         ...(input.title !== undefined && { title: input.title }),
         ...(input.body !== undefined && { body: input.body }),
+        ...(input.coverUrl !== undefined && { coverUrl: input.coverUrl }),
         updatedAt: now,
       })
       .where(and(eq(writings.id, id), eq(writings.authorUserId, authorUserId)))
@@ -84,14 +89,24 @@ export async function updateWriting(
       .where(eq(writingTags.writingId, id))
     return { ...writing, tags: tagRows.map((r) => r.name) }
   })
+
+  // 트랜잭션 커밋 후에만 옛 Blob 정리 — 외부 I/O는 트랜잭션 밖. cover가 실제로
+  // 바뀐 경우(교체/제거)에만 삭제.
+  if (result && input.coverUrl !== undefined && oldCover && oldCover !== input.coverUrl) {
+    await deleteBlobIfManaged(oldCover)
+  }
+  return result
 }
 
 export async function deleteWriting(db: Db, authorUserId: number, id: number): Promise<boolean> {
   const result = await db
     .delete(writings)
     .where(and(eq(writings.id, id), eq(writings.authorUserId, authorUserId)))
-    .returning({ id: writings.id })
-  return result.length > 0
+    .returning({ id: writings.id, coverUrl: writings.coverUrl })
+  const row = result[0]
+  if (!row) return false
+  await deleteBlobIfManaged(row.coverUrl)
+  return true
 }
 
 export async function getWritingBySlug(
