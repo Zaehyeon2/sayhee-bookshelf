@@ -8,6 +8,7 @@ import { MarkdownEditor, type MarkdownEditorHandle } from './MarkdownEditor'
 import { ConfirmDialog } from './ConfirmDialog'
 import { Spinner } from './Spinner'
 import { focusNextOnEnter } from '@/lib/focus-next-on-enter'
+import { MAX_IMAGE_BYTES, ALLOWED_IMAGE_MIME } from '@/lib/image-constraints'
 
 export interface WritingFormValues {
   title: string
@@ -47,23 +48,29 @@ export function WritingForm({ initial, mode }: Props) {
   function onPickCover(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (!file.type.startsWith('image/')) {
-      toast.error('이미지 파일만 첨부할 수 있어요')
+    if (!ALLOWED_IMAGE_MIME.includes(file.type)) {
+      toast.error('이미지 파일(jpg/png/webp/gif)만 첨부할 수 있어요')
       return
     }
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_IMAGE_BYTES) {
       toast.error('이미지는 최대 5MB까지 첨부할 수 있어요')
       return
     }
     setCoverFile(file)
     setCoverRemoved(false)
-    setCoverPreview(URL.createObjectURL(file))
+    setCoverPreview((prev) => {
+      if (prev?.startsWith('blob:')) URL.revokeObjectURL(prev)
+      return URL.createObjectURL(file)
+    })
   }
 
   function onRemoveCover() {
     setCoverFile(null)
     setCoverRemoved(true)
-    setCoverPreview(null)
+    setCoverPreview((prev) => {
+      if (prev?.startsWith('blob:')) URL.revokeObjectURL(prev)
+      return null
+    })
     if (coverInputRef.current) coverInputRef.current.value = ''
   }
 
@@ -186,7 +193,7 @@ export function WritingForm({ initial, mode }: Props) {
           <input
             ref={coverInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
+            accept={ALLOWED_IMAGE_MIME.join(',')}
             onChange={onPickCover}
             className="hidden"
           />

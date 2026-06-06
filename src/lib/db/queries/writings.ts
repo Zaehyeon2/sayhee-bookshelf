@@ -56,15 +56,14 @@ export async function updateWriting(
   id: number,
   input: UpdateWritingInput,
 ): Promise<WritingWithTags | null> {
-  let oldCover: string | null = null
-  const result = await db.transaction(async (tx) => {
+  const txResult = await db.transaction(async (tx) => {
     const existing = await tx
       .select()
       .from(writings)
       .where(and(eq(writings.id, id), eq(writings.authorUserId, authorUserId)))
       .limit(1)
     if (existing.length === 0) return null
-    oldCover = existing[0].coverUrl
+    const oldCover = existing[0].coverUrl
 
     const now = Date.now()
     const updated = await tx
@@ -87,15 +86,16 @@ export async function updateWriting(
       .from(writingTags)
       .innerJoin(tags, eq(writingTags.tagId, tags.id))
       .where(eq(writingTags.writingId, id))
-    return { ...writing, tags: tagRows.map((r) => r.name) }
+    return { writing: { ...writing, tags: tagRows.map((r) => r.name) }, oldCover }
   })
 
-  // 트랜잭션 커밋 후에만 옛 Blob 정리 — 외부 I/O는 트랜잭션 밖. cover가 실제로
-  // 바뀐 경우(교체/제거)에만 삭제.
-  if (result && input.coverUrl !== undefined && oldCover && oldCover !== input.coverUrl) {
+  if (!txResult) return null
+  const { writing, oldCover } = txResult
+  // 트랜잭션 커밋 후에만 옛 Blob 정리 — 외부 I/O는 트랜잭션 밖. cover가 실제로 바뀐 경우만.
+  if (input.coverUrl !== undefined && oldCover && oldCover !== input.coverUrl) {
     await deleteBlobIfManaged(oldCover)
   }
-  return result
+  return writing
 }
 
 export async function deleteWriting(db: Db, authorUserId: number, id: number): Promise<boolean> {

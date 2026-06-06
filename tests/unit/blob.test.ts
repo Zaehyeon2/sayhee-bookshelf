@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { validateImageUpload, isManagedBlobUrl, MAX_IMAGE_BYTES } from '@/lib/blob'
+import { validateImageUpload, isManagedBlobUrl, MAX_IMAGE_BYTES } from '@/lib/image-constraints'
 
 describe('validateImageUpload', () => {
   it('accepts jpeg under size limit and returns ext', () => {
