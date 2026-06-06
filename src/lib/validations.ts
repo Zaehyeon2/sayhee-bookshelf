@@ -211,6 +211,7 @@ export const CreateWritingSchema = z
       .transform((arr) =>
         Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))),
       ),
+    coverUrl: coverUrlSchema,
   })
   .strict()
 
@@ -223,6 +224,7 @@ export const UpdateWritingSchema = z
     tags: tagsArraySchema
       .transform((arr) => Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))))
       .optional(),
+    coverUrl: coverUrlSchema,
   })
   .strict()
 
