@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, test } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { WritingCard } from '@/components/WritingCard'
 import { GenreBadge } from '@/components/GenreBadge'
 import { RatingStars } from '@/components/RatingStars'
 import { Filters } from '@/components/Filters'
@@ -180,5 +181,33 @@ describe('MovieForm', () => {
     expect(select).not.toBeNull()
     expect(screen.getByRole('option', { name: '액션' })).toBeInTheDocument()
     expect(screen.queryByRole('option', { name: '소설' })).toBeNull()
+  })
+})
+
+describe('WritingCard cover', () => {
+  const base = {
+    id: 1,
+    authorUserId: 1,
+    title: '봄밤',
+    body: '본문',
+    slug: 'spring',
+    coverUrl: null as string | null,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    tags: [] as string[],
+  }
+
+  it('renders an image when coverUrl is present', () => {
+    const { container } = render(
+      <WritingCard
+        writing={{ ...base, coverUrl: 'https://abc.public.blob.vercel-storage.com/w/1/x.png' }}
+      />,
+    )
+    expect(container.querySelector('img')).not.toBeNull()
+  })
+
+  it('renders no image when coverUrl is null', () => {
+    const { container } = render(<WritingCard writing={base} />)
+    expect(container.querySelector('img')).toBeNull()
   })
 })
