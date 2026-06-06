@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
+import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { db } from '@/lib/db/client'
@@ -41,6 +42,15 @@ export default async function WritingDetailPage({ params }: { params: Promise<{ 
             수정
           </Link>
         </div>
+        {w.coverUrl && (
+          <Image
+            src={w.coverUrl}
+            alt={`${w.title} 대표 이미지`}
+            width={800}
+            height={400}
+            className="mt-3 w-full max-h-[360px] rounded-[var(--radius-toss-sm)] object-cover shadow-[var(--shadow-toss)]"
+          />
+        )}
         <h1 className="mt-3 text-[28px] sm:text-[32px] font-bold tracking-tight leading-tight text-[var(--color-text-strong)]">
           {w.title}
         </h1>

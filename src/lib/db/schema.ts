@@ -99,6 +99,7 @@ export const writings = sqliteTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
     body: text('body').notNull().default(''),
+    coverUrl: text('cover_url'),
     slug: text('slug').notNull(),
     createdAt: integer('created_at').notNull(),
     updatedAt: integer('updated_at').notNull(),

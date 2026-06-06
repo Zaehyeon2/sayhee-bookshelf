@@ -73,6 +73,7 @@ export async function createWriting(
       slug: overrides.slug ?? `writing-${now}-${Math.random().toString(36).slice(2, 6)}`,
       createdAt: overrides.createdAt ?? now,
       updatedAt: overrides.updatedAt ?? now,
+      ...(overrides.coverUrl !== undefined && { coverUrl: overrides.coverUrl }),
     })
     .returning()
   return w

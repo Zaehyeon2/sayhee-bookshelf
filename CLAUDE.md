@@ -141,3 +141,4 @@ tests/
 - **Toast UI Editor**: SSR 비호환 — `'use client'` 컴포넌트 (`MarkdownEditor.tsx`)에서만 import. 서버 컴포넌트에서 직접 import 금지.
 - **`DEFAULT_USER_PASSWORD` 변경 시**: 이미 발급된 신규 계정엔 영향 없음 (해시는 생성 시 한 번 굳음).
 - **WSL2 next dev hang**: 60s 안에 안 뜨면 README의 트러블슈팅 섹션 참고 (`pkill next-server` + `rm local.db`는 **destructive**라 Claude는 사용자 승인 후에만 실행).
+- **Vercel Blob 토큰**: 글방 대표 이미지 업로드(`/api/uploads`)는 `BLOB_READ_WRITE_TOKEN` 필요. Vercel은 Blob store 연결 시 자동 주입, 로컬은 `.env.local`에 수동 추가. 없으면 업로드만 비동작(나머지 영향 없음). 글방 cover는 `writings.coverUrl`(nullable) 컬럼에 Blob public URL로 저장 — 교체/제거·글 삭제 시 `deleteBlobIfManaged`로 옛 Blob 정리(트랜잭션 밖).

@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'image.tmdb.org' },
       { protocol: 'https', hostname: 'shopping-phinf.pstatic.net' },
+      { protocol: 'https', hostname: '*.public.blob.vercel-storage.com' },
       // RFC 6761 reserved TLD — never resolves on the public internet, used
       // by e2e fixtures so SSR validation passes without hitting a real CDN.
       { protocol: 'https', hostname: 'images.example.test' },

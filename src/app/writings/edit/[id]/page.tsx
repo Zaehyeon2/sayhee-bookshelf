@@ -20,7 +20,13 @@ export default async function EditWritingPage({ params }: { params: Promise<{ id
       <WritingForm
         key={`writing-edit-${writing.id}`}
         mode="edit"
-        initial={{ id: writing.id, title: writing.title, body: writing.body, tags }}
+        initial={{
+          id: writing.id,
+          title: writing.title,
+          body: writing.body,
+          tags,
+          coverUrl: writing.coverUrl,
+        }}
       />
     </div>
   )
