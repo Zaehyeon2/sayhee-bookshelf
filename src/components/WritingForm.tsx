@@ -13,6 +13,7 @@ export interface WritingFormValues {
   title: string
   body: string
   tags: string[]
+  coverUrl: string | null
 }
 
 interface Props {
@@ -37,6 +38,35 @@ export function WritingForm({ initial, mode }: Props) {
   const [tags, setTags] = useState<string[]>(initial?.tags ?? [])
   const editorRef = useRef<MarkdownEditorHandle>(null)
 
+  const existingCover = initial?.coverUrl ?? null
+  const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [coverRemoved, setCoverRemoved] = useState(false)
+  const [coverPreview, setCoverPreview] = useState<string | null>(existingCover)
+  const coverInputRef = useRef<HTMLInputElement>(null)
+
+  function onPickCover(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      toast.error('이미지 파일만 첨부할 수 있어요')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('이미지는 최대 5MB까지 첨부할 수 있어요')
+      return
+    }
+    setCoverFile(file)
+    setCoverRemoved(false)
+    setCoverPreview(URL.createObjectURL(file))
+  }
+
+  function onRemoveCover() {
+    setCoverFile(null)
+    setCoverRemoved(true)
+    setCoverPreview(null)
+    if (coverInputRef.current) coverInputRef.current.value = ''
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     if (submitting) return
@@ -48,7 +78,28 @@ export function WritingForm({ initial, mode }: Props) {
         toast.error('에디터가 준비되지 않았습니다. 다시 시도해주세요.')
         return
       }
-      const payload = { title: title.trim(), body, tags }
+      // cover 결정: 새 파일 → 업로드 후 URL / 제거 버튼 → null / 변경 없음 → 키 생략
+      let coverUrl: string | null | undefined
+      if (coverFile) {
+        const fd = new FormData()
+        fd.append('file', coverFile)
+        const up = await fetch('/api/uploads', { method: 'POST', body: fd })
+        if (!up.ok) {
+          const d = await up.json().catch(() => ({}))
+          toast.error(d.error || '이미지 업로드 실패')
+          return
+        }
+        coverUrl = (await up.json()).url as string
+      } else if (coverRemoved) {
+        coverUrl = null
+      }
+
+      const payload = {
+        title: title.trim(),
+        body,
+        tags,
+        ...(coverUrl !== undefined && { coverUrl }),
+      }
       const url = mode === 'create' ? '/api/writings' : `/api/writings/${initial?.id}`
       const res = await fetch(url, {
         method: mode === 'create' ? 'POST' : 'PATCH',
@@ -104,6 +155,41 @@ export function WritingForm({ initial, mode }: Props) {
         <div>
           <label className={labelCls}>태그</label>
           <TagInput value={tags} onChange={setTags} />
+        </div>
+        <div>
+          <label className={labelCls}>대표 이미지 (선택)</label>
+          {coverPreview ? (
+            <div className="flex items-start gap-3">
+              {/* biome-ignore lint/performance/noImgElement: 미리보기는 blob/objectURL이라 next/image 부적합 */}
+              <img
+                src={coverPreview}
+                alt="대표 이미지 미리보기"
+                className="h-32 w-auto rounded-[var(--radius-toss-sm)] border border-[var(--color-border)] object-cover"
+              />
+              <button
+                type="button"
+                onClick={onRemoveCover}
+                className="h-9 px-3 rounded-[var(--radius-toss-sm)] text-[13px] font-semibold text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition"
+              >
+                이미지 제거
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => coverInputRef.current?.click()}
+              className="h-12 px-5 rounded-[var(--radius-toss-sm)] border border-dashed border-[var(--color-border)] text-[14px] font-semibold text-[var(--color-text-muted)] hover:border-[var(--color-toss-blue)] hover:text-[var(--color-toss-blue)] transition"
+            >
+              + 이미지 첨부
+            </button>
+          )}
+          <input
+            ref={coverInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={onPickCover}
+            className="hidden"
+          />
         </div>
       </section>
 
