@@ -38,6 +38,8 @@ ESLint 없음 — **Biome 단독**. `npm run lint` 같은 이전 명령은 더 �
 
 전부 `src/lib/auth-helpers.ts`. `mustChangePassword=1` 사용자는 기본적으로 **모든 mutation에서 차단**됨 — `requireUser`가 throw. 비번 변경 endpoint만 opt-in.
 
+**유일한 예외 = 공개 피드**: `listRecentPublicBooks/Movies`·works 집계만 `authorUserId` 필터 없음. 이들은 반드시 `isPublic = 1 AND publishedAt IS NOT NULL` 조건 — 이 조건 없는 cross-user 쿼리는 무조건 버그.
+
 ### 2. Middleware (`src/middleware.ts`)
 
 **`proxy.ts` 아님.** README의 옛 표기를 신뢰하지 말 것.
@@ -55,7 +57,7 @@ ESLint 없음 — **Biome 단독**. `npm run lint` 같은 이전 명령은 더 �
 
 ### 4. LIKE 패턴은 반드시 escape
 
-`src/lib/db/queries.ts`의 `escapeLikePattern(s)` 사용 후 SQL에 `ESCAPE '\'` 명시. 검색어가 `%`, `_`, `\`를 포함하면 raw로 전달 시 와일드카드로 해석되어 의도와 다른 결과 + 잠재적 정보 누출.
+`src/lib/db/queries/shared.ts`의 `escapeLikePattern(s)` 사용 후 SQL에 `ESCAPE '\'` 명시. 검색어가 `%`, `_`, `\`를 포함하면 raw로 전달 시 와일드카드로 해석되어 의도와 다른 결과 + 잠재적 정보 누출.
 
 ### 5. Slug 충돌 retry
 
@@ -85,40 +87,46 @@ ESLint 없음 — **Biome 단독**. `npm run lint` 같은 이전 명령은 더 �
 src/
 ├ app/
 │  ├ api/
-│  │  ├ books/, writings/         CRUD (인증 필수)
-│  │  ├ users/                    admin-only 사용자 관리 + me/password, me/profile
-│  │  ├ login/, logout/           세션 발급/말소
-│  │  ├ admin/                    admin-only 라우트
-│  │  └ tags/                     태그 자동완성
-│  ├ books/, writings/            목록·상세·new·edit 페이지
-│  ├ admin/users/                 사용자 관리 페이지
-│  ├ settings/{password,profile}  본인 설정
-│  ├ login/
-│  └ page.tsx                     홈 (getUserStats 단일 쿼리)
-├ components/                     BookForm/WritingForm/MarkdownEditor/Pagination 등
+│  │  ├ books/, movies/, writings/   CRUD + 각 stats/ (대시보드 집계 GET)
+│  │  ├ uploads/                     글방 cover 이미지 업로드/보상삭제 (Vercel Blob)
+│  │  ├ external/                    외부 작품 검색 프록시 (네이버 책/TMDB)
+│  │  ├ users/                       admin-only 사용자 관리 + me/password, me/profile
+│  │  ├ login/, logout/, admin/, tags/
+│  ├ books/, movies/, writings/      목록(+접이식 통계 패널)·상세·new·edit
+│  ├ works/                          공개 작품 집계 (book/[isbn], movie/[tmdbId])
+│  ├ feed/                           공개 피드
+│  ├ admin/users/, settings/, login/
+│  └ page.tsx                        홈 (getUserStats 단일 쿼리, KST 연도)
+├ components/                        BookForm/MovieForm/WritingForm/MarkdownEditor 등
+│  ├ stats/                          StatsPanel(접이식)/StatsDashboard/charts(chart.js lazy)
+│  └ works/                          공개 작품 상세·검색 카드
 ├ lib/
-│  ├ auth.ts                      bcrypt + jose HS256 JWT (DUMMY_HASH timing guard)
-│  ├ auth-helpers.ts              requireUser/Admin/OwnBook/OwnWriting + HttpError
+│  ├ auth.ts / auth-edge.ts          bcrypt + jose HS256 JWT (DUMMY_HASH timing guard)
+│  ├ auth-helpers.ts                 requireUser/Admin/OwnBook/OwnWriting + HttpError
 │  ├ db/
-│  │  ├ schema.ts                 users, books, writings, tags, *_tags (+ composite index)
-│  │  ├ queries.ts                트랜잭션·LIKE escape·slug retry·N+1 batch·getUserStats
-│  │  └ client.ts                 libsql/drizzle
-│  ├ validations.ts               zod 스키마 (책/글/사용자/페이지네이션)
-│  ├ excerpt.ts, highlight.tsx    검색 매칭 부근 발췌 + <mark> 하이라이트
-│  ├ slug.ts                      Hangul-friendly slug
-│  └ username-normalize.ts        대소문자/공백 정규화
-└ middleware.ts                   CSRF + 세션 + mcp 게이트
+│  │  ├ schema.ts                    users, books, movies, writings, tags, *_tags
+│  │  ├ queries.ts                   barrel — 실제 구현은 queries/{books,movies,writings,tags,stats,shared}.ts
+│  │  └ client.ts                    libsql/drizzle
+│  ├ external/                       외부 API lookup + rate-limit + route-factory
+│  ├ validations.ts                  zod 스키마 (책/영화/글/사용자/페이지네이션)
+│  ├ rating.ts                       별점 ÷2 표시 변환 단일 지점
+│  ├ kst.ts                          currentKstYear() — "올해" 집계 연도 단일 소스
+│  ├ stats-types.ts                  대시보드 공유 타입 (클라이언트는 여기서만 import)
+│  ├ blob.ts / image-constraints.ts  Vercel Blob 업로드·제약
+│  ├ public-feed-cache.ts / works-detail-cache.ts
+│  ├ excerpt.ts, highlight.tsx, slug.ts, genres.ts, isbn.ts, username-normalize.ts
+└ middleware.ts                      CSRF + 세션 + mcp 게이트
 ```
 
 ## DB 스키마 요약
 
 - **users** (id, username uniq, displayName, passwordHash, role 'admin'|'member', mustChangePassword 0|1, tokenVersion, createdAt)
-- **books** (id, **authorUserId**, title, author, genre, readDate, rating CHECK 1-10, content, slug, ts)
-  - composite: `(user, date DESC)`, `(user, genre)`, `(user, rating DESC)`, `(user, slug) UNIQUE`
-- **movies** (id, **authorUserId**, title, director, genre, watchedDate, rating CHECK 1-10, content, slug, ts) — books와 동형 패턴
-- **writings** (id, **authorUserId**, title, body, slug, ts)
+- **books** (id, **authorUserId**, title, author, genre, readDate, rating CHECK 1-10, content, oneLineReview?, isPublic 0|1, publishedAt?, slug, isbn?, coverUrl?, externalSource?, ts)
+  - composite: `(user, date DESC)`, `(user, genre)`, `(user, rating DESC)`, `(user, slug) UNIQUE`, `(isPublic, publishedAt DESC)`, `(isPublic, isbn)`
+- **movies** — books와 동형 (director/watchedDate/tmdbId가 author/readDate/isbn 자리). 인덱스도 동형.
+- **writings** (id, **authorUserId**, title, body, coverUrl?, slug, ts)
   - composite: `(user, createdAt DESC)`, `(user, slug) UNIQUE`
-- **tags** + **book_tags** + **writing_tags** + **movie_tags** — 태그는 books/writings/movies가 **공유** (`tags.name UNIQUE`).
+- **tags** + **book_tags** + **writing_tags** + **movie_tags** — 태그는 books/writings/movies가 **공유** (`tags.name UNIQUE`). junction PK `(entity, tag)` + 역방향 `(tag)` 인덱스로 양방향 커버.
 
 **rating 스케일**: DB 저장은 **1~10 정수** (books·movies 동일, CHECK `BETWEEN 1 AND 10`). UI 표시는 항상 **÷2 = 0.5~5 별점** (`RatingScore` 관례). 통계·차트·라벨 등 사용자에게 보이는 모든 별점 값은 /2 스케일로 변환할 것 — 1~10 그대로 노출 금지.
 
@@ -134,12 +142,14 @@ src/
 
 ```
 tests/
-├ unit/           Vitest — auth/excerpt/slug/validations/username-normalize/components
-├ integration/    실제 SQLite — books-scoping, writings-scoping, stats-and-pagination
-└ e2e/            Playwright — auth, golden-path, delete 모달
+├ unit/           Vitest — auth/validations/blob/uploads-route/stats-routes/components 등
+├ integration/    실제 SQLite — *-scoping(멀티테넌트 회귀 가드), stats-*, public-feed,
+│                 works-aggregation, writings-cover, external-search
+└ e2e/            Playwright — golden-path(책/영화), stats-panel, public-feed, works-search 등
 ```
 
-- `tests/setup-db.ts`가 in-memory libSQL을 띄우고 `tests/factories.ts`가 user/book/writing factory 제공.
+- `tests/setup-db.ts`가 임시 파일 libSQL을 띄우고 `tests/factories.ts`가 user/book/movie/writing factory 제공.
+- e2e는 `global-setup.ts`가 `seed:e2e`를 자동 실행 — 표준 계정 `e2e-alice`/`e2e-bob` (`e2etestpass1234`, alice는 영화 시드 보유). 로그인은 `tests/e2e/helpers.ts`의 `login()` 사용 — spec마다 복제 금지.
 - factory는 `createdAt`/`updatedAt` **override를 존중** — 통계 연도 필터링 테스트가 이걸 필요로 함.
 - 통합 테스트는 멀티테넌트 격리가 진짜로 작동하는지 검증하는 회귀 가드 — 새 user-scoped 쿼리 추가 시 cross-user 격리 케이스 1개씩 추가.
 
@@ -154,6 +164,7 @@ tests/
 
 - **`.env.local` $ escape**: `$2a$...` 같은 bcrypt 해시를 환경변수로 넣을 때 `\$2a\$...`로 escape 안 하면 dotenv-expand가 변수로 해석. `LEGACY_OWNER_PASSWORD_HASH`, `INITIAL_ADMIN_PASSWORD`(평문이라 영향 적음) 모두 주의.
 - **Drizzle 명령 prefix**: Next.js dotenv는 drizzle-kit에 안 먹습니다. 항상 `pnpm exec dotenv -e .env.local --` 붙이세요.
+- **Turso(prod) 스키마 변경**: `drizzle-kit push`는 Turso에서 SQL_INPUT_ERROR로 실패, `migrate`는 **silent no-op** (EXIT 0인데 `__drizzle_migrations` 빈 채 미적용). raw `@libsql/client` ALTER + `PRAGMA table_info` 검증만 신뢰할 것. exit code를 적용 성공의 증거로 믿지 말 것. (로컬 `file:` DB엔 push 정상 동작 — 단 `TURSO_TOKEN=`이 빈 문자열이면 turso dialect 검증 실패하므로 `TURSO_URL=file:local.db pnpm exec drizzle-kit push`처럼 TOKEN 없이 실행.)
 - **Toast UI Editor**: SSR 비호환 — `'use client'` 컴포넌트 (`MarkdownEditor.tsx`)에서만 import. 서버 컴포넌트에서 직접 import 금지.
 - **`DEFAULT_USER_PASSWORD` 변경 시**: 이미 발급된 신규 계정엔 영향 없음 (해시는 생성 시 한 번 굳음).
 - **WSL2 next dev hang**: 60s 안에 안 뜨면 README의 트러블슈팅 섹션 참고 (`pkill next-server` + `rm local.db`는 **destructive**라 Claude는 사용자 승인 후에만 실행).
