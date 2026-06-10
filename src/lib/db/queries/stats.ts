@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { books, writings, movies, tags, bookTags, movieTags } from '../schema'
+import { books, writings, movies, tags, bookTags, movieTags, writingTags } from '../schema'
 import type { Db } from './shared'
 
 export interface UserStats {
@@ -268,5 +268,81 @@ export async function getMovieDashboard(
     yearTimeline: toCountItems(yearRows),
     topTags: toCountItems(tagRows),
     topDirectors: toCountItems(directorRows),
+  }
+}
+
+export interface WritingDashboard {
+  summary: { total: number; thisYear: number }
+  monthlyTimeline: CountItem[] // 최근 12개월, label='YYYY-MM', 빈 달 0
+  topTags: CountItem[]
+  charStats: { totalChars: number; avgChars: number }
+}
+
+/**
+ * 글방 대시보드. createdAt은 ms epoch — UTC 경계로 결정론적 버킷 (getUserStats와 동일 규칙).
+ * 월 라벨은 strftime('%Y-%m', created_at/1000, 'unixepoch') — UTC 기준.
+ * now 파라미터는 테스트 결정론용.
+ */
+export async function getWritingDashboard(
+  db: Db,
+  userId: number,
+  now: Date = new Date(),
+): Promise<WritingDashboard> {
+  const year = now.getUTCFullYear()
+  const yearStartMs = Date.UTC(year, 0, 1)
+  const yearEndMs = Date.UTC(year + 1, 0, 1)
+  const monthStartMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 11, 1)
+
+  const [summaryRows, monthlyRows, tagRows, charRows] = await Promise.all([
+    db.all(sql`
+      SELECT
+        (SELECT COUNT(*) FROM ${writings} WHERE ${writings.authorUserId} = ${userId}) AS total,
+        (SELECT COUNT(*) FROM ${writings}
+           WHERE ${writings.authorUserId} = ${userId}
+             AND ${writings.createdAt} >= ${yearStartMs}
+             AND ${writings.createdAt} < ${yearEndMs}) AS this_year
+    `),
+    db.all(sql`
+      SELECT strftime('%Y-%m', ${writings.createdAt} / 1000, 'unixepoch') AS label,
+             COUNT(*) AS count
+      FROM ${writings}
+      WHERE ${writings.authorUserId} = ${userId}
+        AND ${writings.createdAt} >= ${monthStartMs}
+      GROUP BY label
+      ORDER BY label
+    `),
+    db.all(sql`
+      SELECT ${tags.name} AS label, COUNT(*) AS count
+      FROM ${writingTags}
+      JOIN ${writings} ON ${writingTags.writingId} = ${writings.id}
+      JOIN ${tags} ON ${writingTags.tagId} = ${tags.id}
+      WHERE ${writings.authorUserId} = ${userId}
+      GROUP BY ${tags.name}
+      ORDER BY COUNT(*) DESC, label
+      LIMIT 5
+    `),
+    db.all(sql`
+      SELECT COALESCE(SUM(LENGTH(${writings.body})), 0) AS total_chars,
+             COALESCE(AVG(LENGTH(${writings.body})), 0) AS avg_chars
+      FROM ${writings}
+      WHERE ${writings.authorUserId} = ${userId}
+    `),
+  ])
+
+  // 최근 12개월 라벨 생성 + 빈 달 0 채움
+  const months: string[] = []
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1))
+    months.push(`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`)
+  }
+  const byMonth = new Map(toCountItems(monthlyRows).map((r) => [r.label, r.count]))
+
+  const s = (summaryRows as Array<Record<string, number | null>>)[0] ?? {}
+  const c = (charRows as Array<Record<string, number | null>>)[0] ?? {}
+  return {
+    summary: { total: Number(s.total ?? 0), thisYear: Number(s.this_year ?? 0) },
+    monthlyTimeline: months.map((m) => ({ label: m, count: byMonth.get(m) ?? 0 })),
+    topTags: toCountItems(tagRows),
+    charStats: { totalChars: Number(c.total_chars ?? 0), avgChars: Number(c.avg_chars ?? 0) },
   }
 }
