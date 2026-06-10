@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, like, sql } from 'drizzle-orm'
+import { and, count, desc, eq, inArray, isNotNull, like, sql } from 'drizzle-orm'
 import { movies, movieTags, tags, users } from '../schema'
 import { toSlug } from '@/lib/slug'
 import type { CreateMovieInput, UpdateMovieInput } from '@/lib/validations'
@@ -213,10 +213,7 @@ export async function listMovies(
     let q = db
       .select({ movie: movies })
       .from(movies)
-      .innerJoin(
-        movieTags,
-        sql`${movieTags.movieId} = ${movies.id} AND ${movieTags.tagId} = ${tagId}`,
-      )
+      .innerJoin(movieTags, and(eq(movieTags.movieId, movies.id), eq(movieTags.tagId, tagId)))
       .where(and(...conditions))
       .orderBy(
         ...(filters.sort === 'rating'
@@ -310,15 +307,16 @@ export async function listMovieGenresWithCounts(
   db: Db,
   authorUserId: number,
 ): Promise<{ genre: string; count: number }[]> {
+  const cnt = count()
   const rows = await db
     .select({
       genre: movies.genre,
-      count: sql<number>`COUNT(*)`,
+      count: cnt,
     })
     .from(movies)
     .where(eq(movies.authorUserId, authorUserId))
     .groupBy(movies.genre)
-    .orderBy(desc(sql`COUNT(*)`))
+    .orderBy(desc(cnt))
   return rows.map((r) => ({ genre: r.genre, count: Number(r.count) }))
 }
 
@@ -346,7 +344,7 @@ export async function listRecentPublicMovies(
     })
     .from(movies)
     .innerJoin(users, eq(movies.authorUserId, users.id))
-    .where(and(eq(movies.isPublic, 1), sql`${movies.publishedAt} IS NOT NULL`))
+    .where(and(eq(movies.isPublic, 1), isNotNull(movies.publishedAt)))
     .orderBy(desc(movies.publishedAt))
     .$dynamic()
   q = q.limit(opts.limit)
@@ -360,7 +358,7 @@ export async function countPublicMovies(db: Db): Promise<number> {
   const rows = await db
     .select({ n: sql<number>`COUNT(*)` })
     .from(movies)
-    .where(and(eq(movies.isPublic, 1), sql`${movies.publishedAt} IS NOT NULL`))
+    .where(and(eq(movies.isPublic, 1), isNotNull(movies.publishedAt)))
   return Number(rows[0]?.n ?? 0)
 }
 
@@ -378,13 +376,7 @@ export async function getPublicMovieFallbackByTmdbId(
       coverUrl: movies.coverUrl,
     })
     .from(movies)
-    .where(
-      and(
-        eq(movies.isPublic, 1),
-        sql`${movies.publishedAt} IS NOT NULL`,
-        eq(movies.tmdbId, tmdbId),
-      ),
-    )
+    .where(and(eq(movies.isPublic, 1), isNotNull(movies.publishedAt), eq(movies.tmdbId, tmdbId)))
     .orderBy(desc(movies.publishedAt))
     .limit(1)
   return rows[0] ?? null
@@ -414,10 +406,7 @@ export async function countMovies(
     const rows = await db
       .select({ n: sql<number>`COUNT(*)` })
       .from(movies)
-      .innerJoin(
-        movieTags,
-        sql`${movieTags.movieId} = ${movies.id} AND ${movieTags.tagId} = ${tagId}`,
-      )
+      .innerJoin(movieTags, and(eq(movieTags.movieId, movies.id), eq(movieTags.tagId, tagId)))
       .where(and(...conditions))
     return Number(rows[0]?.n ?? 0)
   }
@@ -476,11 +465,7 @@ export async function getMovieAggregatesByTmdbIds(
     })
     .from(movies)
     .where(
-      and(
-        eq(movies.isPublic, 1),
-        sql`${movies.publishedAt} IS NOT NULL`,
-        inArray(movies.tmdbId, tmdbIds),
-      ),
+      and(eq(movies.isPublic, 1), isNotNull(movies.publishedAt), inArray(movies.tmdbId, tmdbIds)),
     )
     .groupBy(movies.tmdbId)
   for (const r of rows) {
@@ -516,13 +501,7 @@ export async function listMovieReviewsByTmdbId(
     })
     .from(movies)
     .innerJoin(users, eq(movies.authorUserId, users.id))
-    .where(
-      and(
-        eq(movies.isPublic, 1),
-        sql`${movies.publishedAt} IS NOT NULL`,
-        eq(movies.tmdbId, tmdbId),
-      ),
-    )
+    .where(and(eq(movies.isPublic, 1), isNotNull(movies.publishedAt), eq(movies.tmdbId, tmdbId)))
     .orderBy(desc(movies.publishedAt))
     .$dynamic()
   q = q.limit(opts.limit)
@@ -536,13 +515,7 @@ export async function countMovieReviewsByTmdbId(db: Db, tmdbId: number): Promise
   const rows = await db
     .select({ n: sql<number>`COUNT(*)` })
     .from(movies)
-    .where(
-      and(
-        eq(movies.isPublic, 1),
-        sql`${movies.publishedAt} IS NOT NULL`,
-        eq(movies.tmdbId, tmdbId),
-      ),
-    )
+    .where(and(eq(movies.isPublic, 1), isNotNull(movies.publishedAt), eq(movies.tmdbId, tmdbId)))
   return Number(rows[0]?.n ?? 0)
 }
 
@@ -556,13 +529,7 @@ export async function getMovieRatingDistributionByTmdbId(
       cnt: sql<number>`COUNT(*)`,
     })
     .from(movies)
-    .where(
-      and(
-        eq(movies.isPublic, 1),
-        sql`${movies.publishedAt} IS NOT NULL`,
-        eq(movies.tmdbId, tmdbId),
-      ),
-    )
+    .where(and(eq(movies.isPublic, 1), isNotNull(movies.publishedAt), eq(movies.tmdbId, tmdbId)))
     .groupBy(movies.rating)
   const buckets: Record<number, number> = {}
   for (let r = 1; r <= 10; r++) buckets[r] = 0

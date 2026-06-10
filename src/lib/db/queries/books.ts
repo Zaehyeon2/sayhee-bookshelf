@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, like, sql } from 'drizzle-orm'
+import { and, count, desc, eq, inArray, isNotNull, like, sql } from 'drizzle-orm'
 import { books, bookTags, tags, users } from '../schema'
 import { toSlug } from '@/lib/slug'
 import type { CreateBookInput, UpdateBookInput } from '@/lib/validations'
@@ -212,10 +212,7 @@ export async function listBooks(
     let q = db
       .select({ book: books })
       .from(books)
-      .innerJoin(
-        bookTags,
-        sql`${bookTags.bookId} = ${books.id} AND ${bookTags.tagId} = ${tagId}`,
-      )
+      .innerJoin(bookTags, and(eq(bookTags.bookId, books.id), eq(bookTags.tagId, tagId)))
       .where(and(...conditions))
       .orderBy(
         ...(filters.sort === 'rating'
@@ -309,15 +306,16 @@ export async function listGenresWithCounts(
   db: Db,
   authorUserId: number,
 ): Promise<{ genre: string; count: number }[]> {
+  const cnt = count()
   const rows = await db
     .select({
       genre: books.genre,
-      count: sql<number>`COUNT(*)`,
+      count: cnt,
     })
     .from(books)
     .where(eq(books.authorUserId, authorUserId))
     .groupBy(books.genre)
-    .orderBy(desc(sql`COUNT(*)`))
+    .orderBy(desc(cnt))
   return rows.map((r) => ({ genre: r.genre, count: Number(r.count) }))
 }
 
@@ -345,7 +343,7 @@ export async function listRecentPublicBooks(
     })
     .from(books)
     .innerJoin(users, eq(books.authorUserId, users.id))
-    .where(and(eq(books.isPublic, 1), sql`${books.publishedAt} IS NOT NULL`))
+    .where(and(eq(books.isPublic, 1), isNotNull(books.publishedAt)))
     .orderBy(desc(books.publishedAt))
     .$dynamic()
   q = q.limit(opts.limit)
@@ -359,7 +357,7 @@ export async function countPublicBooks(db: Db): Promise<number> {
   const rows = await db
     .select({ n: sql<number>`COUNT(*)` })
     .from(books)
-    .where(and(eq(books.isPublic, 1), sql`${books.publishedAt} IS NOT NULL`))
+    .where(and(eq(books.isPublic, 1), isNotNull(books.publishedAt)))
   return Number(rows[0]?.n ?? 0)
 }
 
@@ -377,13 +375,7 @@ export async function getPublicBookFallbackByIsbn(
       coverUrl: books.coverUrl,
     })
     .from(books)
-    .where(
-      and(
-        eq(books.isPublic, 1),
-        sql`${books.publishedAt} IS NOT NULL`,
-        eq(books.isbn, isbn),
-      ),
-    )
+    .where(and(eq(books.isPublic, 1), isNotNull(books.publishedAt), eq(books.isbn, isbn)))
     .orderBy(desc(books.publishedAt))
     .limit(1)
   return rows[0] ?? null
@@ -413,10 +405,7 @@ export async function countBooks(
     const rows = await db
       .select({ n: sql<number>`COUNT(*)` })
       .from(books)
-      .innerJoin(
-        bookTags,
-        sql`${bookTags.bookId} = ${books.id} AND ${bookTags.tagId} = ${tagId}`,
-      )
+      .innerJoin(bookTags, and(eq(bookTags.bookId, books.id), eq(bookTags.tagId, tagId)))
       .where(and(...conditions))
     return Number(rows[0]?.n ?? 0)
   }
@@ -474,13 +463,7 @@ export async function getBookAggregatesByIsbns(
       cnt: sql<number>`COUNT(*)`,
     })
     .from(books)
-    .where(
-      and(
-        eq(books.isPublic, 1),
-        sql`${books.publishedAt} IS NOT NULL`,
-        inArray(books.isbn, isbns),
-      ),
-    )
+    .where(and(eq(books.isPublic, 1), isNotNull(books.publishedAt), inArray(books.isbn, isbns)))
     .groupBy(books.isbn)
   for (const r of rows) {
     if (r.isbn != null) out.set(r.isbn, { avg: Number(r.avg), cnt: Number(r.cnt) })
@@ -515,13 +498,7 @@ export async function listBookReviewsByIsbn(
     })
     .from(books)
     .innerJoin(users, eq(books.authorUserId, users.id))
-    .where(
-      and(
-        eq(books.isPublic, 1),
-        sql`${books.publishedAt} IS NOT NULL`,
-        eq(books.isbn, isbn),
-      ),
-    )
+    .where(and(eq(books.isPublic, 1), isNotNull(books.publishedAt), eq(books.isbn, isbn)))
     .orderBy(desc(books.publishedAt))
     .$dynamic()
   q = q.limit(opts.limit)
@@ -535,13 +512,7 @@ export async function countBookReviewsByIsbn(db: Db, isbn: string): Promise<numb
   const rows = await db
     .select({ n: sql<number>`COUNT(*)` })
     .from(books)
-    .where(
-      and(
-        eq(books.isPublic, 1),
-        sql`${books.publishedAt} IS NOT NULL`,
-        eq(books.isbn, isbn),
-      ),
-    )
+    .where(and(eq(books.isPublic, 1), isNotNull(books.publishedAt), eq(books.isbn, isbn)))
   return Number(rows[0]?.n ?? 0)
 }
 
@@ -561,13 +532,7 @@ export async function getBookRatingDistributionByIsbn(
       cnt: sql<number>`COUNT(*)`,
     })
     .from(books)
-    .where(
-      and(
-        eq(books.isPublic, 1),
-        sql`${books.publishedAt} IS NOT NULL`,
-        eq(books.isbn, isbn),
-      ),
-    )
+    .where(and(eq(books.isPublic, 1), isNotNull(books.publishedAt), eq(books.isbn, isbn)))
     .groupBy(books.rating)
 
   const buckets: Record<number, number> = {}
