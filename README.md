@@ -1,13 +1,17 @@
 # 누구의 서재
 
-멀티유저 독후감/글방 사이트. 각자 본인 서재만 보이는 *완전 비공개 멀티테넌트* 모델. 사이트 제목은 로그인 상태에 따라 동적으로 바뀝니다 (비로그인 "누구의 서재" / 로그인 "{displayName}의 서재"). 토스 스타일 디자인 시스템 + 다크모드 + 본문 검색 + 페이지네이션.
+멀티유저 독후감/영화/글방 사이트. 각자 본인 서재만 보이는 멀티테넌트 모델 — 리뷰별로 *공개*를 선택하면 공개 피드(`/feed`)와 작품 페이지(`/works`)에 노출됩니다. 사이트 제목은 로그인 상태에 따라 동적으로 바뀝니다 (비로그인 "누구의 서재" / 로그인 "{displayName}의 서재"). 토스 스타일 디자인 시스템 + 다크모드 + 본문 검색 + 페이지네이션.
 
-**Tech**: Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 (CSS-first) · Drizzle ORM · libsql/Turso · Biome · Pretendard · Radix Dialog · sonner
+**Tech**: Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 (CSS-first) · Drizzle ORM · libsql/Turso · Biome · Pretendard · Radix Dialog · sonner · chart.js · Vercel Blob
 
 ## 기능
 
-- **독후감 CRUD** — 제목·작가·읽은 날짜·14개 장르·별점·태그·마크다운 본문 (Toast UI Editor)
-- **글방 CRUD** — 책과 분리된 자유 글 — 제목·태그·마크다운 본문. 독후감과 태그 풀 공유
+- **독후감 CRUD** — 제목·작가·읽은 날짜·14개 장르·별점·태그·한줄평·마크다운 본문 (Toast UI Editor). ISBN 기반 외부 메타 자동 채우기
+- **영화 기록 CRUD (`/movies`)** — 감독·본 날짜·10개 장르·별점·태그·한줄평. TMDB 자동 채우기. 독후감과 동형 구조
+- **글방 CRUD** — 책과 분리된 자유 글 — 제목·태그·마크다운 본문 + **대표 이미지** (Vercel Blob 업로드, rate limit, 고아 blob 정리). 독후감·영화와 태그 풀 공유
+- **별점 half-star** — 저장은 1~10 정수, 표시는 0.5~5 별점 (반 칸 단위 선택)
+- **공개 피드 (`/feed`)** — 리뷰별 공개 토글 → 공개된 책/영화 리뷰가 모두에게 노출. 멀티테넌트의 유일한 의도적 예외
+- **통계 대시보드** — 책장/영화관/글방 목록 상단 접이식 패널. chart.js로 별점 분포·장르 도넛·연도 타임라인·태그/저자/감독 Top 5 (글방은 월별 작성·글자수). 펼칠 때만 lazy fetch
 - **검색** — 제목·작가·**본문 LIKE** 매칭, 가중치 랭킹(제목→작가→본문), 매칭 부근 스니펫 + `<mark>` 키워드 하이라이트, LIKE 패턴 escape
 - **장르/태그 필터링**, 최근/별점 정렬, **페이지네이션** (limit/offset + total count)
 - **삭제 모달** — Radix Dialog 기반 focus-trap·Esc·backdrop 모달
@@ -15,11 +19,11 @@
 - **다크모드** — 시스템/라이트/다크 3-state 수동 토글, OS 자동 추종, 0-FOUC inline 부트스트랩
 - **인증** — bcrypt + HS256 JWT 쿠키 (issuer/audience 검증) + Next.js middleware (CSRF Origin/Referer 차단·세션 검증·mcp 강제 변경)
 - **세션 무효화** — `users.tokenVersion` + JWT `tv` 클레임 매칭 — 비번 변경/admin 리셋 시 이전 토큰 자동 거절
-- **권한** — 본인 책/글만 읽기/쓰기/수정/삭제. admin은 사용자 관리(`/admin/users`)와 비번 reset 추가 가능 (마지막 admin 삭제 방지)
+- **권한** — 본인 책/영화/글만 읽기/쓰기/수정/삭제. admin은 사용자 관리(`/admin/users`)와 비번 reset 추가 가능 (마지막 admin 삭제 방지)
 - **사용자 관리** — admin이 신규 멤버 생성, 기본 비밀번호로 첫 로그인 → 강제 변경, 비번 reset 지원, `/settings/password`·`/settings/profile`
 - **접근성** — focus-visible ring 일관성, 44×44 탭 타겟, `prefers-reduced-motion` 대응, 시각/스크린리더 친화
 - **모바일** — iOS 줌 방지 (인풋 16px), 가로 스크롤 chip + PC 마우스 드래그, 안전 영역 padding
-- **스켈레톤 로딩** — 홈/목록/상세 3개 라우트에 토스 톤 placeholder
+- **스켈레톤 로딩** — 홈/목록/상세 라우트에 토스 톤 placeholder
 - **작품 검색 (`/works`)** — Naver Book / TMDB로 책·영화를 검색해 사이트 사용자들의 별점·한줄평 묶음을 외부 ID(ISBN/tmdbId) 기반으로 조회
 
 ## 로컬 실행
@@ -80,13 +84,15 @@ admin으로 로그인 → 우측 메뉴 → "사용자 관리" → "신규 사�
 ## 테스트
 
 ```bash
-pnpm test         # Vitest 단위 + 통합 (unit 39개 + integration 19개)
-pnpm e2e          # Playwright E2E (인증 차단 + 등록·열람 골든패스 + 삭제 모달)
+pnpm test         # Vitest 단위 + 통합 (292개)
+pnpm e2e          # Playwright E2E (골든패스·공개 피드·작품 검색·통계 패널 등 15 spec)
 pnpm lint         # Biome check (lint + format 검사)
 pnpm format       # Biome 자동 수정 (safe)
 ```
 
-통합 테스트(`tests/integration/`)는 실제 in-memory libSQL을 띄워 멀티테넌트 격리·페이지네이션·통계 쿼리를 검증합니다.
+통합 테스트(`tests/integration/`)는 실제 libSQL(임시 파일)을 띄워 멀티테넌트 격리·페이지네이션·통계 대시보드·공개 피드를 검증합니다.
+
+E2E는 `tests/e2e/global-setup.ts`가 표준 계정(`e2e-alice`/`e2e-bob`)을 자동 시드합니다 — 별도 계정 준비 불필요. 로그인 헬퍼는 `tests/e2e/helpers.ts`.
 
 ### E2E 환경 준비 (Linux/WSL2)
 
@@ -129,12 +135,17 @@ pnpm e2e   # 또는 pnpm dev
 4. **환경변수 등록** (Vercel Project Settings → Environment Variables)
    - `TURSO_URL` (libsql://...)
    - `TURSO_TOKEN` (Turso CLI 출력값)
-   - `ADMIN_PASSWORD_HASH` (`$` 그대로 입력 — Vercel은 escape 불필요)
-   - `AUTH_SECRET` (`$` 그대로)
-5. **첫 배포 후 운영 DB에 스키마 push**
+   - `AUTH_SECRET` (`$` 그대로 입력 — Vercel은 escape 불필요)
+   - `INITIAL_ADMIN_USERNAME` / `INITIAL_ADMIN_PASSWORD` / `DEFAULT_USER_PASSWORD`
+   - `NAVER_CLIENT_ID` / `NAVER_CLIENT_SECRET` / `TMDB_API_KEY` (작품 검색용, 선택)
+   - `BLOB_READ_WRITE_TOKEN` — Vercel Blob store 연결 시 자동 주입 (글방 대표 이미지)
+5. **첫 배포 후 운영 DB에 초기 스키마 push**
    ```bash
    TURSO_URL=libsql://... TURSO_TOKEN=... pnpm exec drizzle-kit push
    ```
+   ⚠️ **빈 DB 초기 생성만 push 사용.** 이후 스키마 변경은 Turso에서 push가 실패하고
+   `drizzle-kit migrate`도 silent no-op이 됩니다 — raw `@libsql/client` ALTER + `PRAGMA table_info`
+   검증으로 적용하세요 (자세한 내용은 `CLAUDE.md` Gotchas).
 6. 이후 `git push origin main` → Vercel 자동 빌드/배포
 
 ## 구조
@@ -145,44 +156,46 @@ src/
 │  ├ layout.tsx            ─ RootLayout (Pretendard·테마 부트스트랩·Toaster·헤더)
 │  ├ globals.css           ─ Tailwind v4 @theme 토큰 + 다크모드 + 모션 안정성
 │  ├ icon.tsx              ─ 📚 emoji 동적 favicon
-│  ├ page.tsx              ─ 홈 (hero·getUserStats 단일 쿼리·장르 그리드·최근 책/글)
-│  ├ books/                ─ 목록·상세·new·edit (검색·필터·하이라이트·페이지네이션)
-│  ├ writings/             ─ 글방 목록·상세·new·edit
-│  ├ admin/users/          ─ 사용자 관리 (UserAdminTable)
-│  ├ settings/             ─ /settings/password, /settings/profile
-│  ├ login/                ─ 로그인 페이지
+│  ├ page.tsx              ─ 홈 (getUserStats 단일 쿼리·KST 연도·최근 책/영화/글)
+│  ├ books/, movies/       ─ 목록(+접이식 통계 패널)·상세·new·edit
+│  ├ writings/             ─ 글방 목록·상세·new·edit (대표 이미지)
+│  ├ feed/                 ─ 공개 피드 (책/영화 탭)
+│  ├ works/                ─ 작품 검색 + book/[isbn]·movie/[tmdbId] 공개 집계
+│  ├ admin/users/, settings/, login/
 │  ├ error.tsx, not-found.tsx, loading.tsx
 │  └ api/
-│     ├ books/, writings/  ─ CRUD (인증 필수)
-│     ├ users/             ─ admin-only 사용자 관리 + me/password, me/profile
-│     ├ admin/             ─ admin-only 라우트 (사용자 mutation)
+│     ├ books/, movies/, writings/  ─ CRUD + stats/ (대시보드 집계)
+│     ├ uploads/           ─ 글방 cover 업로드/보상삭제 (Vercel Blob, rate limit)
+│     ├ external/          ─ 외부 검색 프록시 (Naver Book / TMDB)
+│     ├ users/, admin/     ─ 사용자 관리 (admin-only) + me/password, me/profile
 │     ├ login/, logout/    ─ 세션 발급/말소
 │     └ tags/              ─ 태그 자동완성
 ├ components/
-│  ├ BookCard·Form, WritingCard·Form, GenreBadge, RatingStars, TagInput
-│  ├ SearchBox, Filters     ─ 드래그 스크롤 chip
-│  ├ Pagination             ─ limit/offset 기반 페이지 컨트롤
-│  ├ MarkdownEditor·Viewer  ─ Toast UI + 다크 동기화
-│  ├ ThemeToggle            ─ 3-state 사이클 + storage 동기화
-│  ├ ConfirmDialog          ─ Radix Dialog 토스 래퍼
+│  ├ BookCard·Form, MovieCard·Form, WritingCard·Form, GenreBadge, RatingStars·Score, TagInput
+│  ├ stats/                ─ StatsPanel(접이식)·StatsDashboard·charts (chart.js lazy)
+│  ├ works/                ─ 작품 검색·상세 카드, RatingDistribution
+│  ├ ExternalBook·MovieSearchBar ─ 외부 메타 자동 채우기
+│  ├ SearchBox, Filters, Pagination, MarkdownEditor·Viewer, ThemeToggle, ConfirmDialog
 │  ├ UserAdminTable, PasswordChangeForm, ProfileForm
-│  ├ LocalDate, Spinner, EmptyState
-│  └ Skeleton               ─ 로딩 placeholder primitive
+│  └ LocalDate, Spinner, EmptyState, Skeleton
 ├ lib/
-│  ├ auth.ts                ─ bcrypt + HS256 JWT (issuer/audience·tokenVersion·DUMMY_HASH)
+│  ├ auth.ts / auth-edge.ts ─ bcrypt + HS256 JWT (issuer/audience·tokenVersion·DUMMY_HASH)
 │  ├ auth-helpers.ts        ─ requireUser/Admin/OwnBook/OwnWriting + HttpError
-│  ├ db/                    ─ Drizzle 스키마/클라이언트/쿼리
-│  │                          (트랜잭션·LIKE escape·slug 충돌 retry·N+1 batch·getUserStats)
-│  ├ excerpt.ts             ─ 마크다운 노이즈 제거 후 매치 부근 발췌
-│  ├ highlight.tsx          ─ <mark> 키워드 강조
-│  ├ slug.ts, genres.ts, validations.ts, username-normalize.ts
+│  ├ db/                    ─ schema + client + queries/ (books·movies·writings·tags·stats·shared)
+│  ├ external/              ─ 외부 API lookup·rate-limit·route-factory
+│  ├ rating.ts              ─ 별점 ÷2 표시 변환 단일 지점 (저장 1~10 → 표시 0.5~5)
+│  ├ kst.ts                 ─ KST 기준 "올해" 연도 단일 소스
+│  ├ stats-types.ts         ─ 대시보드 공유 타입 (서버/클라이언트 계약)
+│  ├ blob.ts, image-constraints.ts ─ Vercel Blob 업로드·제약
+│  ├ excerpt.ts, highlight.tsx, slug.ts, genres.ts, isbn.ts, validations.ts, username-normalize.ts
+│  └ public-feed-cache.ts, works-detail-cache.ts
 └ middleware.ts             ─ CSRF (Origin/Referer) + 세션 검증 + mcp 강제 변경 게이트
 
 drizzle/                    ─ 마이그레이션 SQL
 tests/
-├ unit/                     ─ Vitest (auth·excerpt·slug·validations·username-normalize·components)
-├ integration/              ─ Vitest + 실제 libSQL (books/writings scoping, stats+pagination)
-└ e2e/                      ─ Playwright (auth·golden-path·delete)
+├ unit/                     ─ Vitest (auth·validations·blob·uploads/stats 라우트·components 등)
+├ integration/              ─ Vitest + 실제 libSQL (멀티테넌트 scoping·통계·공개 피드·works 집계)
+└ e2e/                      ─ Playwright (골든패스·공개 피드·작품 검색·통계 패널 등 15 spec)
 docs/superpowers/           ─ 설계서·구현 계획서·plans (히스토리 reference)
 public/fonts/               ─ Pretendard Variable woff2 (로컬 호스팅)
 ```
