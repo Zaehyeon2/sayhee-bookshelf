@@ -7,6 +7,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Toaster } from 'sonner'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { MobileMenu } from '@/components/MobileMenu'
+import { NavDropdown } from '@/components/NavDropdown'
 import { getCurrentUser } from '@/lib/auth'
 import './globals.css'
 
@@ -74,30 +75,27 @@ async function NavUser() {
       <div data-testid="desktop-nav" className="hidden md:flex items-center gap-1">
         {me ? (
           <>
-            <Link
+            <NavDropdown
               href="/books"
-              className="px-3 h-11 inline-flex items-center text-[14px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
-            >
-              📚 내 책장
-            </Link>
-            <Link
+              label="📚 내 책장"
+              subItems={[{ href: '/books/stats', label: '📊 통계 보기' }]}
+            />
+            <NavDropdown
               href="/movies"
-              className="px-3 h-11 inline-flex items-center text-[14px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
-            >
-              🎬 내 영화관
-            </Link>
+              label="🎬 내 영화관"
+              subItems={[{ href: '/movies/stats', label: '📊 통계 보기' }]}
+            />
             <Link
               href="/works"
               className="px-3 h-11 inline-flex items-center text-[14px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
             >
               🔍 작품 검색
             </Link>
-            <Link
+            <NavDropdown
               href="/writings"
-              className="px-3 h-11 inline-flex items-center text-[14px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
-            >
-              ✏️ 글방
-            </Link>
+              label="✏️ 글방"
+              subItems={[{ href: '/writings/stats', label: '📊 통계 보기' }]}
+            />
             <UserMenu displayName={me.displayName} role={me.role as 'admin' | 'member'} />
           </>
         ) : (
@@ -128,7 +126,6 @@ async function NavUser() {
     </>
   )
 }
-
 
 function UserMenu({ displayName, role }: { displayName: string; role: 'admin' | 'member' }) {
   return (

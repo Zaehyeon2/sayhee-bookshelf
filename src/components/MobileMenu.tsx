@@ -51,11 +51,25 @@ export function MobileMenu({ displayName, role }: Props) {
             📚 내 책장
           </Link>
           <Link
+            href="/books/stats"
+            onClick={close}
+            className="block pl-9 pr-4 py-2 text-[13px] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)]"
+          >
+            📊 통계 보기
+          </Link>
+          <Link
             href="/movies"
             onClick={close}
             className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]"
           >
             🎬 내 영화관
+          </Link>
+          <Link
+            href="/movies/stats"
+            onClick={close}
+            className="block pl-9 pr-4 py-2 text-[13px] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)]"
+          >
+            📊 통계 보기
           </Link>
           <Link
             href="/works"
@@ -70,6 +84,13 @@ export function MobileMenu({ displayName, role }: Props) {
             className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]"
           >
             ✏️ 글방
+          </Link>
+          <Link
+            href="/writings/stats"
+            onClick={close}
+            className="block pl-9 pr-4 py-2 text-[13px] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)]"
+          >
+            📊 통계 보기
           </Link>
           <div className="border-t border-[var(--color-border-subtle)] my-1" />
           <div className="px-4 py-2 text-[12px] text-[var(--color-text-muted)]">{displayName}</div>
