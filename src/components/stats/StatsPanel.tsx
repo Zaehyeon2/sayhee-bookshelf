@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { Component, type ReactNode, useState } from 'react'
+import { Skeleton } from '@/components/Skeleton'
 import { StatsDashboard, type StatsData } from './StatsDashboard'
 
 const ENDPOINT: Record<StatsData['domain'], string> = {
@@ -9,9 +10,23 @@ const ENDPOINT: Record<StatsData['domain'], string> = {
   writings: '/api/writings/stats',
 }
 
+// 차트 렌더/청크 로드 실패가 페이지 전체 error boundary까지 번지지 않게 패널 안에서 격리.
+class PanelErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false }
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+  render() {
+    if (this.state.failed) {
+      return <div className="text-sm text-[var(--color-text-muted)]">통계를 표시하지 못했어요.</div>
+    }
+    return this.props.children
+  }
+}
+
 export function StatsPanel({ domain }: { domain: StatsData['domain'] }) {
   const [open, setOpen] = useState(false)
-  const [data, setData] = useState<StatsData['data'] | null>(null)
+  const [stats, setStats] = useState<StatsData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
 
@@ -21,7 +36,9 @@ export function StatsPanel({ domain }: { domain: StatsData['domain'] }) {
     try {
       const res = await fetch(ENDPOINT[domain])
       if (!res.ok) throw new Error(`stats fetch failed: ${res.status}`)
-      setData(await res.json())
+      // 런타임 JSON을 union으로 승격하는 유일한 지점 — domain↔data 결합을 여기서 고정.
+      // shape 불일치(배포 skew 등)는 PanelErrorBoundary가 렌더 단계에서 격리.
+      setStats({ domain, data: await res.json() } as StatsData)
     } catch {
       setError(true)
     } finally {
@@ -32,7 +49,7 @@ export function StatsPanel({ domain }: { domain: StatsData['domain'] }) {
   function toggle() {
     const next = !open
     setOpen(next)
-    if (next && data === null && !loading) void fetchStats()
+    if (next && stats === null && !loading) void fetchStats()
   }
 
   return (
@@ -47,9 +64,7 @@ export function StatsPanel({ domain }: { domain: StatsData['domain'] }) {
       </button>
       {open && (
         <div className="mt-3">
-          {loading && (
-            <div className="h-32 animate-pulse rounded-[var(--radius-toss-sm)] bg-[var(--color-surface-2)]" />
-          )}
+          {loading && <Skeleton className="h-32" />}
           {error && (
             <div className="text-sm text-[var(--color-text-muted)]">
               통계를 불러오지 못했어요.{' '}
@@ -58,7 +73,11 @@ export function StatsPanel({ domain }: { domain: StatsData['domain'] }) {
               </button>
             </div>
           )}
-          {data && <StatsDashboard {...({ domain, data } as StatsData)} />}
+          {stats && (
+            <PanelErrorBoundary>
+              <StatsDashboard {...stats} />
+            </PanelErrorBoundary>
+          )}
         </div>
       )}
     </section>

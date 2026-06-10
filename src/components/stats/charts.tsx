@@ -10,7 +10,7 @@ import {
   Tooltip,
 } from 'chart.js'
 import { Bar, Doughnut } from 'react-chartjs-2'
-import type { CountItem } from '@/lib/db/queries/stats'
+import type { CountItem } from '@/lib/stats-types'
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend)
 
