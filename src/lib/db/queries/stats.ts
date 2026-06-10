@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { books, writings, movies } from '../schema'
+import { books, writings, movies, tags, bookTags } from '../schema'
 import type { Db } from './shared'
 
 export interface UserStats {
@@ -84,5 +84,111 @@ export async function getUserMovieStats(
     moviesThisYear: Number(r.movies_year ?? 0),
     avgMovieRating:
       r.avg_rating !== null && r.avg_rating !== undefined ? Number(r.avg_rating) : null,
+  }
+}
+
+/** 대시보드 위젯 공용 항목 — chart.js 카테고리 축에 그대로 매핑 */
+export interface CountItem {
+  label: string
+  count: number
+}
+
+export interface BookDashboard {
+  summary: { total: number; thisYear: number; avgRating: number | null }
+  ratingDist: CountItem[] // 1~10 전 칸, 빈 칸 0
+  genreDist: CountItem[] // count DESC
+  yearTimeline: CountItem[] // 연도 ASC, 기록 있는 연도만
+  topTags: CountItem[] // 최대 5
+  topAuthors: CountItem[] // 최대 5
+}
+
+function toCountItems(rows: unknown): CountItem[] {
+  return (rows as Array<{ label: string | number; count: number }>).map((r) => ({
+    label: String(r.label),
+    count: Number(r.count),
+  }))
+}
+
+/**
+ * rating 1~10 전 칸 채움 — 히스토그램 축 고정용.
+ * 라벨은 저장값/2 = 0.5~5 — 사이트 별점 표시 관례(RatingScore)와 동일 스케일.
+ */
+function fillRatingDist(rows: CountItem[]): CountItem[] {
+  const byLabel = new Map(rows.map((r) => [r.label, r.count]))
+  return Array.from({ length: 10 }, (_, i) => {
+    const raw = String(i + 1) // DB 저장값 키 (1~10)
+    return { label: String((i + 1) / 2), count: byLabel.get(raw) ?? 0 }
+  })
+}
+
+/**
+ * 책장 대시보드 — 전부 인덱스 위 COUNT/AVG/GROUP BY, 본문 row 미조회.
+ * readDate는 user-typed `YYYY-MM-DD` 텍스트 → substr/LIKE로 TZ-free 연도 버킷.
+ */
+export async function getBookDashboard(
+  db: Db,
+  userId: number,
+  year: number = new Date().getFullYear(),
+): Promise<BookDashboard> {
+  const yearPrefix = `${year}-%`
+
+  const [summaryRows, ratingRows, genreRows, yearRows, tagRows, authorRows] = await Promise.all([
+    db.all(sql`
+      SELECT
+        (SELECT COUNT(*) FROM ${books} WHERE ${books.authorUserId} = ${userId}) AS total,
+        (SELECT COUNT(*) FROM ${books}
+           WHERE ${books.authorUserId} = ${userId}
+             AND ${books.readDate} LIKE ${yearPrefix}) AS this_year,
+        (SELECT AVG(${books.rating}) FROM ${books}
+           WHERE ${books.authorUserId} = ${userId}) AS avg_rating
+    `),
+    db.all(sql`
+      SELECT ${books.rating} AS label, COUNT(*) AS count FROM ${books}
+      WHERE ${books.authorUserId} = ${userId}
+      GROUP BY ${books.rating}
+    `),
+    db.all(sql`
+      SELECT ${books.genre} AS label, COUNT(*) AS count FROM ${books}
+      WHERE ${books.authorUserId} = ${userId}
+      GROUP BY ${books.genre}
+      ORDER BY COUNT(*) DESC, label
+    `),
+    db.all(sql`
+      SELECT substr(${books.readDate}, 1, 4) AS label, COUNT(*) AS count FROM ${books}
+      WHERE ${books.authorUserId} = ${userId}
+      GROUP BY label
+      ORDER BY label
+    `),
+    db.all(sql`
+      SELECT ${tags.name} AS label, COUNT(*) AS count
+      FROM ${bookTags}
+      JOIN ${books} ON ${bookTags.bookId} = ${books.id}
+      JOIN ${tags} ON ${bookTags.tagId} = ${tags.id}
+      WHERE ${books.authorUserId} = ${userId}
+      GROUP BY ${tags.name}
+      ORDER BY COUNT(*) DESC, label
+      LIMIT 5
+    `),
+    db.all(sql`
+      SELECT ${books.author} AS label, COUNT(*) AS count FROM ${books}
+      WHERE ${books.authorUserId} = ${userId}
+      GROUP BY ${books.author}
+      ORDER BY COUNT(*) DESC, label
+      LIMIT 5
+    `),
+  ])
+
+  const s = (summaryRows as Array<Record<string, number | null>>)[0] ?? {}
+  return {
+    summary: {
+      total: Number(s.total ?? 0),
+      thisYear: Number(s.this_year ?? 0),
+      avgRating: s.avg_rating !== null && s.avg_rating !== undefined ? Number(s.avg_rating) : null,
+    },
+    ratingDist: fillRatingDist(toCountItems(ratingRows)),
+    genreDist: toCountItems(genreRows),
+    yearTimeline: toCountItems(yearRows),
+    topTags: toCountItems(tagRows),
+    topAuthors: toCountItems(authorRows),
   }
 }
