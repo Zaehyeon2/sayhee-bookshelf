@@ -7,6 +7,8 @@ import { PublicMovieCard } from '@/components/PublicMovieCard'
 import { WritingCard } from '@/components/WritingCard'
 import { EmptyState } from '@/components/EmptyState'
 import { getCurrentUser } from '@/lib/auth'
+import { currentKstYear } from '@/lib/kst'
+import { formatRating } from '@/lib/rating'
 
 export default async function HomePage() {
   const me = await getCurrentUser()
@@ -30,11 +32,8 @@ export default async function HomePage() {
     )
   }
 
-  // 서버 로컬(UTC일 수 있음) 대신 KST 기준 연도 — 사용자가 입력하는 날짜는 KST 달력 기준이라
-  // 신년 경계에서 서버 TZ 차이로 "올해" 버킷이 어긋나는 것을 막는다.
-  const thisYear = Number(
-    new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Seoul', year: 'numeric' }).format(new Date()),
-  )
+  // KST 기준 연도 — 대시보드 stats 라우트와 동일 소스 (src/lib/kst.ts 참고)
+  const thisYear = currentKstYear()
   const [stats, movieStats, recentPublicBooks, recentPublicMovies, recentWritings] =
     await Promise.all([
       getUserStats(db, me.id, thisYear),
@@ -66,7 +65,7 @@ export default async function HomePage() {
           unit="권"
           metrics={[
             `${thisYear}년 ${stats.booksThisYear}권`,
-            totalBooks > 0 ? `평균 ★${(avgRating / 2).toFixed(1)}` : null,
+            totalBooks > 0 ? `평균 ★${formatRating(avgRating)}` : null,
           ]}
           subAction={{ href: '/books/new', label: '새 책' }}
         />
@@ -88,7 +87,7 @@ export default async function HomePage() {
           metrics={[
             `${thisYear}년 ${movieStats.moviesThisYear}편`,
             movieStats.moviesTotal > 0 && movieStats.avgMovieRating !== null
-              ? `평균 ★${(movieStats.avgMovieRating / 2).toFixed(1)}`
+              ? `평균 ★${formatRating(movieStats.avgMovieRating)}`
               : null,
           ]}
           subAction={{ href: '/movies/new', label: '새 영화' }}

@@ -1,5 +1,7 @@
 'use client'
 
+import { formatRatingCompact } from '@/lib/rating'
+
 interface Props {
   /** 1-10 정수. 짝수=full star, 홀수=half star로 렌더링됨 (10=★5, 9=★4.5, ...). */
   value: number
@@ -13,10 +15,8 @@ const SIZE: Record<NonNullable<Props['size']>, string> = {
   lg: 'text-[28px] gap-1',
 }
 
-function formatHalfStars(v: number): string {
-  // 1-10 → "0.5", "1", "1.5", ..., "5"
-  return (v / 2).toString()
-}
+// 1-10 → "0.5", "1", "1.5", ..., "5"
+const formatHalfStars = formatRatingCompact
 
 export function RatingStars({ value, onChange, size = 'md' }: Props) {
   const editable = !!onChange

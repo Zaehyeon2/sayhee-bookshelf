@@ -8,6 +8,7 @@ import { GenreBadge } from '@/components/GenreBadge'
 import { RatingStars } from '@/components/RatingStars'
 import { MarkdownViewer } from '@/components/MarkdownViewer'
 import { getCurrentUser } from '@/lib/auth'
+import { formatRatingCompact } from '@/lib/rating'
 
 export async function generateMetadata({
   params,
@@ -20,7 +21,7 @@ export async function generateMetadata({
   const movie = await getMovieBySlug(db, me.id, decodeURIComponent(slug))
   if (!movie) return { title: '영화를 찾을 수 없어요' }
   const pageTitle = `${movie.title} · ${movie.director}`
-  const description = `${movie.director} 감독 · ${movie.genre} — 별점 ${movie.rating / 2}/5`
+  const description = `${movie.director} 감독 · ${movie.genre} — 별점 ${formatRatingCompact(movie.rating)}/5`
   return {
     title: pageTitle,
     description,

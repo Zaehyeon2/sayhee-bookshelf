@@ -2,11 +2,13 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
 import { getMovieDashboard } from '@/lib/db/queries'
 import { requireUser, HttpError } from '@/lib/auth-helpers'
+import { currentKstYear } from '@/lib/kst'
 
 export async function GET() {
   try {
     const user = await requireUser()
-    const dashboard = await getMovieDashboard(db, user.id)
+    // 연도는 KST 기준 — 홈(getUserMovieStats 호출부)과 동일 소스, 서버 TZ 무관
+    const dashboard = await getMovieDashboard(db, user.id, currentKstYear())
     return NextResponse.json(dashboard)
   } catch (e) {
     if (e instanceof HttpError) return e.toResponse()
