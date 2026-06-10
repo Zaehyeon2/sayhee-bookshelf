@@ -1,13 +1,8 @@
 import { test, expect, type Page } from '@playwright/test'
-
-const ALICE_USER = 'e2e-alice'
-const PASSWORD = 'e2etestpass1234'
+import { login as helperLogin } from './helpers'
 
 async function login(page: Page) {
-  await page.goto('/login?next=/books/new')
-  await page.fill('input[autocomplete="username"]', ALICE_USER)
-  await page.fill('input[type="password"]', PASSWORD)
-  await Promise.all([page.waitForURL('**/books/new'), page.click('button[type="submit"]')])
+  await helperLogin(page, '/books/new')
   // Wait for the Toast UI MarkdownEditor dynamic import to finish mounting —
   // ensures the post-login navigation has fully settled before we navigate away.
   await page.waitForSelector('.toastui-editor-defaultUI', { timeout: 30_000 })

@@ -1,13 +1,8 @@
 import { test, expect, type Page } from '@playwright/test'
-
-const ALICE_USER = 'e2e-alice'
-const PASSWORD = 'e2etestpass1234'
+import { login as helperLogin } from './helpers'
 
 async function login(page: Page) {
-  await page.goto('/login?next=/movies/new')
-  await page.fill('input[autocomplete="username"]', ALICE_USER)
-  await page.fill('input[type="password"]', PASSWORD)
-  await Promise.all([page.waitForURL('**/movies/new'), page.click('button[type="submit"]')])
+  await helperLogin(page, '/movies/new')
   // Wait for the Toast UI MarkdownEditor dynamic import to finish mounting
   await page.waitForSelector('.toastui-editor-defaultUI', { timeout: 30_000 })
 }
@@ -18,10 +13,9 @@ test('영화 생성 → 목록 → 수정 → 삭제 golden path', async ({ page
 
   const uniqueTitle = `E2E 영화 ${Date.now()}`
 
-  // 생성 — inputs: [0]=제목, [1]=감독 (장르는 select, 날짜는 type="date")
-  const visibleInputs = page.locator('input:not([type="hidden"]):not([type="date"])')
-  await visibleInputs.nth(0).fill(uniqueTitle)
-  await visibleInputs.nth(1).fill('테스트 감독')
+  // 생성 — title(maxlength=200), director(maxlength=100) — search bar is nth(0) so use maxlength selectors
+  await page.locator('input[maxlength="200"]').fill(uniqueTitle)
+  await page.locator('input[maxlength="100"]').fill('테스트 감독')
 
   await page.click('button:has-text("등록")')
   // Navigate to movie detail page (not /movies/new or /movies/edit/*)
@@ -41,7 +35,7 @@ test('영화 생성 → 목록 → 수정 → 삭제 golden path', async ({ page
   await page.waitForSelector('.toastui-editor-defaultUI', { timeout: 30_000 })
 
   // 제목 수정
-  const titleInput = page.locator('input:not([type="hidden"]):not([type="date"])').first()
+  const titleInput = page.locator('input[maxlength="200"]')
   await titleInput.fill(`${uniqueTitle} 수정됨`)
   await page.click('button:has-text("수정")')
   // After edit, redirect to movie detail
@@ -63,5 +57,6 @@ test('영화 생성 → 목록 → 수정 → 삭제 golden path', async ({ page
 
   // /movies 목록으로 이동 + 삭제된 제목 없음 확인
   await page.waitForURL(/\/movies(\?.*)?$/, { timeout: 10_000 })
-  await expect(page.getByText(`${uniqueTitle} 수정됨`)).toHaveCount(0)
+  await page.reload()
+  await expect(page.getByText(`${uniqueTitle} 수정됨`)).toHaveCount(0, { timeout: 10_000 })
 })

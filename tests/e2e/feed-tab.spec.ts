@@ -1,12 +1,10 @@
 import { test, expect, type Page } from '@playwright/test'
-
-const ALICE_USER = 'e2e-alice'
-const PASSWORD = 'e2etestpass1234'
+import { E2E_ALICE } from './helpers'
 
 async function login(page: Page, next = '/feed') {
   await page.goto(`/login?next=${encodeURIComponent(next)}`)
-  await page.fill('input[autocomplete="username"]', ALICE_USER)
-  await page.fill('input[type="password"]', PASSWORD)
+  await page.fill('input[autocomplete="username"]', E2E_ALICE.username)
+  await page.fill('input[type="password"]', E2E_ALICE.password)
   await page.click('button[type="submit"]')
   await page.waitForURL(/\/feed/, { timeout: 10_000 })
 }
