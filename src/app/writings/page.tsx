@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/Skeleton'
 import { excerpt } from '@/lib/excerpt'
 import { spKey } from '@/lib/sp-key'
 import { getCurrentUser } from '@/lib/auth'
+import { StatsPanel } from '@/components/stats/StatsPanel'
 
 const PAGE_SIZE = 24
 
@@ -32,6 +33,7 @@ export default async function WritingsPage({ searchParams }: SP) {
 
   return (
     <div className="space-y-6">
+      <StatsPanel domain="writings" />
       <Suspense fallback={null}>
         <SearchBox basePath="/writings" placeholder="제목·본문 검색" />
       </Suspense>

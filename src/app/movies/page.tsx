@@ -15,6 +15,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { MOVIE_GENRES } from '@/lib/genres'
 import { spKey } from '@/lib/sp-key'
 import { ListMoviesQuerySchema } from '@/lib/validations'
+import { StatsPanel } from '@/components/stats/StatsPanel'
 
 const PAGE_SIZE = 24
 
@@ -36,6 +37,7 @@ export default async function MoviesPage({ searchParams }: SP) {
 
   return (
     <div className="space-y-6">
+      <StatsPanel domain="movies" />
       <Suspense fallback={null}>
         <SearchBox basePath="/movies" placeholder="제목·감독·본문 검색" />
         <Filters basePath="/movies" genres={MOVIE_GENRES} />
