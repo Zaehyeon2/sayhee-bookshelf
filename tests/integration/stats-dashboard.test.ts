@@ -148,9 +148,10 @@ describe('getMovieDashboard', () => {
 
   it('동률 count는 label 사전순 tie-break (회귀 가드)', async () => {
     const u = await createUser(db, { username: 'alice' })
-    // 감독 2명 각 1편 — count 동률 → ORDER BY COUNT(*) DESC, label 의 2차 정렬 검증
-    await createMovie(db, u.id, { director: '가나다', rating: 5 })
+    // 감독 2명 각 1편 — count 동률 → ORDER BY COUNT(*) DESC, label 의 2차 정렬 검증.
+    // 사전순 역순으로 insert해 rowid 순서가 우연히 통과시키는 false-pass 차단.
     await createMovie(db, u.id, { director: '라마바', rating: 5 })
+    await createMovie(db, u.id, { director: '가나다', rating: 5 })
 
     const d = await getMovieDashboard(db, u.id, 2026)
 
