@@ -100,11 +100,14 @@ src/
 ## DB 스키마 요약
 
 - **users** (id, username uniq, displayName, passwordHash, role 'admin'|'member', mustChangePassword 0|1, tokenVersion, createdAt)
-- **books** (id, **authorUserId**, title, author, genre, readDate, rating CHECK 1-5, content, slug, ts)
+- **books** (id, **authorUserId**, title, author, genre, readDate, rating CHECK 1-10, content, slug, ts)
   - composite: `(user, date DESC)`, `(user, genre)`, `(user, rating DESC)`, `(user, slug) UNIQUE`
+- **movies** (id, **authorUserId**, title, director, genre, watchedDate, rating CHECK 1-10, content, slug, ts) — books와 동형 패턴
 - **writings** (id, **authorUserId**, title, body, slug, ts)
   - composite: `(user, createdAt DESC)`, `(user, slug) UNIQUE`
-- **tags** + **book_tags** + **writing_tags** — 태그는 books/writings가 **공유** (`tags.name UNIQUE`).
+- **tags** + **book_tags** + **writing_tags** + **movie_tags** — 태그는 books/writings/movies가 **공유** (`tags.name UNIQUE`).
+
+**rating 스케일**: DB 저장은 **1~10 정수** (books·movies 동일, CHECK `BETWEEN 1 AND 10`). UI 표시는 항상 **÷2 = 0.5~5 별점** (`RatingScore` 관례). 통계·차트·라벨 등 사용자에게 보이는 모든 별점 값은 /2 스케일로 변환할 것 — 1~10 그대로 노출 금지.
 
 `authorUserId`는 모든 user-scoped 테이블의 NOT NULL FK. 새 user-scoped 테이블 추가 시 동일 패턴 (FK + composite index + slug retry + requireOwn* 헬퍼) 따라가세요.
 
