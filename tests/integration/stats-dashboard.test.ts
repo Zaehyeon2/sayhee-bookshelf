@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { eq } from 'drizzle-orm'
-import { getBookDashboard } from '@/lib/db/queries'
-import { tags, bookTags } from '@/lib/db/schema'
+import { getBookDashboard, getMovieDashboard } from '@/lib/db/queries'
+import { tags, bookTags, movieTags } from '@/lib/db/schema'
 import { makeTestDb, type TestDb } from '../setup-db'
-import { createUser, createBook } from '../factories'
+import { createUser, createBook, createMovie } from '../factories'
 
 async function getOrCreateTagId(db: TestDb, name: string): Promise<number> {
   const existing = await db.select().from(tags).where(eq(tags.name, name))
@@ -15,6 +15,11 @@ async function getOrCreateTagId(db: TestDb, name: string): Promise<number> {
 async function tagBook(db: TestDb, bookId: number, name: string) {
   const tagId = await getOrCreateTagId(db, name)
   await db.insert(bookTags).values({ bookId, tagId })
+}
+
+async function tagMovie(db: TestDb, movieId: number, name: string) {
+  const tagId = await getOrCreateTagId(db, name)
+  await db.insert(movieTags).values({ movieId, tagId })
 }
 
 describe('getBookDashboard', () => {
@@ -91,5 +96,89 @@ describe('getBookDashboard', () => {
     expect(d.yearTimeline).toEqual([])
     expect(d.topTags).toEqual([])
     expect(d.topAuthors).toEqual([])
+  })
+})
+
+describe('getMovieDashboard', () => {
+  let db: TestDb
+  beforeEach(async () => {
+    ;({ db } = await makeTestDb())
+  })
+
+  it('rating/genre/year/director 집계가 정확하다', async () => {
+    const u = await createUser(db, { username: 'alice' })
+    const m1 = await createMovie(db, u.id, {
+      rating: 9,
+      genre: '드라마',
+      watchedDate: '2025-02-01',
+      director: '봉준호',
+    })
+    await createMovie(db, u.id, {
+      rating: 9,
+      genre: '드라마',
+      watchedDate: '2026-04-01',
+      director: '봉준호',
+    })
+    await createMovie(db, u.id, {
+      rating: 4,
+      genre: 'SF',
+      watchedDate: '2026-05-01',
+      director: '드니 빌뇌브',
+    })
+    await tagMovie(db, m1.id, '명작')
+
+    const d = await getMovieDashboard(db, u.id, 2026)
+
+    expect(d.summary.total).toBe(3)
+    expect(d.summary.thisYear).toBe(2)
+    expect(d.summary.avgRating).toBeCloseTo(22 / 3)
+    expect(d.ratingDist).toHaveLength(10)
+    expect(d.ratingDist[8]).toEqual({ label: '4.5', count: 2 }) // 저장값 9 → 표시 4.5
+    expect(d.genreDist).toEqual([
+      { label: '드라마', count: 2 },
+      { label: 'SF', count: 1 },
+    ])
+    expect(d.yearTimeline).toEqual([
+      { label: '2025', count: 1 },
+      { label: '2026', count: 2 },
+    ])
+    expect(d.topTags).toEqual([{ label: '명작', count: 1 }])
+    expect(d.topDirectors[0]).toEqual({ label: '봉준호', count: 2 })
+  })
+
+  it('동률 count는 label 사전순 tie-break (회귀 가드)', async () => {
+    const u = await createUser(db, { username: 'alice' })
+    // 감독 2명 각 1편 — count 동률 → ORDER BY COUNT(*) DESC, label 의 2차 정렬 검증
+    await createMovie(db, u.id, { director: '가나다', rating: 5 })
+    await createMovie(db, u.id, { director: '라마바', rating: 5 })
+
+    const d = await getMovieDashboard(db, u.id, 2026)
+
+    expect(d.topDirectors).toEqual([
+      { label: '가나다', count: 1 },
+      { label: '라마바', count: 1 },
+    ])
+  })
+
+  it('cross-user 격리', async () => {
+    const a = await createUser(db, { username: 'alice' })
+    const b = await createUser(db, { username: 'bob' })
+    await createMovie(db, a.id, { rating: 10 })
+    await createMovie(db, b.id, { rating: 1 })
+
+    const d = await getMovieDashboard(db, a.id, 2026)
+
+    expect(d.summary.total).toBe(1)
+    expect(d.summary.avgRating).toBe(10)
+  })
+
+  it('빈 데이터', async () => {
+    const u = await createUser(db, { username: 'alice' })
+
+    const d = await getMovieDashboard(db, u.id, 2026)
+
+    expect(d.summary).toEqual({ total: 0, thisYear: 0, avgRating: null })
+    expect(d.genreDist).toEqual([])
+    expect(d.topDirectors).toEqual([])
   })
 })

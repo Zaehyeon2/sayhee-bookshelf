@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { books, writings, movies, tags, bookTags } from '../schema'
+import { books, writings, movies, tags, bookTags, movieTags } from '../schema'
 import type { Db } from './shared'
 
 export interface UserStats {
@@ -190,5 +190,83 @@ export async function getBookDashboard(
     yearTimeline: toCountItems(yearRows),
     topTags: toCountItems(tagRows),
     topAuthors: toCountItems(authorRows),
+  }
+}
+
+export interface MovieDashboard {
+  summary: { total: number; thisYear: number; avgRating: number | null }
+  ratingDist: CountItem[]
+  genreDist: CountItem[]
+  yearTimeline: CountItem[]
+  topTags: CountItem[]
+  topDirectors: CountItem[]
+}
+
+/** 영화관 대시보드 — getBookDashboard와 동형 (watchedDate/director/movieTags) */
+export async function getMovieDashboard(
+  db: Db,
+  userId: number,
+  year: number = new Date().getFullYear(),
+): Promise<MovieDashboard> {
+  const yearPrefix = `${year}-%`
+
+  const [summaryRows, ratingRows, genreRows, yearRows, tagRows, directorRows] = await Promise.all([
+    db.all(sql`
+      SELECT
+        (SELECT COUNT(*) FROM ${movies} WHERE ${movies.authorUserId} = ${userId}) AS total,
+        (SELECT COUNT(*) FROM ${movies}
+           WHERE ${movies.authorUserId} = ${userId}
+             AND ${movies.watchedDate} LIKE ${yearPrefix}) AS this_year,
+        (SELECT AVG(${movies.rating}) FROM ${movies}
+           WHERE ${movies.authorUserId} = ${userId}) AS avg_rating
+    `),
+    db.all(sql`
+      SELECT ${movies.rating} AS label, COUNT(*) AS count FROM ${movies}
+      WHERE ${movies.authorUserId} = ${userId}
+      GROUP BY ${movies.rating}
+    `),
+    db.all(sql`
+      SELECT ${movies.genre} AS label, COUNT(*) AS count FROM ${movies}
+      WHERE ${movies.authorUserId} = ${userId}
+      GROUP BY ${movies.genre}
+      ORDER BY COUNT(*) DESC, label
+    `),
+    db.all(sql`
+      SELECT substr(${movies.watchedDate}, 1, 4) AS label, COUNT(*) AS count FROM ${movies}
+      WHERE ${movies.authorUserId} = ${userId}
+      GROUP BY label
+      ORDER BY label
+    `),
+    db.all(sql`
+      SELECT ${tags.name} AS label, COUNT(*) AS count
+      FROM ${movieTags}
+      JOIN ${movies} ON ${movieTags.movieId} = ${movies.id}
+      JOIN ${tags} ON ${movieTags.tagId} = ${tags.id}
+      WHERE ${movies.authorUserId} = ${userId}
+      GROUP BY ${tags.name}
+      ORDER BY COUNT(*) DESC, label
+      LIMIT 5
+    `),
+    db.all(sql`
+      SELECT ${movies.director} AS label, COUNT(*) AS count FROM ${movies}
+      WHERE ${movies.authorUserId} = ${userId}
+      GROUP BY ${movies.director}
+      ORDER BY COUNT(*) DESC, label
+      LIMIT 5
+    `),
+  ])
+
+  const s = (summaryRows as Array<Record<string, number | null>>)[0] ?? {}
+  return {
+    summary: {
+      total: Number(s.total ?? 0),
+      thisYear: Number(s.this_year ?? 0),
+      avgRating: s.avg_rating !== null && s.avg_rating !== undefined ? Number(s.avg_rating) : null,
+    },
+    ratingDist: fillRatingDist(toCountItems(ratingRows)),
+    genreDist: toCountItems(genreRows),
+    yearTimeline: toCountItems(yearRows),
+    topTags: toCountItems(tagRows),
+    topDirectors: toCountItems(directorRows),
   }
 }
