@@ -66,6 +66,19 @@ ESLint 없음 — **Biome 단독**. `npm run lint` 같은 이전 명령은 더 �
 - `createBook`/`updateBook`/`createWriting`/`updateWriting`은 **트랜잭션 내에서** tag 교체 + 본문 mutation 둘 다 처리. 중간 실패 시 부분 상태 남지 않게.
 - 리스트 조회의 tag 부착은 `attachTagsBatch(bookIds[])`로 한 번에 — 각 row마다 따로 조회하는 N+1 패턴 금지.
 
+### 7. 쿼리 작성: ORM builder가 기본, raw `sql`은 예외 사유 있을 때만
+
+기본은 drizzle query builder (`and`/`eq`/`isNotNull`/`count()` 등). raw ``sql` ` ``가 정당한 경우 (2026-06 전수 검토로 확정):
+
+- **LIKE 검색** — drizzle `like()`는 `ESCAPE` 절 미지원 → invariant 4 위반이라 사용 금지. raw로 `LIKE ${pattern} ESCAPE '\'` 유지.
+- **스칼라 서브쿼리 단일왕복** (`getUserStats`류) — builder로 풀면 쿼리 N개로 쪼개져 단일 왕복 특성 상실.
+- **동적 테이블/컬럼 제네릭** (`contentDashboard`) — builder는 동적 `SQLiteTable`에서 타입 추론 붕괴.
+- **SQLite 함수** — `strftime`/`substr`/`LENGTH` 등.
+
+위 사유 없는 raw(조인 조건, `IS NOT NULL`, `COUNT(*)` 정렬)는 builder로 쓸 것.
+
+**인덱스**: 2026-06 `EXPLAIN QUERY PLAN` 전수 실측 — 현행 인덱스 충분, 추가 금지(개인 규모 + 쓰기 비용). `LIKE 'YYYY-%'` year 필터가 인덱스 range를 못 타지만 covering 인덱스라 무해 — "LIKE는 느리다"로 단정해 인덱스 추가하지 말 것. 공개 사이트 성장 시 유일 검토 후보: `idx_books_public_isbn_published`.
+
 ## 아키텍처 한눈에
 
 ```
