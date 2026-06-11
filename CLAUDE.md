@@ -166,6 +166,7 @@ tests/
 - **Drizzle 명령 prefix**: Next.js dotenv는 drizzle-kit에 안 먹습니다. 항상 `pnpm exec dotenv -e .env.local --` 붙이세요.
 - **Turso(prod) 스키마 변경**: `drizzle-kit push`는 Turso에서 SQL_INPUT_ERROR로 실패, `migrate`는 **silent no-op** (EXIT 0인데 `__drizzle_migrations` 빈 채 미적용). raw `@libsql/client` ALTER + `PRAGMA table_info` 검증만 신뢰할 것. exit code를 적용 성공의 증거로 믿지 말 것. (로컬 `file:` DB엔 push 정상 동작 — 단 `TURSO_TOKEN=`이 빈 문자열이면 turso dialect 검증 실패하므로 `TURSO_URL=file:local.db pnpm exec drizzle-kit push`처럼 TOKEN 없이 실행.)
 - **Toast UI Editor**: SSR 비호환 — `'use client'` 컴포넌트 (`MarkdownEditor.tsx`)에서만 import. 서버 컴포넌트에서 직접 import 금지.
+- **Next 16 세그먼트 보존(React Activity)**: 라우터가 떠난 페이지를 unmount하지 않고 hidden 보존 — client state·DOM이 재진입 후에도 살아있음. ① 입력 폼류 페이지는 `FreshOnVisible`로 감싸 재진입 시 remount (`key`/`template.tsx`로는 못 막음 — reconcile 자체가 안 일어남). ② e2e 셀렉터는 `:visible` 한정 — 안 그러면 hidden 사본(이전 페이지 폼)을 잡아 오탐.
 - **`DEFAULT_USER_PASSWORD` 변경 시**: 이미 발급된 신규 계정엔 영향 없음 (해시는 생성 시 한 번 굳음).
 - **WSL2 next dev hang**: 60s 안에 안 뜨면 README의 트러블슈팅 섹션 참고 (`pkill next-server` + `rm local.db`는 **destructive**라 Claude는 사용자 승인 후에만 실행).
 - **Vercel Blob 토큰**: 글방 대표 이미지 업로드(`/api/uploads`)는 `BLOB_READ_WRITE_TOKEN` 필요. Vercel은 Blob store 연결 시 자동 주입, 로컬은 `.env.local`에 수동 추가. 없으면 업로드만 비동작(나머지 영향 없음). 글방 cover는 `writings.coverUrl`(nullable) 컬럼에 Blob public URL로 저장 — 교체/제거·글 삭제 시 `deleteBlobIfManaged`로 옛 Blob 정리(트랜잭션 밖).
