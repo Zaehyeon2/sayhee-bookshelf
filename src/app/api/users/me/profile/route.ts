@@ -7,7 +7,7 @@ import { UpdateProfileSchema } from '@/lib/validations'
 import { requireUser } from '@/lib/auth-helpers'
 import { SESSION_CACHE_TAG } from '@/lib/auth'
 import { PUBLIC_FEED_TAGS } from '@/lib/public-feed-cache'
-import { WORKS_BOOK_TAG, WORKS_MOVIE_TAG } from '@/lib/works-detail-cache'
+import { WORKS_BOOK_TAG, WORKS_MOVIE_TAG, WORKS_GAME_TAG } from '@/lib/works-detail-cache'
 import { requireJsonBody, withApiHandler } from '@/lib/api-handler'
 
 export const POST = withApiHandler('updateProfile', async (req: Request) => {
@@ -22,7 +22,9 @@ export const POST = withApiHandler('updateProfile', async (req: Request) => {
   revalidateTag(SESSION_CACHE_TAG, 'max')
   revalidateTag(PUBLIC_FEED_TAGS.books, 'max')
   revalidateTag(PUBLIC_FEED_TAGS.movies, 'max')
+  revalidateTag(PUBLIC_FEED_TAGS.games, 'max')
   revalidateTag(WORKS_BOOK_TAG, 'max')
   revalidateTag(WORKS_MOVIE_TAG, 'max')
+  revalidateTag(WORKS_GAME_TAG, 'max')
   return NextResponse.json({ ok: true, displayName })
 })
