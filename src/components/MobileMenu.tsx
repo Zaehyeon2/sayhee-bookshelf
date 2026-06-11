@@ -46,49 +46,49 @@ export function MobileMenu({ displayName, role }: Props) {
           <Link
             href="/books"
             onClick={close}
-            className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]"
+            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
           >
             📚 내 책장
           </Link>
           <Link
             href="/books/stats"
             onClick={close}
-            className="block pl-9 pr-4 py-2 text-[13px] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)]"
+            className="block mx-1 pl-8 pr-3 py-2 rounded-[var(--radius-toss-sm)] text-[13px] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)]"
           >
             📊 통계 보기
           </Link>
           <Link
             href="/movies"
             onClick={close}
-            className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]"
+            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
           >
             🎬 내 영화관
           </Link>
           <Link
             href="/movies/stats"
             onClick={close}
-            className="block pl-9 pr-4 py-2 text-[13px] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)]"
+            className="block mx-1 pl-8 pr-3 py-2 rounded-[var(--radius-toss-sm)] text-[13px] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)]"
           >
             📊 통계 보기
           </Link>
           <Link
             href="/works"
             onClick={close}
-            className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]"
+            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
           >
             🔍 작품 검색
           </Link>
           <Link
             href="/writings"
             onClick={close}
-            className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]"
+            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
           >
             ✏️ 글방
           </Link>
           <Link
             href="/writings/stats"
             onClick={close}
-            className="block pl-9 pr-4 py-2 text-[13px] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)]"
+            className="block mx-1 pl-8 pr-3 py-2 rounded-[var(--radius-toss-sm)] text-[13px] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)]"
           >
             📊 통계 보기
           </Link>
@@ -97,14 +97,14 @@ export function MobileMenu({ displayName, role }: Props) {
           <Link
             href="/settings/profile"
             onClick={close}
-            className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]"
+            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
           >
             프로필 변경
           </Link>
           <Link
             href="/settings/password"
             onClick={close}
-            className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]"
+            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
           >
             비밀번호 변경
           </Link>
@@ -112,7 +112,7 @@ export function MobileMenu({ displayName, role }: Props) {
             <Link
               href="/admin/users"
               onClick={close}
-              className="block px-4 py-2.5 hover:bg-[var(--color-surface-2)]"
+              className="block mx-1 px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
             >
               사용자 관리
             </Link>
@@ -124,7 +124,7 @@ export function MobileMenu({ displayName, role }: Props) {
           >
             <button
               type="submit"
-              className="w-full text-left px-4 py-2.5 hover:bg-[var(--color-surface-2)]"
+              className="mx-1 w-[calc(100%-8px)] text-left px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
             >
               로그아웃
             </button>
