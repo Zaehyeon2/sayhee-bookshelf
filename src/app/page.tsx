@@ -1,9 +1,10 @@
 import Link from 'next/link'
 import { db } from '@/lib/db/client'
 import { listWritings, getUserStats, getUserMovieStats, getUserGameStats } from '@/lib/db/queries'
-import { getPublicBooksFeed, getPublicMoviesFeed } from '@/lib/public-feed-cache'
+import { getPublicBooksFeed, getPublicMoviesFeed, getPublicGamesFeed } from '@/lib/public-feed-cache'
 import { PublicReviewCard } from '@/components/PublicReviewCard'
 import { PublicMovieCard } from '@/components/PublicMovieCard'
+import { PublicGameCard } from '@/components/PublicGameCard'
 import { WritingCard } from '@/components/WritingCard'
 import { EmptyState } from '@/components/EmptyState'
 import { getCurrentUser } from '@/lib/auth'
@@ -34,15 +35,23 @@ export default async function HomePage() {
 
   // KST 기준 연도 — 대시보드 stats 라우트와 동일 소스 (src/lib/kst.ts 참고)
   const thisYear = currentKstYear()
-  const [stats, movieStats, gameStats, recentPublicBooks, recentPublicMovies, recentWritings] =
-    await Promise.all([
-      getUserStats(db, me.id, thisYear),
-      getUserMovieStats(db, me.id, thisYear),
-      getUserGameStats(db, me.id, thisYear),
-      getPublicBooksFeed(6, 0),
-      getPublicMoviesFeed(6, 0),
-      listWritings(db, me.id, { limit: 6 }),
-    ])
+  const [
+    stats,
+    movieStats,
+    gameStats,
+    recentPublicBooks,
+    recentPublicMovies,
+    recentPublicGames,
+    recentWritings,
+  ] = await Promise.all([
+    getUserStats(db, me.id, thisYear),
+    getUserMovieStats(db, me.id, thisYear),
+    getUserGameStats(db, me.id, thisYear),
+    getPublicBooksFeed(6, 0),
+    getPublicMoviesFeed(6, 0),
+    getPublicGamesFeed(6, 0),
+    listWritings(db, me.id, { limit: 6 }),
+  ])
 
   const totalBooks = stats.booksTotal
   const totalWritings = stats.writingsTotal
@@ -160,6 +169,34 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             {recentPublicMovies.map((m) => (
               <PublicMovieCard key={m.id} item={m} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <div className="mb-4 flex items-baseline justify-between">
+          <h2 className="text-[20px] font-bold text-[var(--color-text-strong)]">모두의 게임방</h2>
+          {recentPublicGames.length > 0 && (
+            <Link
+              href="/feed?type=game"
+              className="text-[13px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-toss-blue)] transition"
+            >
+              전체 보기 →
+            </Link>
+          )}
+        </div>
+        {recentPublicGames.length === 0 ? (
+          <EmptyState
+            emoji="🎮"
+            title="아직 공개된 게임이 없어요"
+            description="내 게임을 공개하면 모두의 게임방에 올라와요"
+            action={{ href: '/games', label: '내 게임으로 가기' }}
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {recentPublicGames.map((g) => (
+              <PublicGameCard key={g.id} item={g} />
             ))}
           </div>
         )}
