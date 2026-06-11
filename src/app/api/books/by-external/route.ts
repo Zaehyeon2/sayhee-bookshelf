@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
 import { countBooksByExternalIds } from '@/lib/db/queries/books'
-import { HttpError, requireUser } from '@/lib/auth-helpers'
+import { requireUser } from '@/lib/auth-helpers'
 import { ExternalIdsQuerySchema } from '@/lib/validations'
+import { withApiHandler } from '@/lib/api-handler'
 
 /**
  * GET /api/books/by-external?ids=isbn1,isbn2,...
@@ -12,14 +13,8 @@ import { ExternalIdsQuerySchema } from '@/lib/validations'
  *
  * Response: { counts: Record<isbn, number> } — 매칭이 0건인 ID는 키로 포함되지 않음.
  */
-export async function GET(req: Request): Promise<Response> {
-  let user
-  try {
-    user = await requireUser()
-  } catch (e) {
-    if (e instanceof HttpError) return e.toResponse()
-    throw e
-  }
+export const GET = withApiHandler('listBooksByExternal', async (req: Request): Promise<Response> => {
+  const user = await requireUser()
 
   const url = new URL(req.url)
   const parsed = ExternalIdsQuerySchema.safeParse({ ids: url.searchParams.get('ids') ?? '' })
@@ -38,4 +33,4 @@ export async function GET(req: Request): Promise<Response> {
   }
   const map = await countBooksByExternalIds(db, user.id, validIds)
   return NextResponse.json({ counts: Object.fromEntries(map) })
-}
+})

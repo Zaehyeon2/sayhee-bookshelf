@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
 import { countMoviesByExternalIds } from '@/lib/db/queries/movies'
-import { HttpError, requireUser } from '@/lib/auth-helpers'
+import { requireUser } from '@/lib/auth-helpers'
 import { ExternalIdsQuerySchema } from '@/lib/validations'
+import { withApiHandler } from '@/lib/api-handler'
 
 /**
  * GET /api/movies/by-external?ids=tmdbId1,tmdbId2,...
@@ -13,14 +14,8 @@ import { ExternalIdsQuerySchema } from '@/lib/validations'
  * ExternalIdsQuerySchema는 string[]을 반환하므로 numeric으로 coerce — 유효하지 않은 ID는 필터 제외.
  * Response: { counts: Record<tmdbId, number> } — 매칭 0건 또는 비-numeric ID는 키로 포함되지 않음.
  */
-export async function GET(req: Request): Promise<Response> {
-  let user
-  try {
-    user = await requireUser()
-  } catch (e) {
-    if (e instanceof HttpError) return e.toResponse()
-    throw e
-  }
+export const GET = withApiHandler('listMoviesByExternal', async (req: Request): Promise<Response> => {
+  const user = await requireUser()
 
   const url = new URL(req.url)
   const parsed = ExternalIdsQuerySchema.safeParse({ ids: url.searchParams.get('ids') ?? '' })
@@ -46,4 +41,4 @@ export async function GET(req: Request): Promise<Response> {
   const counts: Record<string, number> = {}
   for (const [k, v] of map) counts[String(k)] = v
   return NextResponse.json({ counts })
-}
+})

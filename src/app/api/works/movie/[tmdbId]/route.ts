@@ -1,17 +1,19 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
-import { requireUser, HttpError } from '@/lib/auth-helpers'
+import { requireUser } from '@/lib/auth-helpers'
 import { TmdbIdParamSchema, PageParamSchema } from '@/lib/validations'
 import {
   listMovieReviewsByTmdbId,
   countMovieReviewsByTmdbId,
   getMovieRatingDistributionByTmdbId,
 } from '@/lib/db/queries'
+import { withApiHandler } from '@/lib/api-handler'
 
 const PAGE_SIZE = 24
 
-export async function GET(req: Request, { params }: { params: Promise<{ tmdbId: string }> }) {
-  try {
+export const GET = withApiHandler(
+  'getMovieReviews',
+  async (req: Request, { params }: { params: Promise<{ tmdbId: string }> }) => {
     await requireUser()
     const { tmdbId: rawTmdbId } = await params
     const parsedTmdb = TmdbIdParamSchema.safeParse(rawTmdbId)
@@ -34,8 +36,5 @@ export async function GET(req: Request, { params }: { params: Promise<{ tmdbId: 
       pageSize: PAGE_SIZE,
       distribution,
     })
-  } catch (e) {
-    if (e instanceof HttpError) return e.toResponse()
-    throw e
-  }
-}
+  },
+)
