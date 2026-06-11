@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/auth'
 import { WritingForm } from '@/components/WritingForm'
+import { FreshOnVisible } from '@/components/FreshOnVisible'
 
 export const metadata = { title: '새 글' }
 
@@ -12,8 +13,10 @@ export default async function NewWritingPage() {
       <h1 className="text-[28px] font-bold tracking-tight text-[var(--color-text-strong)]">
         새 글
       </h1>
-      {/* key로 네비게이션 시 강제 remount — 이전 글 입력값 잔존 방지 (BookForm과 동일 사유) */}
-      <WritingForm key="writing-create" mode="create" />
+      {/* 재진입 시 폼 입력 잔존 방지 — FreshOnVisible 주석 참고 */}
+      <FreshOnVisible>
+        <WritingForm key="writing-create" mode="create" />
+      </FreshOnVisible>
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { BookForm } from '@/components/BookForm'
+import { FreshOnVisible } from '@/components/FreshOnVisible'
 
 export default function NewBookPage() {
   return (
@@ -6,9 +7,11 @@ export default function NewBookPage() {
       <h1 className="text-[28px] font-bold tracking-tight text-[var(--color-text-strong)]">
         새 독후감
       </h1>
-      {/* key로 네비게이션 시 강제 remount — layout(template 없음) 재조정이 폼 인스턴스를
-          재사용해 이전 책의 입력값이 잔존하는 문제 방지 */}
-      <BookForm key="book-create" mode="create" />
+      {/* 재진입 시 폼 입력 잔존 방지 — FreshOnVisible 주석 참고 (key 방식은 Next 16
+          세그먼트 보존(Activity)에서 무력) */}
+      <FreshOnVisible>
+        <BookForm key="book-create" mode="create" />
+      </FreshOnVisible>
     </div>
   )
 }
