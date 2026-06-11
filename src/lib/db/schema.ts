@@ -132,6 +132,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   books: many(books),
   writings: many(writings),
   movies: many(movies),
+  games: many(games),
 }))
 export const booksRelations = relations(books, ({ one, many }) => ({
   author: one(users, { fields: [books.authorUserId], references: [users.id] }),
@@ -141,6 +142,7 @@ export const tagsRelations = relations(tags, ({ many }) => ({
   bookTags: many(bookTags),
   writingTags: many(writingTags),
   movieTags: many(movieTags),
+  gameTags: many(gameTags),
 }))
 export const bookTagsRelations = relations(bookTags, ({ one }) => ({
   book: one(books, { fields: [bookTags.bookId], references: [books.id] }),
@@ -221,6 +223,72 @@ export const movieTagsRelations = relations(movieTags, ({ one }) => ({
   tag: one(tags, { fields: [movieTags.tagId], references: [tags.id] }),
 }))
 
+export const games = sqliteTable(
+  'games',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    authorUserId: integer('author_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    developer: text('developer').notNull(),
+    genre: text('genre').notNull(),
+    playedDate: text('played_date').notNull(),
+    rating: integer('rating').notNull(),
+    content: text('content').notNull().default(''),
+    oneLineReview: text('one_line_review'),
+    isPublic: integer('is_public').notNull().default(1),
+    publishedAt: integer('published_at'),
+    slug: text('slug').notNull(),
+    // 외부 API 메타데이터 (모두 nullable)
+    rawgId: integer('rawg_id'),
+    coverUrl: text('cover_url'),
+    externalSource: text('external_source'),
+    createdAt: integer('created_at').notNull(),
+    updatedAt: integer('updated_at').notNull(),
+  },
+  (t) => ({
+    authorUserIdx: index('idx_games_author_user').on(t.authorUserId),
+    userSlugUnique: uniqueIndex('idx_games_user_slug').on(t.authorUserId, t.slug),
+    userDateIdx: index('idx_games_user_date').on(t.authorUserId, sql`${t.playedDate} DESC`),
+    userGenreIdx: index('idx_games_user_genre').on(t.authorUserId, t.genre),
+    userRatingIdx: index('idx_games_user_rating').on(t.authorUserId, sql`${t.rating} DESC`),
+    publicPublishedIdx: index('idx_games_public_published').on(
+      t.isPublic,
+      sql`${t.publishedAt} DESC`,
+    ),
+    rawgIdx: index('idx_games_rawg').on(t.rawgId),
+    publicRawgIdx: index('idx_games_public_rawg').on(t.isPublic, t.rawgId),
+    ratingCheck: check('games_rating_range', sql`${t.rating} BETWEEN 1 AND 10`),
+  }),
+)
+
+export const gameTags = sqliteTable(
+  'game_tags',
+  {
+    gameId: integer('game_id')
+      .notNull()
+      .references(() => games.id, { onDelete: 'cascade' }),
+    tagId: integer('tag_id')
+      .notNull()
+      .references(() => tags.id, { onDelete: 'cascade' }),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.gameId, t.tagId] }),
+    tagIdx: index('idx_game_tags_tag').on(t.tagId),
+  }),
+)
+
+export const gamesRelations = relations(games, ({ one, many }) => ({
+  author: one(users, { fields: [games.authorUserId], references: [users.id] }),
+  gameTags: many(gameTags),
+}))
+
+export const gameTagsRelations = relations(gameTags, ({ one }) => ({
+  game: one(games, { fields: [gameTags.gameId], references: [games.id] }),
+  tag: one(tags, { fields: [gameTags.tagId], references: [tags.id] }),
+}))
+
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Book = typeof books.$inferSelect
@@ -237,3 +305,7 @@ export type Movie = typeof movies.$inferSelect
 export type NewMovie = typeof movies.$inferInsert
 export type MovieTag = typeof movieTags.$inferSelect
 export type NewMovieTag = typeof movieTags.$inferInsert
+export type Game = typeof games.$inferSelect
+export type NewGame = typeof games.$inferInsert
+export type GameTag = typeof gameTags.$inferSelect
+export type NewGameTag = typeof gameTags.$inferInsert
