@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { eq } from 'drizzle-orm'
-import { getBookDashboard, getMovieDashboard, getWritingDashboard } from '@/lib/db/queries'
-import { tags, bookTags, movieTags, writingTags } from '@/lib/db/schema'
+import { getBookDashboard, getMovieDashboard, getWritingDashboard, getGameDashboard } from '@/lib/db/queries'
+import { tags, bookTags, movieTags, writingTags, gameTags } from '@/lib/db/schema'
 import { makeTestDb, type TestDb } from '../setup-db'
-import { createUser, createBook, createMovie, createWriting } from '../factories'
+import { createUser, createBook, createMovie, createWriting, createGame } from '../factories'
 
 async function getOrCreateTagId(db: TestDb, name: string): Promise<number> {
   const existing = await db.select().from(tags).where(eq(tags.name, name))
@@ -25,6 +25,11 @@ async function tagMovie(db: TestDb, movieId: number, name: string) {
 async function tagWriting(db: TestDb, writingId: number, name: string) {
   const tagId = await getOrCreateTagId(db, name)
   await db.insert(writingTags).values({ writingId, tagId })
+}
+
+async function tagGame(db: TestDb, gameId: number, name: string) {
+  const tagId = await getOrCreateTagId(db, name)
+  await db.insert(gameTags).values({ gameId, tagId })
 }
 
 describe('getBookDashboard', () => {
@@ -246,5 +251,70 @@ describe('getWritingDashboard', () => {
     expect(d.monthlyTimeline.every((m) => m.count === 0)).toBe(true)
     expect(d.topTags).toEqual([])
     expect(d.charStats).toEqual({ totalChars: 0, avgChars: 0 })
+  })
+})
+
+describe('getGameDashboard', () => {
+  let db: TestDb
+  beforeEach(async () => {
+    ;({ db } = await makeTestDb())
+  })
+
+  it('연도 필터(thisYear), ratingDist, topDevelopers 집계가 정확하다', async () => {
+    const u = await createUser(db, { username: 'alice' })
+    const g1 = await createGame(db, u.id, {
+      rating: 9,
+      genre: 'RPG',
+      playedDate: '2025-03-01',
+      developer: '블리자드',
+    })
+    await createGame(db, u.id, {
+      rating: 9,
+      genre: 'RPG',
+      playedDate: '2026-04-01',
+      developer: '블리자드',
+    })
+    await createGame(db, u.id, {
+      rating: 4,
+      genre: '액션',
+      playedDate: '2026-05-01',
+      developer: '캡콤',
+    })
+    await tagGame(db, g1.id, '명작')
+
+    const d = await getGameDashboard(db, u.id, 2026)
+
+    expect(d.summary.total).toBe(3)
+    expect(d.summary.thisYear).toBe(2)
+    expect(d.summary.avgRating).toBeCloseTo(22 / 3)
+    // ratingDist는 10칸 전부 채움, 라벨은 /2 스케일
+    expect(d.ratingDist).toHaveLength(10)
+    expect(d.ratingDist[8]).toEqual({ label: '4.5', count: 2 }) // 저장값 9 → 표시 4.5
+    expect(d.topTags).toEqual([{ label: '명작', count: 1 }])
+    expect(d.topDevelopers[0]).toEqual({ label: '블리자드', count: 2 })
+  })
+
+  it('cross-user 격리', async () => {
+    const a = await createUser(db, { username: 'alice' })
+    const b = await createUser(db, { username: 'bob' })
+    await createGame(db, a.id, { rating: 10 })
+    await createGame(db, b.id, { rating: 1 })
+
+    const d = await getGameDashboard(db, a.id, 2026)
+
+    expect(d.summary.total).toBe(1)
+    expect(d.summary.avgRating).toBe(10)
+  })
+
+  it('빈 데이터', async () => {
+    const u = await createUser(db, { username: 'alice' })
+
+    const d = await getGameDashboard(db, u.id, 2026)
+
+    expect(d.summary).toEqual({ total: 0, thisYear: 0, avgRating: null })
+    expect(d.ratingDist).toHaveLength(10)
+    expect(d.ratingDist.every((r) => r.count === 0)).toBe(true)
+    expect(d.genreDist).toEqual([])
+    expect(d.topDevelopers).toEqual([])
   })
 })
