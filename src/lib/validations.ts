@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { BOOK_GENRES, MOVIE_GENRES } from './genres'
+import { BOOK_GENRES, MOVIE_GENRES, GAME_GENRES } from './genres'
 import { isValidUsername } from './username-normalize'
 import { canonicalIsbn } from './isbn'
 import { isManagedBlobUrl } from './image-constraints'
@@ -167,6 +167,69 @@ export const ListMoviesQuerySchema = z.object({
   page: z.coerce.number().int().min(1).max(10_000).optional(),
 })
 
+export const CreateGameSchema = z
+  .object({
+    title: z.string().trim().min(1, '제목을 입력하세요').max(200),
+    developer: z.string().trim().min(1, '개발사를 입력하세요').max(100),
+    genre: z.enum(GAME_GENRES),
+    playedDate: z.string().regex(dateRe, '날짜 형식은 YYYY-MM-DD'),
+    rating: z.number().int().min(1).max(10),
+    content: z.string().max(MAX_CONTENT_LEN, '본문이 너무 깁니다').default(''),
+    tags: tagsArraySchema
+      .default([])
+      .transform((arr) =>
+        Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))),
+      ),
+    oneLineReview: z
+      .string()
+      .trim()
+      .max(150, '한줄평은 150자 이내로 입력해주세요')
+      .optional()
+      .transform((v) => (v && v.length > 0 ? v : null)),
+    isPublic: z.boolean().optional().default(true),
+    rawgId: z.number().int().positive().nullable().optional(),
+    coverUrl: coverUrlSchema,
+    externalSource: z.enum(['rawg']).nullable().optional(),
+  })
+  .strict()
+
+export type CreateGameInput = z.infer<typeof CreateGameSchema>
+
+export const UpdateGameSchema = z
+  .object({
+    title: z.string().trim().min(1, '제목을 입력하세요').max(200).optional(),
+    developer: z.string().trim().min(1, '개발사를 입력하세요').max(100).optional(),
+    genre: z.enum(GAME_GENRES).optional(),
+    playedDate: z.string().regex(dateRe, '날짜 형식은 YYYY-MM-DD').optional(),
+    rating: z.number().int().min(1).max(10).optional(),
+    content: z.string().max(MAX_CONTENT_LEN, '본문이 너무 깁니다').optional(),
+    tags: tagsArraySchema
+      .transform((arr) => Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))))
+      .optional(),
+    oneLineReview: z
+      .string()
+      .trim()
+      .max(150, '한줄평은 150자 이내로 입력해주세요')
+      .optional()
+      .transform((v) => (v === undefined ? undefined : v.length > 0 ? v : null)),
+    isPublic: z.boolean().optional(),
+    rawgId: z.number().int().positive().nullable().optional(),
+    coverUrl: coverUrlSchema,
+    externalSource: z.enum(['rawg']).nullable().optional(),
+  })
+  .strict()
+
+export type UpdateGameInput = z.infer<typeof UpdateGameSchema>
+
+export const ListGamesQuerySchema = z.object({
+  q: z.string().max(MAX_SEARCH_Q).optional(),
+  genre: z.enum(GAME_GENRES).optional(),
+  tag: z.string().max(MAX_TAG_LEN).optional(),
+  year: z.coerce.number().int().min(1900).max(2100).optional(),
+  sort: z.enum(['date', 'rating']).optional(),
+  page: z.coerce.number().int().min(1).max(10_000).optional(),
+})
+
 export const FeedQuerySchema = z.object({
   type: z.enum(['book', 'movie']).default('book'),
   page: z.coerce.number().int().min(1).max(10_000).optional(),
@@ -187,6 +250,7 @@ export function isValidId(n: number): boolean {
 
 export const IsbnParamSchema = z.string().regex(/^\d{10}(\d{3})?$/)
 export const TmdbIdParamSchema = z.coerce.number().int().positive()
+export const RawgIdParamSchema = z.coerce.number().int().positive()
 
 export const LoginSchema = z
   .object({
