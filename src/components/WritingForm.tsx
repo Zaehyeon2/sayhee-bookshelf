@@ -6,7 +6,7 @@ import { useCrudForm } from './useCrudForm'
 import { TagInput } from './TagInput'
 import { MarkdownEditor, type MarkdownEditorHandle } from './MarkdownEditor'
 import { FormActionBar } from './FormActionBar'
-import { deleteOrToast, getEditorMarkdownOrToast, saveJsonOrToast } from './form-helpers'
+import { getEditorMarkdownOrToast, saveJsonOrToast } from './form-helpers'
 import { focusNextOnEnter } from '@/lib/focus-next-on-enter'
 import { MAX_IMAGE_BYTES, ALLOWED_IMAGE_MIME } from '@/lib/image-constraints'
 
@@ -113,14 +113,9 @@ export function WritingForm({ initial, mode }: Props) {
       router.push(`/writings/${encodeURIComponent(data.slug)}`)
       router.refresh()
     },
-    onDelete: !initial?.id
-      ? undefined
-      : async () => {
-          if (!(await deleteOrToast(`/api/writings/${initial.id}`))) return
-          toast.success('삭제되었습니다')
-          router.push('/writings')
-          router.refresh()
-        },
+    deleteAction: initial?.id
+      ? { url: `/api/writings/${initial.id}`, redirectTo: '/writings' }
+      : undefined,
   })
   const { handleFormSubmit, router } = crud
 

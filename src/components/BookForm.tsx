@@ -9,7 +9,7 @@ import { RatingStars } from './RatingStars'
 import { TagInput } from './TagInput'
 import { MarkdownEditor, type MarkdownEditorHandle } from './MarkdownEditor'
 import { FormActionBar } from './FormActionBar'
-import { deleteOrToast, getEditorMarkdownOrToast, saveJsonOrToast } from './form-helpers'
+import { getEditorMarkdownOrToast, saveJsonOrToast } from './form-helpers'
 import { Toggle } from './Toggle'
 import { ExternalBookSearchBar, type BookSelection } from './ExternalBookSearchBar'
 import { focusNextOnEnter } from '@/lib/focus-next-on-enter'
@@ -85,14 +85,9 @@ export function BookForm({ initial, mode }: Props) {
       router.push(`/books/${data.slug}`)
       router.refresh()
     },
-    onDelete: !initial?.id
-      ? undefined
-      : async () => {
-          if (!(await deleteOrToast(`/api/books/${initial.id}`))) return
-          toast.success('삭제되었습니다')
-          router.push('/books')
-          router.refresh()
-        },
+    deleteAction: initial?.id
+      ? { url: `/api/books/${initial.id}`, redirectTo: '/books' }
+      : undefined,
   })
   const { handleFormSubmit, router } = crud
 

@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { deleteOrToast } from './form-helpers'
 
 export interface UseCrudFormOptions {
   /**
@@ -10,10 +12,10 @@ export interface UseCrudFormOptions {
    */
   onSubmit: () => Promise<void>
   /**
-   * 삭제 로직 전체 (fetch, toast, router.push/refresh 포함).
+   * 선언적 삭제 설정 — url로 DELETE 후 성공 toast·redirectTo 이동까지 훅이 처리.
    * 제공하지 않으면 삭제 관련 핸들러는 no-op.
    */
-  onDelete?: () => Promise<void>
+  deleteAction?: { url: string; redirectTo: string }
 }
 
 export interface UseCrudFormReturn {
@@ -41,7 +43,7 @@ export interface UseCrudFormReturn {
  * useTransition은 async 콜백을 await하지 않아 pending이 fetch 도중 false로
  * 돌아가 중복 제출이 가능하다. 명시적 플래그로 in-flight 상태를 정확히 추적한다.
  */
-export function useCrudForm({ onSubmit, onDelete }: UseCrudFormOptions): UseCrudFormReturn {
+export function useCrudForm({ onSubmit, deleteAction }: UseCrudFormOptions): UseCrudFormReturn {
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
@@ -63,9 +65,14 @@ export function useCrudForm({ onSubmit, onDelete }: UseCrudFormOptions): UseCrud
   }
 
   function handleDeleteConfirmed() {
-    if (!onDelete) return
+    if (!deleteAction) return
     setDeleting(true)
-    onDelete().finally(() => setDeleting(false))
+    ;(async () => {
+      if (!(await deleteOrToast(deleteAction.url))) return
+      toast.success('삭제되었습니다')
+      router.push(deleteAction.redirectTo)
+      router.refresh()
+    })().finally(() => setDeleting(false))
   }
 
   return {
