@@ -44,87 +44,100 @@ export async function requireAdmin(): Promise<User> {
 }
 
 /**
- * API route용: 본인 책 한 권 조회. 다른 사용자의 책이면 404로 응답.
- * 라우트에서 try/catch로 HttpError를 잡아 response로 변환.
+ * 본인 소유 row 조회 헬퍼 팩토리. 멀티테넌트 invariant의 단일 구현 지점 —
+ * 모든 user-scoped 테이블은 (id, authorUserId) 매칭으로만 단건 접근한다.
+ * - forApi: 라우트에서 try/catch로 HttpError를 잡아 response로 변환.
+ * - forPage: 서버 컴포넌트(페이지)용 — 소유자가 아니면 Next.js notFound() throw.
  */
+function makeOwnershipHelpers<Row>(
+  fetchOwn: (id: number, userId: number) => Promise<Row | undefined>,
+  notFoundMessage: string,
+) {
+  return {
+    async forApi(id: number): Promise<{ user: User; row: Row }> {
+      const user = await requireUser()
+      const row = await fetchOwn(id, user.id)
+      if (row === undefined) throw new HttpError(404, { error: notFoundMessage })
+      return { user, row }
+    },
+    async forPage(id: number): Promise<{ user: User; row: Row }> {
+      const user = await getCurrentUser()
+      if (!user) notFound()
+      const row = await fetchOwn(id, user.id)
+      if (row === undefined) notFound()
+      return { user, row }
+    },
+  }
+}
+
+const ownBook = makeOwnershipHelpers<Book>(
+  async (id, userId) =>
+    (
+      await db
+        .select()
+        .from(books)
+        .where(and(eq(books.id, id), eq(books.authorUserId, userId)))
+        .limit(1)
+    )[0],
+  '책을 찾을 수 없습니다',
+)
+
+const ownWriting = makeOwnershipHelpers<Writing>(
+  async (id, userId) =>
+    (
+      await db
+        .select()
+        .from(writings)
+        .where(and(eq(writings.id, id), eq(writings.authorUserId, userId)))
+        .limit(1)
+    )[0],
+  '글을 찾을 수 없습니다',
+)
+
+const ownMovie = makeOwnershipHelpers<Movie>(
+  async (id, userId) =>
+    (
+      await db
+        .select()
+        .from(movies)
+        .where(and(eq(movies.id, id), eq(movies.authorUserId, userId)))
+        .limit(1)
+    )[0],
+  '영화를 찾을 수 없습니다',
+)
+
 export async function requireOwnBook(bookId: number): Promise<{ user: User; book: Book }> {
-  const user = await requireUser()
-  const rows = await db
-    .select()
-    .from(books)
-    .where(and(eq(books.id, bookId), eq(books.authorUserId, user.id)))
-    .limit(1)
-  if (rows.length === 0) throw new HttpError(404, { error: '책을 찾을 수 없습니다' })
-  return { user, book: rows[0] }
+  const { user, row: book } = await ownBook.forApi(bookId)
+  return { user, book }
 }
 
-/**
- * 서버 컴포넌트(페이지)용 변형: 다른 사용자의 책이면 Next.js notFound() throw.
- */
 export async function requireOwnBookForPage(bookId: number): Promise<{ user: User; book: Book }> {
-  const user = await getCurrentUser()
-  if (!user) notFound()
-  const rows = await db
-    .select()
-    .from(books)
-    .where(and(eq(books.id, bookId), eq(books.authorUserId, user.id)))
-    .limit(1)
-  if (rows.length === 0) notFound()
-  return { user, book: rows[0] }
+  const { user, row: book } = await ownBook.forPage(bookId)
+  return { user, book }
 }
 
-/** API 라우트용: 본인 글 한 개 조회. 다른 사용자의 글이면 404. */
 export async function requireOwnWriting(
   writingId: number,
 ): Promise<{ user: User; writing: Writing }> {
-  const user = await requireUser()
-  const rows = await db
-    .select()
-    .from(writings)
-    .where(and(eq(writings.id, writingId), eq(writings.authorUserId, user.id)))
-    .limit(1)
-  if (rows.length === 0) throw new HttpError(404, { error: '글을 찾을 수 없습니다' })
-  return { user, writing: rows[0] }
+  const { user, row: writing } = await ownWriting.forApi(writingId)
+  return { user, writing }
 }
 
-/** 서버 컴포넌트(페이지)용: 다른 사용자의 글이면 notFound() throw. */
 export async function requireOwnWritingForPage(
   writingId: number,
 ): Promise<{ user: User; writing: Writing }> {
-  const user = await getCurrentUser()
-  if (!user) notFound()
-  const rows = await db
-    .select()
-    .from(writings)
-    .where(and(eq(writings.id, writingId), eq(writings.authorUserId, user.id)))
-    .limit(1)
-  if (rows.length === 0) notFound()
-  return { user, writing: rows[0] }
+  const { user, row: writing } = await ownWriting.forPage(writingId)
+  return { user, writing }
 }
 
-/** API route용: 본인 영화 한 편 조회. 다른 사용자의 영화면 404. */
 export async function requireOwnMovie(movieId: number): Promise<{ user: User; movie: Movie }> {
-  const user = await requireUser()
-  const rows = await db
-    .select()
-    .from(movies)
-    .where(and(eq(movies.id, movieId), eq(movies.authorUserId, user.id)))
-    .limit(1)
-  if (rows.length === 0) throw new HttpError(404, { error: '영화를 찾을 수 없습니다' })
-  return { user, movie: rows[0] }
+  const { user, row: movie } = await ownMovie.forApi(movieId)
+  return { user, movie }
 }
 
-/** 서버 컴포넌트(페이지)용: 다른 사용자의 영화면 notFound() throw. */
 export async function requireOwnMovieForPage(
   movieId: number,
 ): Promise<{ user: User; movie: Movie }> {
-  const user = await getCurrentUser()
-  if (!user) notFound()
-  const rows = await db
-    .select()
-    .from(movies)
-    .where(and(eq(movies.id, movieId), eq(movies.authorUserId, user.id)))
-    .limit(1)
-  if (rows.length === 0) notFound()
-  return { user, movie: rows[0] }
+  const { user, row: movie } = await ownMovie.forPage(movieId)
+  return { user, movie }
 }
