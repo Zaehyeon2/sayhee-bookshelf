@@ -5,6 +5,8 @@ import {
   listRecentPublicMovies,
   countPublicBooks,
   countPublicMovies,
+  listRecentPublicGames,
+  countPublicGames,
 } from '@/lib/db/queries'
 
 // Public feed는 user-scope 없는 cross-user read — Next 16 'use cache: remote' directive로
@@ -12,6 +14,7 @@ import {
 
 const PUBLIC_BOOKS_TAG = 'public-books-feed'
 const PUBLIC_MOVIES_TAG = 'public-movies-feed'
+const PUBLIC_GAMES_TAG = 'public-games-feed'
 
 export async function getPublicBooksFeed(limit: number, offset: number) {
   'use cache: remote'
@@ -41,7 +44,22 @@ export async function getPublicMoviesFeedCount() {
   return countPublicMovies(db)
 }
 
+export async function getPublicGamesFeed(limit: number, offset: number) {
+  'use cache: remote'
+  cacheTag(PUBLIC_GAMES_TAG)
+  cacheLife('minutes')
+  return listRecentPublicGames(db, { limit, offset })
+}
+
+export async function getPublicGamesFeedCount() {
+  'use cache: remote'
+  cacheTag(PUBLIC_GAMES_TAG)
+  cacheLife('minutes')
+  return countPublicGames(db)
+}
+
 export const PUBLIC_FEED_TAGS = {
   books: PUBLIC_BOOKS_TAG,
   movies: PUBLIC_MOVIES_TAG,
+  games: PUBLIC_GAMES_TAG,
 }

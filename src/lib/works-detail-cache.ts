@@ -7,6 +7,9 @@ import {
   listMovieReviewsByTmdbId,
   countMovieReviewsByTmdbId,
   getMovieRatingDistributionByTmdbId,
+  listGameReviewsByRawgId,
+  countGameReviewsByRawgId,
+  getGameRatingDistributionByRawgId,
 } from '@/lib/db/queries'
 
 // works/[isbn|tmdbId] 상세 페이지의 cross-user DB read — Vercel Runtime Cache로
@@ -14,6 +17,7 @@ import {
 
 export const WORKS_BOOK_TAG = 'works-book-detail'
 export const WORKS_MOVIE_TAG = 'works-movie-detail'
+export const WORKS_GAME_TAG = 'works-game-detail'
 
 export async function getBookReviewsCached(isbn: string, limit: number, offset: number) {
   'use cache: remote'
@@ -55,4 +59,25 @@ export async function getMovieDistributionCached(tmdbId: number) {
   cacheTag(WORKS_MOVIE_TAG)
   cacheLife('minutes')
   return getMovieRatingDistributionByTmdbId(db, tmdbId)
+}
+
+export async function getGameReviewsCached(rawgId: number, limit: number, offset: number) {
+  'use cache: remote'
+  cacheTag(WORKS_GAME_TAG)
+  cacheLife('minutes')
+  return listGameReviewsByRawgId(db, rawgId, { limit, offset })
+}
+
+export async function getGameReviewsCountCached(rawgId: number) {
+  'use cache: remote'
+  cacheTag(WORKS_GAME_TAG)
+  cacheLife('minutes')
+  return countGameReviewsByRawgId(db, rawgId)
+}
+
+export async function getGameDistributionCached(rawgId: number) {
+  'use cache: remote'
+  cacheTag(WORKS_GAME_TAG)
+  cacheLife('minutes')
+  return getGameRatingDistributionByRawgId(db, rawgId)
 }
