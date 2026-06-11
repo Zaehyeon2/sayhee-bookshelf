@@ -8,6 +8,7 @@ import { Toaster } from 'sonner'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { MobileMenu } from '@/components/MobileMenu'
 import { NavDropdown } from '@/components/NavDropdown'
+import { UserMenu } from '@/components/UserMenu'
 import { getCurrentUser } from '@/lib/auth'
 import './globals.css'
 
@@ -124,49 +125,5 @@ async function NavUser() {
         )}
       </div>
     </>
-  )
-}
-
-function UserMenu({ displayName, role }: { displayName: string; role: 'admin' | 'member' }) {
-  return (
-    <details className="relative">
-      <summary className="list-none cursor-pointer px-3 h-11 inline-flex items-center text-[14px] font-medium text-[var(--color-text-strong)] rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)] transition">
-        {displayName} ▾
-      </summary>
-      <div className="absolute right-0 mt-1 w-48 rounded-[var(--radius-toss)] bg-[var(--color-surface)] shadow-[var(--shadow-toss)] border border-[var(--color-border-subtle)] py-1 text-[14px]">
-        <Link
-          href="/settings/profile"
-          className="block mx-1 px-3 py-2 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
-        >
-          프로필 변경
-        </Link>
-        <Link
-          href="/settings/password"
-          className="block mx-1 px-3 py-2 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
-        >
-          비밀번호 변경
-        </Link>
-        {role === 'admin' && (
-          <Link
-            href="/admin/users"
-            className="block mx-1 px-3 py-2 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
-          >
-            사용자 관리
-          </Link>
-        )}
-        <form
-          action="/api/logout"
-          method="POST"
-          className="border-t border-[var(--color-border-subtle)] mt-1 pt-1"
-        >
-          <button
-            type="submit"
-            className="mx-1 w-[calc(100%-8px)] text-left px-3 py-2 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
-          >
-            로그아웃
-          </button>
-        </form>
-      </div>
-    </details>
   )
 }

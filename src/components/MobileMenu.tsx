@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 interface Props {
   displayName: string
@@ -11,6 +12,13 @@ interface Props {
 export function MobileMenu({ displayName, role }: Props) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const pathname = usePathname()
+
+  // 항목 onClick close 외 안전망 — 어떤 경로로든 라우트가 바뀌면 닫음 (뒤로가기 포함)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pathname 변경을 트리거로 쓰는 의도적 의존성
+  useEffect(() => {
+    setOpen(false)
+  }, [pathname])
 
   useEffect(() => {
     if (!open) return
