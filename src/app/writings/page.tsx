@@ -13,14 +13,9 @@ import { excerpt } from '@/lib/excerpt'
 import { spKey } from '@/lib/sp-key'
 import { getCurrentUser } from '@/lib/auth'
 import { StatsPageLink } from '@/components/StatsPageLink'
+import { PageParamSchema } from '@/lib/validations'
 
 const PAGE_SIZE = 24
-
-function parsePage(value: string | undefined): number {
-  if (!value) return 1
-  const n = Number(value)
-  return Number.isFinite(n) && n >= 1 ? Math.floor(n) : 1
-}
 
 interface SP {
   searchParams: Promise<{ page?: string; q?: string }>
@@ -62,7 +57,7 @@ async function WritingsResults({
   sp: Awaited<SP['searchParams']>
   userId: number
 }) {
-  const page = parsePage(sp.page)
+  const page = PageParamSchema.parse(sp.page ?? '1')
   const q = sp.q?.trim() ?? ''
   const isSearch = q.length > 0
   const offset = (page - 1) * PAGE_SIZE

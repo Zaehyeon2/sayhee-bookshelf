@@ -180,6 +180,11 @@ export const WorksSearchQuerySchema = z.object({
 
 export const PageParamSchema = z.coerce.number().int().min(1).max(10_000).catch(1)
 
+// API [id] 라우트 공용 — 양의 safe integer만 유효한 리소스 id
+export function isValidId(n: number): boolean {
+  return Number.isSafeInteger(n) && n > 0
+}
+
 export const IsbnParamSchema = z.string().regex(/^\d{10}(\d{3})?$/)
 export const TmdbIdParamSchema = z.coerce.number().int().positive()
 

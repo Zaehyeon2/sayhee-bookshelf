@@ -136,12 +136,12 @@ async function MoviesResults({ sp, userId }: { sp: Awaited<SP['searchParams']>; 
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             {movies.map((m) => {
-              const matchesMeta = isSearch
-                ? m.title.toLowerCase().includes(q.toLowerCase()) ||
-                  m.director.toLowerCase().includes(q.toLowerCase())
-                : true
-              const snippet =
-                isSearch && !matchesMeta ? (excerpt(m.content, q) ?? undefined) : undefined
+              // 검색어가 제목·감독에 안 잡히면 본문 매치 — 그때만 발췌 스니펫 표시
+              const matchesMeta =
+                !isSearch ||
+                m.title.toLowerCase().includes(q.toLowerCase()) ||
+                m.director.toLowerCase().includes(q.toLowerCase())
+              const snippet = matchesMeta ? undefined : (excerpt(m.content, q) ?? undefined)
               return (
                 <MovieCard
                   key={m.id}

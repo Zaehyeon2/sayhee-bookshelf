@@ -11,14 +11,9 @@ import { PublicMovieCard } from '@/components/PublicMovieCard'
 import { Pagination } from '@/components/Pagination'
 import { EmptyState } from '@/components/EmptyState'
 import { getCurrentUser } from '@/lib/auth'
+import { PageParamSchema } from '@/lib/validations'
 
 const PAGE_SIZE = 24
-
-function parsePage(value: string | undefined): number {
-  if (!value) return 1
-  const n = Number(value)
-  return Number.isFinite(n) && n >= 1 ? Math.floor(n) : 1
-}
 
 type FeedType = 'book' | 'movie'
 function parseType(v: string | undefined): FeedType {
@@ -34,7 +29,7 @@ export default async function FeedPage({ searchParams }: SP) {
   if (!me) redirect('/login?next=/feed')
 
   const sp = await searchParams
-  const page = parsePage(sp.page)
+  const page = PageParamSchema.parse(sp.page ?? '1')
   const type = parseType(sp.type)
 
   return (

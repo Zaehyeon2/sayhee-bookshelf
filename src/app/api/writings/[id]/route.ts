@@ -1,14 +1,10 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
 import { deleteWriting, getWritingById, updateWriting } from '@/lib/db/queries'
-import { UpdateWritingSchema } from '@/lib/validations'
+import { isValidId, UpdateWritingSchema } from '@/lib/validations'
 import { requireOwnWriting, HttpError } from '@/lib/auth-helpers'
 
 type Params = { params: Promise<{ id: string }> }
-
-function isValidId(n: number): boolean {
-  return Number.isSafeInteger(n) && n > 0
-}
 
 export async function GET(_req: Request, { params }: Params) {
   try {

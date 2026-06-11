@@ -2,16 +2,12 @@ import { NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
 import { db } from '@/lib/db/client'
 import { deleteBook, getBookById, updateBook } from '@/lib/db/queries'
-import { UpdateBookSchema } from '@/lib/validations'
+import { isValidId, UpdateBookSchema } from '@/lib/validations'
 import { requireOwnBook, HttpError } from '@/lib/auth-helpers'
 import { PUBLIC_FEED_TAGS } from '@/lib/public-feed-cache'
 import { WORKS_BOOK_TAG } from '@/lib/works-detail-cache'
 
 type Params = { params: Promise<{ id: string }> }
-
-function isValidId(n: number): boolean {
-  return Number.isSafeInteger(n) && n > 0
-}
 
 export async function GET(_req: Request, { params }: Params) {
   try {

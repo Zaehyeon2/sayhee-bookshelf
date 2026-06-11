@@ -2,16 +2,12 @@ import { NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
 import { db } from '@/lib/db/client'
 import { deleteMovie, getMovieById, updateMovie } from '@/lib/db/queries'
-import { UpdateMovieSchema } from '@/lib/validations'
+import { isValidId, UpdateMovieSchema } from '@/lib/validations'
 import { requireOwnMovie, HttpError } from '@/lib/auth-helpers'
 import { PUBLIC_FEED_TAGS } from '@/lib/public-feed-cache'
 import { WORKS_MOVIE_TAG } from '@/lib/works-detail-cache'
 
 type Params = { params: Promise<{ id: string }> }
-
-function isValidId(n: number): boolean {
-  return Number.isSafeInteger(n) && n > 0
-}
 
 export async function GET(_req: Request, { params }: Params) {
   try {
