@@ -37,7 +37,6 @@ export default async function MoviesPage({ searchParams }: SP) {
 
   return (
     <div className="space-y-6">
-      <StatsPageLink href="/movies/stats" />
       <Suspense fallback={null}>
         <SearchBox basePath="/movies" placeholder="제목·감독·본문 검색" />
         <Filters basePath="/movies" genres={MOVIE_GENRES} />
@@ -108,6 +107,7 @@ async function MoviesResults({ sp, userId }: { sp: Awaited<SP['searchParams']>; 
       <div className="flex items-baseline justify-between">
         <h2 className="text-[22px] font-bold text-[var(--color-text-strong)]">{title}</h2>
         <div className="flex items-center gap-3">
+          <StatsPageLink href="/movies/stats" />
           <span className="text-[13px] text-[var(--color-text-weak)] font-tabular">{total}편</span>
           <Link
             href="/movies/new"

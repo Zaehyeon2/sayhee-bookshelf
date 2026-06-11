@@ -37,7 +37,6 @@ export default async function BooksPage({ searchParams }: SP) {
 
   return (
     <div className="space-y-6">
-      <StatsPageLink href="/books/stats" />
       <Suspense fallback={null}>
         <SearchBox />
         <Filters basePath="/books" genres={BOOK_GENRES} />
@@ -108,6 +107,7 @@ async function BooksResults({ sp, userId }: { sp: Awaited<SP['searchParams']>; u
       <div className="flex items-baseline justify-between">
         <h2 className="text-[22px] font-bold text-[var(--color-text-strong)]">{title}</h2>
         <div className="flex items-center gap-3">
+          <StatsPageLink href="/books/stats" />
           <span className="text-[13px] text-[var(--color-text-weak)] font-tabular">{total}권</span>
           <Link
             href="/books/new"

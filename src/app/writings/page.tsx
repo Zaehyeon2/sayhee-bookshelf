@@ -33,7 +33,6 @@ export default async function WritingsPage({ searchParams }: SP) {
 
   return (
     <div className="space-y-6">
-      <StatsPageLink href="/writings/stats" />
       <Suspense fallback={null}>
         <SearchBox basePath="/writings" placeholder="제목·본문 검색" />
       </Suspense>
@@ -95,6 +94,7 @@ async function WritingsResults({
           {isSearch ? `"${q}" 검색 결과` : '글방'}
         </h1>
         <div className="flex items-center gap-3">
+          <StatsPageLink href="/writings/stats" />
           <span className="text-[13px] text-[var(--color-text-weak)] font-tabular">{total}편</span>
           <Link
             href="/writings/new"
