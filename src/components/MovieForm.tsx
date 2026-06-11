@@ -9,7 +9,7 @@ import { RatingStars } from './RatingStars'
 import { TagInput } from './TagInput'
 import { MarkdownEditor, type MarkdownEditorHandle } from './MarkdownEditor'
 import { FormActionBar } from './FormActionBar'
-import { deleteOrToast, getEditorMarkdownOrToast, saveJsonOrToast } from './form-helpers'
+import { getEditorMarkdownOrToast, saveJsonOrToast } from './form-helpers'
 import { Toggle } from './Toggle'
 import { ExternalMovieSearchBar, type MovieSelection } from './ExternalMovieSearchBar'
 
@@ -84,14 +84,9 @@ export function MovieForm({ initial, mode }: Props) {
       router.push(`/movies/${data.slug}`)
       router.refresh()
     },
-    onDelete: !initial?.id
-      ? undefined
-      : async () => {
-          if (!(await deleteOrToast(`/api/movies/${initial.id}`))) return
-          toast.success('삭제되었습니다')
-          router.push('/movies')
-          router.refresh()
-        },
+    deleteAction: initial?.id
+      ? { url: `/api/movies/${initial.id}`, redirectTo: '/movies' }
+      : undefined,
   })
   const { handleFormSubmit, router } = crud
 

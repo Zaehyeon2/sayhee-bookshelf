@@ -6,7 +6,7 @@ import type { UseCrudFormReturn } from './useCrudForm'
 
 interface Props {
   mode: 'create' | 'edit'
-  /** edit 모드에서 삭제 버튼 노출 여부 — 보통 `mode === 'edit' && !!initial?.id` */
+  /** 삭제 버튼 노출 여부 — 저장된 리소스가 있을 때만 (보통 `!!initial?.id`) */
   canDelete: boolean
   deleteConfirmTitle: string
   deleteConfirmDescription: string
@@ -45,7 +45,7 @@ export function FormActionBar({
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      {mode === 'edit' && canDelete && (
+      {canDelete && (
         <>
           <button
             type="button"

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import type { z, ZodType } from 'zod'
 import { HttpError } from '@/lib/auth-helpers'
 import { isValidId } from '@/lib/validations'
 
@@ -33,4 +34,31 @@ export async function requireIdParam(params: Promise<{ id: string }>): Promise<n
   const n = Number(id)
   if (!isValidId(n)) throw new HttpError(400, { error: 'invalid id' })
   return n
+}
+
+/**
+ * JSON body를 zod 스키마로 검증. JSON 파싱 실패·검증 실패 시 HttpError(400) throw.
+ * 검증 실패 응답엔 `issues`(flatten)가 포함된다 — withApiHandler 안에서만 사용.
+ */
+export async function requireJsonBody<S extends ZodType>(
+  req: Request,
+  schema: S,
+): Promise<z.output<S>> {
+  const body = await req.json().catch(() => null)
+  const parsed = schema.safeParse(body)
+  if (!parsed.success) {
+    throw new HttpError(400, { error: '입력값이 올바르지 않습니다', issues: parsed.error.flatten() })
+  }
+  return parsed.data
+}
+
+/**
+ * URL search params를 zod 스키마로 검증. 실패 시 HttpError(400) throw —
+ * withApiHandler 안에서만 사용.
+ */
+export function requireQuery<S extends ZodType>(req: Request, schema: S): z.output<S> {
+  const url = new URL(req.url)
+  const parsed = schema.safeParse(Object.fromEntries(url.searchParams))
+  if (!parsed.success) throw new HttpError(400, { error: '잘못된 쿼리 파라미터' })
+  return parsed.data
 }

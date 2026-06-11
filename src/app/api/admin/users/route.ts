@@ -6,7 +6,7 @@ import { users, books } from '@/lib/db/schema'
 import { CreateUserSchema } from '@/lib/validations'
 import { requireAdmin } from '@/lib/auth-helpers'
 import { normalizeUsername } from '@/lib/username-normalize'
-import { withApiHandler } from '@/lib/api-handler'
+import { requireJsonBody, withApiHandler } from '@/lib/api-handler'
 
 export const GET = withApiHandler('listUsers', async () => {
   await requireAdmin()
@@ -58,19 +58,15 @@ export const POST = withApiHandler('createUser', async (req: Request) => {
       { status: 500 },
     )
   }
-  const body = await req.json().catch(() => null)
-  const parsed = CreateUserSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json({ error: '입력값이 올바르지 않습니다' }, { status: 400 })
-  }
-  const normalized = normalizeUsername(parsed.data.username)
+  const input = await requireJsonBody(req, CreateUserSchema)
+  const normalized = normalizeUsername(input.username)
   const hash = await bcrypt.hash(defaultPw, 10)
   try {
     const [inserted] = await db
       .insert(users)
       .values({
         username: normalized,
-        displayName: parsed.data.displayName ?? parsed.data.username.trim(),
+        displayName: input.displayName ?? input.username.trim(),
         passwordHash: hash,
         role: 'member',
         mustChangePassword: 1,

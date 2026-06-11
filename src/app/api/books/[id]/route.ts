@@ -4,7 +4,7 @@ import { db } from '@/lib/db/client'
 import { deleteBook, getBookById, updateBook } from '@/lib/db/queries'
 import { UpdateBookSchema } from '@/lib/validations'
 import { requireOwnBook } from '@/lib/auth-helpers'
-import { requireIdParam, withApiHandler } from '@/lib/api-handler'
+import { requireIdParam, requireJsonBody, withApiHandler } from '@/lib/api-handler'
 import { PUBLIC_FEED_TAGS } from '@/lib/public-feed-cache'
 import { WORKS_BOOK_TAG } from '@/lib/works-detail-cache'
 
@@ -21,15 +21,8 @@ export const GET = withApiHandler('getBook', async (_req: Request, { params }: P
 export const PATCH = withApiHandler('updateBook', async (req: Request, { params }: Params) => {
   const bookId = await requireIdParam(params)
   const { user } = await requireOwnBook(bookId)
-  const body = await req.json().catch(() => null)
-  const parsed = UpdateBookSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: '입력이 유효하지 않습니다', issues: parsed.error.flatten() },
-      { status: 400 },
-    )
-  }
-  const updated = await updateBook(db, user.id, bookId, parsed.data)
+  const input = await requireJsonBody(req, UpdateBookSchema)
+  const updated = await updateBook(db, user.id, bookId, input)
   if (!updated) return NextResponse.json({ error: 'not found' }, { status: 404 })
   revalidateTag(PUBLIC_FEED_TAGS.books, 'max')
   revalidateTag(WORKS_BOOK_TAG, 'max')
