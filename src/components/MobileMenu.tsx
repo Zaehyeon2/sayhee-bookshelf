@@ -70,7 +70,7 @@ export function MobileMenu({ displayName, role }: Props) {
             onClick={close}
             className="block mx-1 px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
           >
-            🎮 게임
+            🎮 내 게임
           </Link>
           <Link
             href="/works"

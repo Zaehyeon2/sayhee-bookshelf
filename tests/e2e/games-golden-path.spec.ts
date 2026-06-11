@@ -19,7 +19,7 @@ test('게임 생성 → 목록 → 수정 → 삭제 golden path', async ({ page
 
   await page.click('button:has-text("등록")')
   // Navigate to game detail page (not /games/new or /games/edit/*)
-  await page.waitForURL(/\/games\/(?!new|edit)/, { timeout: 15_000 })
+  await page.waitForURL(/\/games\/(?!new|edit)/, { timeout: 30_000 })
 
   // 목록 확인
   await page.goto('/games')
@@ -39,7 +39,7 @@ test('게임 생성 → 목록 → 수정 → 삭제 golden path', async ({ page
   await titleInput.fill(`${uniqueTitle} 수정됨`)
   await page.click('button:has-text("수정")')
   // After edit, redirect to game detail
-  await page.waitForURL(/\/games\/(?!new|edit)/, { timeout: 15_000 })
+  await page.waitForURL(/\/games\/(?!new|edit)/, { timeout: 30_000 })
   await expect(page.getByRole('heading', { name: `${uniqueTitle} 수정됨` })).toBeVisible({
     timeout: 10_000,
   })

@@ -17,5 +17,6 @@ export async function login(
   await page.fill('input[autocomplete="username"]', username)
   await page.fill('input[type="password"]', password)
   await page.click('button[type="submit"]')
-  await page.waitForURL((url) => url.pathname === next, { timeout: 10_000 })
+  // 30s: dev 서버가 next 경로를 첫 방문에서 컴파일하는 시간이 워커 경합 시 10s를 넘을 수 있음 (WSL2)
+  await page.waitForURL((url) => url.pathname === next, { timeout: 30_000 })
 }
