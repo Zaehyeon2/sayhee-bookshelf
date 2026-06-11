@@ -24,9 +24,11 @@ export type StatsData =
 
 function Widget({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-[var(--radius-toss-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-toss)]">
-      <h3 className="mb-3 text-sm font-semibold text-[var(--color-text-weak)]">{title}</h3>
-      <div className="h-52">{children}</div>
+    <div className="rounded-[var(--radius-toss-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-toss)] md:p-4">
+      <h3 className="mb-2 text-[13px] font-semibold text-[var(--color-text-weak)] md:mb-3 md:text-sm">
+        {title}
+      </h3>
+      <div className="h-40 md:h-52">{children}</div>
     </div>
   )
 }
@@ -35,7 +37,7 @@ export function StatsDashboard(props: StatsData) {
   if (props.domain === 'writings') {
     const d = props.data
     return (
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4">
         <SummaryCards
           items={[
             { label: '전체 글', value: String(d.summary.total) },
@@ -44,7 +46,7 @@ export function StatsDashboard(props: StatsData) {
             { label: '평균 길이', value: `${Math.round(d.charStats.avgChars).toLocaleString()}자` },
           ]}
         />
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-3 md:grid-cols-2 md:gap-4">
           <Widget title="월별 작성 (최근 12개월)">
             <CountBarChart items={d.monthlyTimeline} />
           </Widget>
@@ -65,7 +67,7 @@ export function StatsDashboard(props: StatsData) {
   const d = props.data
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 md:space-y-4">
       <SummaryCards
         items={[
           { label: '전체 기록', value: String(d.summary.total) },
@@ -73,7 +75,7 @@ export function StatsDashboard(props: StatsData) {
           { label: '평균 별점', value: formatRating(d.summary.avgRating) },
         ]}
       />
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 md:grid-cols-2 md:gap-4">
         <Widget title="별점 분포 (0.5~5)">
           <CountBarChart items={d.ratingDist} />
         </Widget>
