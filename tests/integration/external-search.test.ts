@@ -37,12 +37,17 @@ vi.mock('@/lib/external/books', () => ({
 vi.mock('@/lib/external/movies', () => ({
   searchMoviesExternal: vi.fn(),
 }))
+vi.mock('@/lib/external/games', () => ({
+  searchGamesExternal: vi.fn(),
+}))
 
 import { GET as booksSearch } from '@/app/api/external/books/search/route'
 import { GET as moviesSearch } from '@/app/api/external/movies/search/route'
+import { GET as gamesSearch } from '@/app/api/external/games/search/route'
 import { requireUser } from '@/lib/auth-helpers'
 import { searchBooksExternal } from '@/lib/external/books'
 import { searchMoviesExternal } from '@/lib/external/movies'
+import { searchGamesExternal } from '@/lib/external/games'
 
 const TEST_USER: User = {
   id: 42,
@@ -166,5 +171,83 @@ describe('GET /api/external/movies/search', () => {
     }
     const r = await moviesSearch(req('https://x/api/external/movies/search?q=hi'))
     expect(r.status).toBe(429)
+  })
+})
+
+describe('GET /api/external/games/search', () => {
+  beforeEach(() => {
+    _resetRateLimitForTest()
+    vi.mocked(requireUser).mockReset()
+    vi.mocked(searchGamesExternal).mockReset()
+  })
+
+  it('returns 401 when not authenticated', async () => {
+    vi.mocked(requireUser).mockRejectedValue(
+      new HttpError(401, { error: '로그인이 필요합니다' }),
+    )
+    const r = await gamesSearch(req('https://x/api/external/games/search?q=zelda'))
+    expect(r.status).toBe(401)
+  })
+
+  it('returns normalized items with source=rawg on success', async () => {
+    vi.mocked(requireUser).mockResolvedValue(TEST_USER)
+    vi.mocked(searchGamesExternal).mockResolvedValue([
+      {
+        externalId: 3498,
+        title: 'The Witcher 3: Wild Hunt',
+        byline: '',
+        year: 2015,
+        genre: 'RPG',
+        coverUrl: 'https://media.rawg.io/cover.jpg',
+        externalRating: 9.4,
+      },
+    ])
+    const r = await gamesSearch(req('https://x/api/external/games/search?q=witcher'))
+    expect(r.status).toBe(200)
+    const body = await r.json()
+    expect(body.source).toBe('rawg')
+    expect(body.items).toHaveLength(1)
+    expect(body.items[0].externalId).toBe(3498)
+    expect(body.items[0].title).toBe('The Witcher 3: Wild Hunt')
+    expect(body.items[0].year).toBe(2015)
+    expect(body.items[0].genre).toBe('RPG')
+    expect(body.items[0].externalRating).toBe(9.4)
+    expect(r.headers.get('cache-control')).toContain('private')
+    expect(r.headers.get('cache-control')).toContain('max-age=60')
+  })
+
+  it('returns empty items array when adapter returns empty (4xx from RAWG)', async () => {
+    vi.mocked(requireUser).mockResolvedValue(TEST_USER)
+    vi.mocked(searchGamesExternal).mockResolvedValue([])
+    const r = await gamesSearch(req('https://x/api/external/games/search?q=notfound'))
+    expect(r.status).toBe(200)
+    const body = await r.json()
+    expect(body.source).toBe('rawg')
+    expect(body.items).toHaveLength(0)
+  })
+
+  it('maps RAWG rating ×2 correctly (0-5 → 0-10)', async () => {
+    vi.mocked(requireUser).mockResolvedValue(TEST_USER)
+    // rating 4.7 × 2 = 9.4
+    vi.mocked(searchGamesExternal).mockResolvedValue([
+      { externalId: 1, title: 'Game', byline: '', externalRating: 9.4 },
+    ])
+    const r = await gamesSearch(req('https://x/api/external/games/search?q=game'))
+    expect(r.status).toBe(200)
+    const body = await r.json()
+    expect(body.items[0].externalRating).toBe(9.4)
+  })
+
+  it('returns 400 when q is too short', async () => {
+    vi.mocked(requireUser).mockResolvedValue(TEST_USER)
+    const r = await gamesSearch(req('https://x/api/external/games/search?q=a'))
+    expect(r.status).toBe(400)
+  })
+
+  it('returns 503 when adapter throws', async () => {
+    vi.mocked(requireUser).mockResolvedValue(TEST_USER)
+    vi.mocked(searchGamesExternal).mockRejectedValue(new Error('RAWG upstream 500'))
+    const r = await gamesSearch(req('https://x/api/external/games/search?q=game'))
+    expect(r.status).toBe(503)
   })
 })
