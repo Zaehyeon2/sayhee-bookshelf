@@ -84,8 +84,8 @@ admin으로 로그인 → 우측 메뉴 → "사용자 관리" → "신규 사�
 ## 테스트
 
 ```bash
-pnpm test         # Vitest 단위 + 통합 (292개)
-pnpm e2e          # Playwright E2E (골든패스·공개 피드·작품 검색·통계 패널 등 15 spec)
+pnpm test         # Vitest 단위 + 통합 (286개)
+pnpm e2e          # Playwright E2E (골든패스·공개 피드·작품 검색·통계 패널 등 14 spec / 25 테스트)
 pnpm lint         # Biome check (lint + format 검사)
 pnpm format       # Biome 자동 수정 (safe)
 ```
@@ -172,6 +172,7 @@ src/
 │     └ tags/              ─ 태그 자동완성
 ├ components/
 │  ├ BookCard·Form, MovieCard·Form, WritingCard·Form, GenreBadge, RatingStars·Score, TagInput
+│  ├ useCrudForm·FormActionBar·form-helpers ─ CRUD 폼 공통 (상태 머신·액션 바·fetch 헬퍼)
 │  ├ stats/                ─ StatsPanel(접이식)·StatsDashboard·charts (chart.js lazy)
 │  ├ works/                ─ 작품 검색·상세 카드, RatingDistribution
 │  ├ ExternalBook·MovieSearchBar ─ 외부 메타 자동 채우기
@@ -181,6 +182,7 @@ src/
 ├ lib/
 │  ├ auth.ts / auth-edge.ts ─ bcrypt + HS256 JWT (issuer/audience·tokenVersion·DUMMY_HASH)
 │  ├ auth-helpers.ts        ─ requireUser/Admin/OwnBook/OwnWriting + HttpError
+│  ├ api-handler.ts         ─ API route 공통 (withApiHandler 예외 변환 + body/query/[id] 검증 헬퍼)
 │  ├ db/                    ─ schema + client + queries/ (books·movies·writings·tags·stats·shared)
 │  ├ external/              ─ 외부 API lookup·rate-limit·route-factory
 │  ├ rating.ts              ─ 별점 ÷2 표시 변환 단일 지점 (저장 1~10 → 표시 0.5~5)
@@ -195,7 +197,7 @@ drizzle/                    ─ 마이그레이션 SQL
 tests/
 ├ unit/                     ─ Vitest (auth·validations·blob·uploads/stats 라우트·components 등)
 ├ integration/              ─ Vitest + 실제 libSQL (멀티테넌트 scoping·통계·공개 피드·works 집계)
-└ e2e/                      ─ Playwright (골든패스·공개 피드·작품 검색·통계 패널 등 15 spec)
+└ e2e/                      ─ Playwright (골든패스·공개 피드·작품 검색·통계 패널 등 14 spec)
 docs/superpowers/           ─ 설계서·구현 계획서·plans (히스토리 reference)
 public/fonts/               ─ Pretendard Variable woff2 (로컬 호스팅)
 ```
