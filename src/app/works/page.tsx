@@ -6,10 +6,12 @@ import { getCurrentUser } from '@/lib/auth'
 import { WorksSearchQuerySchema } from '@/lib/validations'
 import { searchBooksExternal } from '@/lib/external/books'
 import { searchMoviesExternal } from '@/lib/external/movies'
+import { searchGamesExternal } from '@/lib/external/games'
 import { logAdapterError } from '@/lib/external/log-error'
 import {
   getBookAggregatesByIsbns,
   getMovieAggregatesByTmdbIds,
+  getGameAggregatesByRawgIds,
 } from '@/lib/db/queries'
 import { WorksSearchBar } from '@/components/works/WorksSearchBar'
 import { WorksSearchCard } from '@/components/works/WorksSearchCard'
@@ -25,7 +27,8 @@ export default async function WorksSearchPage({ searchParams }: SP) {
   const sp = await searchParams
   // type은 q 유무와 독립적으로 결정 — 빈 q로 탭만 전환하는 경우 지원.
   // q가 있을 때만 WorksSearchQuerySchema로 검증(min 1, max 100, trim).
-  const type: 'book' | 'movie' = sp.type === 'movie' ? 'movie' : 'book'
+  const type: 'book' | 'movie' | 'game' =
+    sp.type === 'movie' ? 'movie' : sp.type === 'game' ? 'game' : 'book'
   const parsedQ = WorksSearchQuerySchema.safeParse({ type, q: sp.q ?? '', page: sp.page })
   const q = parsedQ.success ? parsedQ.data.q : ''
 
@@ -48,6 +51,11 @@ export default async function WorksSearchPage({ searchParams }: SP) {
           active={type === 'movie'}
           label="🎬 영화"
         />
+        <TabLink
+          href={`/works?type=game${q ? `&q=${encodeURIComponent(q)}` : ''}`}
+          active={type === 'game'}
+          label="🎮 게임"
+        />
       </div>
 
       <WorksSearchBar type={type} initialQuery={q} />
@@ -58,11 +66,17 @@ export default async function WorksSearchPage({ searchParams }: SP) {
             emoji="🔍"
             title="키워드로 검색해보세요"
             description={
-              type === 'book' ? '제목이나 저자를 입력해보세요' : '영화 제목을 입력해보세요'
+              type === 'book'
+                ? '제목이나 저자를 입력해보세요'
+                : type === 'game'
+                  ? '게임 제목을 입력해보세요'
+                  : '영화 제목을 입력해보세요'
             }
           />
         ) : type === 'book' ? (
           <BookResults q={q} />
+        ) : type === 'game' ? (
+          <GameResults q={q} />
         ) : (
           <MovieResults q={q} />
         )}
@@ -146,6 +160,50 @@ async function MovieResults({ q }: { q: string }) {
         <WorksSearchCard
           key={it.externalId}
           type="movie"
+          externalId={it.externalId}
+          title={it.title}
+          byline={it.byline}
+          year={it.year}
+          coverUrl={it.coverUrl}
+          externalRating={it.externalRating}
+          siteAgg={agg.get(it.externalId) ?? { avg: 0, cnt: 0 }}
+        />
+      ))}
+    </div>
+  )
+}
+
+async function GameResults({ q }: { q: string }) {
+  let items
+  try {
+    items = await searchGamesExternal(q, { limit: 24 })
+  } catch (e) {
+    logAdapterError('works/search', e)
+    return (
+      <EmptyState
+        emoji="📡"
+        title="외부 검색 서비스 일시 불가"
+        description="잠시 후 다시 시도해주세요"
+      />
+    )
+  }
+  if (items.length === 0) {
+    return (
+      <EmptyState
+        emoji="📭"
+        title="검색 결과가 없어요"
+        description={`"${q}"에 대한 게임을 찾지 못했어요`}
+      />
+    )
+  }
+  const rawgIds = Array.from(new Set(items.map((it) => it.externalId)))
+  const agg = await getGameAggregatesByRawgIds(db, rawgIds)
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+      {items.map((it) => (
+        <WorksSearchCard
+          key={it.externalId}
+          type="game"
           externalId={it.externalId}
           title={it.title}
           byline={it.byline}

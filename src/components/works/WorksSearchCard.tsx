@@ -25,11 +25,27 @@ interface MovieCardProps {
   siteAgg: { avg: number; cnt: number }
 }
 
-type Props = BookCardProps | MovieCardProps
+interface GameCardProps {
+  type: 'game'
+  externalId: number
+  title: string
+  byline: string
+  year: number | undefined
+  coverUrl: string | undefined
+  /** RAWG rating (0-5). undefined when no upstream ratings yet. */
+  externalRating: number | undefined
+  siteAgg: { avg: number; cnt: number }
+}
+
+type Props = BookCardProps | MovieCardProps | GameCardProps
 
 export function WorksSearchCard(props: Props) {
   const href =
-    props.type === 'book' ? `/works/book/${props.externalId}` : `/works/movie/${props.externalId}`
+    props.type === 'book'
+      ? `/works/book/${props.externalId}`
+      : props.type === 'game'
+        ? `/works/game/${props.externalId}`
+        : `/works/movie/${props.externalId}`
   return (
     <Link
       href={href}

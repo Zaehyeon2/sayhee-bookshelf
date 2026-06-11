@@ -4,12 +4,14 @@ import { requireUser, HttpError } from '@/lib/auth-helpers'
 import { WorksSearchQuerySchema } from '@/lib/validations'
 import { searchBooksExternal } from '@/lib/external/books'
 import { searchMoviesExternal } from '@/lib/external/movies'
+import { searchGamesExternal } from '@/lib/external/games'
 import { checkRateLimit } from '@/lib/external/rate-limit'
 import { logAdapterError } from '@/lib/external/log-error'
 import { requireQuery } from '@/lib/api-handler'
 import {
   getBookAggregatesByIsbns,
   getMovieAggregatesByTmdbIds,
+  getGameAggregatesByRawgIds,
 } from '@/lib/db/queries'
 
 const PAGE_SIZE = 24
@@ -39,6 +41,16 @@ export async function GET(req: Request) {
         }))
         // NOTE: external search is single-shot (no offset); pagination metadata is
         // included for forward compat but total === items.length until cursor support lands.
+        return NextResponse.json({ items, total: items.length, page, pageSize: PAGE_SIZE, type })
+      }
+      if (type === 'game') {
+        const externalItems = await searchGamesExternal(q, { limit: PAGE_SIZE, signal: ctl.signal })
+        const rawgIds = Array.from(new Set(externalItems.map((it) => it.externalId)))
+        const agg = await getGameAggregatesByRawgIds(db, rawgIds)
+        const items = externalItems.map((it) => ({
+          ...it,
+          siteAgg: agg.get(it.externalId) ?? { avg: 0, cnt: 0 },
+        }))
         return NextResponse.json({ items, total: items.length, page, pageSize: PAGE_SIZE, type })
       }
       const externalItems = await searchMoviesExternal(q, { limit: PAGE_SIZE, signal: ctl.signal })

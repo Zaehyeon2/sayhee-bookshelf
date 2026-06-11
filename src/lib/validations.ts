@@ -231,12 +231,12 @@ export const ListGamesQuerySchema = z.object({
 })
 
 export const FeedQuerySchema = z.object({
-  type: z.enum(['book', 'movie']).default('book'),
+  type: z.enum(['book', 'movie', 'game']).default('book'),
   page: z.coerce.number().int().min(1).max(10_000).optional(),
 })
 
 export const WorksSearchQuerySchema = z.object({
-  type: z.enum(['book', 'movie']).default('book'),
+  type: z.enum(['book', 'movie', 'game']).default('book'),
   q: z.string().trim().min(1).max(MAX_SEARCH_Q),
   page: z.coerce.number().int().min(1).max(10_000).optional(),
 })

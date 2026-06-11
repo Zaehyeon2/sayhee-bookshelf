@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { MAX_SEARCH_Q } from '@/lib/validations'
 
 interface Props {
-  type: 'book' | 'movie'
+  type: 'book' | 'movie' | 'game'
   initialQuery: string
 }
 
@@ -28,11 +28,13 @@ export function WorksSearchBar({ type, initialQuery }: Props) {
     <form onSubmit={onSubmit} className="flex gap-2">
       <input
         type="search"
-        aria-label={type === 'book' ? '책 검색' : '영화 검색'}
+        aria-label={type === 'book' ? '책 검색' : type === 'game' ? '게임 검색' : '영화 검색'}
         value={q}
         onChange={(e) => setQ(e.target.value)}
         maxLength={MAX_SEARCH_Q}
-        placeholder={type === 'book' ? '책 제목·저자 검색' : '영화 제목 검색'}
+        placeholder={
+          type === 'book' ? '책 제목·저자 검색' : type === 'game' ? '게임 제목 검색' : '영화 제목 검색'
+        }
         className="flex-1 h-11 px-4 rounded-[var(--radius-toss)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[14px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
       />
       <button
