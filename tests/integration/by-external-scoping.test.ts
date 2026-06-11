@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { makeTestDb, type TestDb } from '../setup-db'
-import { createBook, createMovie, createUser } from '../factories'
+import { createBook, createGame, createMovie, createUser } from '../factories'
 import type { User } from '@/lib/db/schema'
 
 // db/client은 route에서 module-level singleton으로 import됨.
@@ -25,6 +25,7 @@ vi.mock('@/lib/auth-helpers', async () => {
 
 import { GET as booksByExternal } from '@/app/api/books/by-external/route'
 import { GET as moviesByExternal } from '@/app/api/movies/by-external/route'
+import { GET as gamesByExternal } from '@/app/api/games/by-external/route'
 import { HttpError, requireUser } from '@/lib/auth-helpers'
 
 function req(url: string): Request {
@@ -196,5 +197,91 @@ describe('GET /api/movies/by-external', () => {
     const r = await moviesByExternal(req('https://x/api/movies/by-external?ids=550'))
     const body = await r.json()
     expect(body.counts['550']).toBe(1)
+  })
+})
+
+describe('GET /api/games/by-external', () => {
+  beforeEach(async () => {
+    ;({ db: testDb } = await makeTestDb())
+    vi.mocked(requireUser).mockReset()
+  })
+
+  it('returns 401 when not authenticated', async () => {
+    vi.mocked(requireUser).mockRejectedValue(
+      new HttpError(401, { error: '로그인이 필요합니다' }),
+    )
+    const r = await gamesByExternal(req('https://x/api/games/by-external?ids=1234'))
+    expect(r.status).toBe(401)
+  })
+
+  it('counts only own games by rawgId (numeric, multi-tenant isolation)', async () => {
+    const userA = await createUser(testDb!, { username: 'aaaa' })
+    const userB = await createUser(testDb!, { username: 'bbbb' })
+
+    await createGame(testDb!, userA.id, { rawgId: 1234, title: 'A1' })
+    await createGame(testDb!, userA.id, { rawgId: 1234, title: 'A2' })
+    await createGame(testDb!, userB.id, { rawgId: 1234, title: 'B' })
+
+    vi.mocked(requireUser).mockResolvedValue(asTestUser(userA))
+
+    const r = await gamesByExternal(req('https://x/api/games/by-external?ids=1234,9999'))
+    expect(r.status).toBe(200)
+    const body = await r.json()
+    expect(body.counts['1234']).toBe(2)
+    expect(body.counts['9999']).toBeUndefined()
+  })
+
+  it('다른 유저의 rawgId 기록은 카운트에 미포함', async () => {
+    const userA = await createUser(testDb!, { username: 'gamer-a' })
+    const userB = await createUser(testDb!, { username: 'gamer-b' })
+
+    await createGame(testDb!, userB.id, { rawgId: 5678, title: 'B only' })
+
+    vi.mocked(requireUser).mockResolvedValue(asTestUser(userA))
+
+    const r = await gamesByExternal(req('https://x/api/games/by-external?ids=5678'))
+    expect(r.status).toBe(200)
+    const body = await r.json()
+    expect(body.counts['5678']).toBeUndefined()
+  })
+
+  it('filters out non-numeric ids', async () => {
+    const user = await createUser(testDb!, { username: 'lone' })
+    vi.mocked(requireUser).mockResolvedValue(asTestUser(user))
+
+    const r = await gamesByExternal(req('https://x/api/games/by-external?ids=abc,1234'))
+    expect(r.status).toBe(200)
+    const body = await r.json()
+    expect(body.counts).toEqual({})
+  })
+
+  it('rejects empty ids with 400', async () => {
+    const user = await createUser(testDb!, { username: 'lone' })
+    vi.mocked(requireUser).mockResolvedValue(asTestUser(user))
+
+    const r = await gamesByExternal(req('https://x/api/games/by-external?ids='))
+    expect(r.status).toBe(400)
+  })
+
+  it('rejects non-canonical numeric forms (5e2, 550.0)', async () => {
+    const user = await createUser(testDb!, { username: 'canon-g' })
+    await createGame(testDb!, user.id, { rawgId: 500, title: 'real-500' })
+    await createGame(testDb!, user.id, { rawgId: 550, title: 'real-550' })
+    vi.mocked(requireUser).mockResolvedValue(asTestUser(user))
+
+    const r = await gamesByExternal(req('https://x/api/games/by-external?ids=5e2,550.0'))
+    expect(r.status).toBe(200)
+    const body = await r.json()
+    expect(body.counts).toEqual({})
+  })
+
+  it('accepts canonical positive integers', async () => {
+    const user = await createUser(testDb!, { username: 'canon-g2' })
+    await createGame(testDb!, user.id, { rawgId: 1234, title: 'real-1234' })
+    vi.mocked(requireUser).mockResolvedValue(asTestUser(user))
+
+    const r = await gamesByExternal(req('https://x/api/games/by-external?ids=1234'))
+    const body = await r.json()
+    expect(body.counts['1234']).toBe(1)
   })
 })
