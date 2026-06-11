@@ -1,8 +1,8 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { useCrudForm } from './useCrudForm'
 import { MOVIE_GENRES } from '@/lib/genres'
 import { MAX_CONTENT_LEN } from '@/lib/validations'
 import { RatingStars } from './RatingStars'
@@ -40,13 +40,6 @@ const inputCls =
 const labelCls = 'block text-[13px] font-semibold text-[var(--color-text-muted)] mb-2'
 
 export function MovieForm({ initial, mode }: Props) {
-  const router = useRouter()
-  // useTransition은 async 콜백을 await하지 않아 pending이 fetch 도중에 false로 돌아가서
-  // 중복 제출이 가능했다. 명시적 boolean state로 in-flight 상태를 정확히 추적한다.
-  const [submitting, setSubmitting] = useState(false)
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
-  const [deleting, setDeleting] = useState(false)
-
   const [title, setTitle] = useState(initial?.title ?? '')
   const [director, setDirector] = useState(initial?.director ?? '')
   const [genre, setGenre] = useState(initial?.genre ?? MOVIE_GENRES[0])
@@ -66,11 +59,17 @@ export function MovieForm({ initial, mode }: Props) {
   )
   const editorRef = useRef<MarkdownEditorHandle>(null)
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault()
-    if (submitting) return
-    setSubmitting(true)
-    try {
+  const {
+    submitting,
+    confirmingDelete,
+    deleting,
+    handleFormSubmit,
+    openDeleteConfirm,
+    onConfirmDialogOpenChange,
+    handleDeleteConfirmed,
+    router,
+  } = useCrudForm({
+    onSubmit: async () => {
       const editor = editorRef.current
       const content = editor?.getMarkdown()
       if (content == null) {
@@ -78,7 +77,9 @@ export function MovieForm({ initial, mode }: Props) {
         return
       }
       if (content.length > MAX_CONTENT_LEN) {
-        toast.error(`본문이 너무 깁니다 (${content.length.toLocaleString()} / ${MAX_CONTENT_LEN.toLocaleString()}자)`)
+        toast.error(
+          `본문이 너무 깁니다 (${content.length.toLocaleString()} / ${MAX_CONTENT_LEN.toLocaleString()}자)`,
+        )
         return
       }
       const payload = {
@@ -110,36 +111,28 @@ export function MovieForm({ initial, mode }: Props) {
       toast.success(mode === 'create' ? '등록되었습니다' : '수정되었습니다')
       router.push(`/movies/${data.slug}`)
       router.refresh()
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  async function handleDelete() {
-    if (!initial?.id || deleting) return
-    setDeleting(true)
-    try {
-      const res = await fetch(`/api/movies/${initial.id}`, { method: 'DELETE' })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        toast.error(data.error || '삭제 실패')
-        return
-      }
-      toast.success('삭제되었습니다')
-      router.push('/movies')
-      router.refresh()
-    } finally {
-      setDeleting(false)
-    }
-  }
+    },
+    onDelete: !initial?.id
+      ? undefined
+      : async () => {
+          const res = await fetch(`/api/movies/${initial.id}`, { method: 'DELETE' })
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}))
+            toast.error(data.error || '삭제 실패')
+            return
+          }
+          toast.success('삭제되었습니다')
+          router.push('/movies')
+          router.refresh()
+        },
+  })
 
   return (
-    <form onSubmit={submit} className="space-y-6">
+    <form onSubmit={handleFormSubmit} className="space-y-6">
       <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-toss)] space-y-5">
         <div>
           <label className={labelCls}>
-            작품 검색{' '}
-            <span className="text-[var(--color-text-weak)] font-normal">(선택)</span>
+            작품 검색 <span className="text-[var(--color-text-weak)] font-normal">(선택)</span>
           </label>
           <ExternalMovieSearchBar
             initial={{
@@ -262,18 +255,18 @@ export function MovieForm({ initial, mode }: Props) {
           <>
             <button
               type="button"
-              onClick={() => setConfirmingDelete(true)}
+              onClick={openDeleteConfirm}
               className="mr-auto h-12 px-5 rounded-[var(--radius-toss-sm)] text-[14px] font-semibold text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-danger)]/50"
             >
               삭제
             </button>
             <ConfirmDialog
               open={confirmingDelete}
-              onOpenChange={(open) => !deleting && setConfirmingDelete(open)}
+              onOpenChange={onConfirmDialogOpenChange}
               title="이 영화 기록을 삭제할까요?"
               description={`'${title || '제목 없음'}' 기록이 영구적으로 사라집니다. 되돌릴 수 없어요.`}
               confirmLabel="삭제"
-              onConfirm={handleDelete}
+              onConfirm={handleDeleteConfirmed}
               danger
               loading={deleting}
             />
