@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db/client'
-import { requireUser, HttpError } from '@/lib/auth-helpers'
+import { requireUser } from '@/lib/auth-helpers'
 import { IsbnParamSchema, PageParamSchema } from '@/lib/validations'
 import { canonicalIsbn } from '@/lib/isbn'
 import {
@@ -8,11 +8,13 @@ import {
   countBookReviewsByIsbn,
   getBookRatingDistributionByIsbn,
 } from '@/lib/db/queries'
+import { withApiHandler } from '@/lib/api-handler'
 
 const PAGE_SIZE = 24
 
-export async function GET(req: Request, { params }: { params: Promise<{ isbn: string }> }) {
-  try {
+export const GET = withApiHandler(
+  'getBookReviews',
+  async (req: Request, { params }: { params: Promise<{ isbn: string }> }) => {
     await requireUser()
     const { isbn: rawIsbn } = await params
     const parsedIsbn = IsbnParamSchema.safeParse(rawIsbn)
@@ -37,8 +39,5 @@ export async function GET(req: Request, { params }: { params: Promise<{ isbn: st
       pageSize: PAGE_SIZE,
       distribution,
     })
-  } catch (e) {
-    if (e instanceof HttpError) return e.toResponse()
-    throw e
-  }
-}
+  },
+)

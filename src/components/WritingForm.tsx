@@ -5,8 +5,8 @@ import { toast } from 'sonner'
 import { useCrudForm } from './useCrudForm'
 import { TagInput } from './TagInput'
 import { MarkdownEditor, type MarkdownEditorHandle } from './MarkdownEditor'
-import { ConfirmDialog } from './ConfirmDialog'
-import { Spinner } from './Spinner'
+import { FormActionBar } from './FormActionBar'
+import { deleteOrToast, getEditorMarkdownOrToast, saveJsonOrToast } from './form-helpers'
 import { focusNextOnEnter } from '@/lib/focus-next-on-enter'
 import { MAX_IMAGE_BYTES, ALLOWED_IMAGE_MIME } from '@/lib/image-constraints'
 
@@ -67,23 +67,10 @@ export function WritingForm({ initial, mode }: Props) {
     if (coverInputRef.current) coverInputRef.current.value = ''
   }
 
-  const {
-    submitting,
-    confirmingDelete,
-    deleting,
-    handleFormSubmit,
-    openDeleteConfirm,
-    onConfirmDialogOpenChange,
-    handleDeleteConfirmed,
-    router,
-  } = useCrudForm({
+  const crud = useCrudForm({
     onSubmit: async () => {
-      const editor = editorRef.current
-      const body = editor?.getMarkdown()
-      if (body == null) {
-        toast.error('에디터가 준비되지 않았습니다. 다시 시도해주세요.')
-        return
-      }
+      const body = getEditorMarkdownOrToast(editorRef)
+      if (body == null) return
       // cover 결정: 새 파일 → 업로드 후 URL / 제거 버튼 → null / 변경 없음 → 키 생략
       let coverUrl: string | null | undefined
       // 이번 submit에서 새로 업로드한 URL — 저장 실패 시 보상 삭제에 사용.
@@ -110,14 +97,8 @@ export function WritingForm({ initial, mode }: Props) {
         ...(coverUrl !== undefined && { coverUrl }),
       }
       const url = mode === 'create' ? '/api/writings' : `/api/writings/${initial?.id}`
-      const res = await fetch(url, {
-        method: mode === 'create' ? 'POST' : 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        toast.error(data.error || '저장 실패')
+      const data = await saveJsonOrToast(url, mode === 'create' ? 'POST' : 'PATCH', payload)
+      if (!data) {
         // 이번 submit에서 업로드한 blob이 있으면 고아가 되지 않도록 best-effort 삭제.
         if (uploadedUrl) {
           await fetch('/api/uploads', {
@@ -128,7 +109,6 @@ export function WritingForm({ initial, mode }: Props) {
         }
         return
       }
-      const data = await res.json()
       toast.success(mode === 'create' ? '글이 등록되었습니다' : '글이 수정되었습니다')
       router.push(`/writings/${encodeURIComponent(data.slug)}`)
       router.refresh()
@@ -136,17 +116,13 @@ export function WritingForm({ initial, mode }: Props) {
     onDelete: !initial?.id
       ? undefined
       : async () => {
-          const res = await fetch(`/api/writings/${initial.id}`, { method: 'DELETE' })
-          if (!res.ok) {
-            const data = await res.json().catch(() => ({}))
-            toast.error(data.error || '삭제 실패')
-            return
-          }
+          if (!(await deleteOrToast(`/api/writings/${initial.id}`))) return
           toast.success('삭제되었습니다')
           router.push('/writings')
           router.refresh()
         },
   })
+  const { handleFormSubmit, router } = crud
 
   return (
     <form onSubmit={handleFormSubmit} onKeyDown={focusNextOnEnter} className="space-y-6">
@@ -207,44 +183,14 @@ export function WritingForm({ initial, mode }: Props) {
         <MarkdownEditor ref={editorRef} initialValue={initial?.body ?? ''} maxLength={50_000} />
       </section>
 
-      <div className="flex flex-wrap items-center gap-3">
-        {mode === 'edit' && initial?.id && (
-          <>
-            <button
-              type="button"
-              onClick={openDeleteConfirm}
-              className="mr-auto h-12 px-5 rounded-[var(--radius-toss-sm)] text-[14px] font-semibold text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-danger)]/50"
-            >
-              삭제
-            </button>
-            <ConfirmDialog
-              open={confirmingDelete}
-              onOpenChange={onConfirmDialogOpenChange}
-              title="이 글을 삭제할까요?"
-              description={`'${title || '제목 없음'}' 글이 영구적으로 사라집니다. 되돌릴 수 없어요.`}
-              confirmLabel="삭제"
-              onConfirm={handleDeleteConfirmed}
-              danger
-              loading={deleting}
-            />
-          </>
-        )}
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="h-12 px-5 rounded-[var(--radius-toss-sm)] text-[15px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
-        >
-          취소
-        </button>
-        <button
-          type="submit"
-          disabled={submitting || title.trim().length === 0}
-          className="inline-flex items-center gap-2 h-12 px-6 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[15px] font-semibold hover:bg-[var(--color-toss-blue-hover)] active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
-        >
-          {submitting && <Spinner />}
-          {submitting ? '저장 중' : mode === 'create' ? '등록' : '수정'}
-        </button>
-      </div>
+      <FormActionBar
+        mode={mode}
+        canDelete={!!initial?.id}
+        deleteConfirmTitle="이 글을 삭제할까요?"
+        deleteConfirmDescription={`'${title || '제목 없음'}' 글이 영구적으로 사라집니다. 되돌릴 수 없어요.`}
+        submitDisabled={title.trim().length === 0}
+        form={crud}
+      />
     </form>
   )
 }
