@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import type { BookDashboard, MovieDashboard, WritingDashboard } from '@/lib/stats-types'
+import type { BookDashboard, GameDashboard, MovieDashboard, WritingDashboard } from '@/lib/stats-types'
 import { formatRating } from '@/lib/rating'
 import { Skeleton } from '@/components/Skeleton'
 import { SummaryCards } from './SummaryCards'
@@ -20,6 +20,7 @@ const CountDoughnutChart = dynamic(() => import('./charts').then((m) => m.CountD
 export type StatsData =
   | { domain: 'books'; data: BookDashboard }
   | { domain: 'movies'; data: MovieDashboard }
+  | { domain: 'games'; data: GameDashboard }
   | { domain: 'writings'; data: WritingDashboard }
 
 function Widget({ title, children }: { title: string; children: React.ReactNode }) {
@@ -58,12 +59,19 @@ export function StatsDashboard(props: StatsData) {
     )
   }
 
-  // books/movies는 동형 — 도메인별 차이는 타이틀 2개와 person 필드뿐
+  // books/movies/games는 동형 — 도메인별 차이는 타이틀 2개와 person 필드뿐
   const person =
     props.domain === 'books'
       ? { title: '저자 Top 5', items: props.data.topAuthors }
-      : { title: '감독 Top 5', items: props.data.topDirectors }
-  const timelineTitle = props.domain === 'books' ? '연도별 읽은 수' : '연도별 본 수'
+      : props.domain === 'movies'
+        ? { title: '감독 Top 5', items: props.data.topDirectors }
+        : { title: '개발사 Top 5', items: props.data.topDevelopers }
+  const timelineTitle =
+    props.domain === 'books'
+      ? '연도별 읽은 수'
+      : props.domain === 'movies'
+        ? '연도별 본 수'
+        : '연도별 플레이 수'
   const d = props.data
 
   return (
