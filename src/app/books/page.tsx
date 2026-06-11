@@ -15,6 +15,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { BOOK_GENRES } from '@/lib/genres'
 import { spKey } from '@/lib/sp-key'
 import { ListBooksQuerySchema } from '@/lib/validations'
+import { StatsPageLink } from '@/components/StatsPageLink'
 
 const PAGE_SIZE = 24
 
@@ -36,6 +37,7 @@ export default async function BooksPage({ searchParams }: SP) {
 
   return (
     <div className="space-y-6">
+      <StatsPageLink href="/books/stats" />
       <Suspense fallback={null}>
         <SearchBox />
         <Filters basePath="/books" genres={BOOK_GENRES} />
