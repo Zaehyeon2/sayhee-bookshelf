@@ -68,7 +68,7 @@ export function NavDropdown({ href, label, subItems }: Props) {
                 key={item.href}
                 href={item.href}
                 onClick={close}
-                className="block px-4 py-2.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] hover:bg-[var(--color-surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-toss-blue)]/50"
+                className="block mx-1 px-3 py-2.5 rounded-[var(--radius-toss-sm)] text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] hover:bg-[var(--color-surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-toss-blue)]/50"
               >
                 {item.label}
               </Link>
