@@ -21,14 +21,24 @@ describe('writing cover lifecycle', () => {
 
   it('createWriting persists coverUrl', async () => {
     const a = await createUser(db, { username: 'alice' })
-    const w = await createWriting(db, a.id, { title: '봄', coverUrl: `${BLOB}/1/a.png`, tags: [] })
+    const w = await createWriting(db, a.id, {
+      title: '봄',
+      body: '',
+      coverUrl: `${BLOB}/1/a.png`,
+      tags: [],
+    })
     const got = await getWritingById(db, a.id, w.id)
     expect(got?.coverUrl).toBe(`${BLOB}/1/a.png`)
   })
 
   it('updateWriting replacing cover deletes the old blob', async () => {
     const a = await createUser(db, { username: 'alice' })
-    const w = await createWriting(db, a.id, { title: '봄', coverUrl: `${BLOB}/1/old.png`, tags: [] })
+    const w = await createWriting(db, a.id, {
+      title: '봄',
+      body: '',
+      coverUrl: `${BLOB}/1/old.png`,
+      tags: [],
+    })
     await updateWriting(db, a.id, w.id, { coverUrl: `${BLOB}/1/new.png` })
     expect(deleteBlobIfManaged).toHaveBeenCalledWith(`${BLOB}/1/old.png`)
     const got = await getWritingById(db, a.id, w.id)
@@ -37,7 +47,12 @@ describe('writing cover lifecycle', () => {
 
   it('updateWriting removing cover (null) deletes old blob and stores null', async () => {
     const a = await createUser(db, { username: 'alice' })
-    const w = await createWriting(db, a.id, { title: '봄', coverUrl: `${BLOB}/1/old.png`, tags: [] })
+    const w = await createWriting(db, a.id, {
+      title: '봄',
+      body: '',
+      coverUrl: `${BLOB}/1/old.png`,
+      tags: [],
+    })
     await updateWriting(db, a.id, w.id, { coverUrl: null })
     expect(deleteBlobIfManaged).toHaveBeenCalledWith(`${BLOB}/1/old.png`)
     const got = await getWritingById(db, a.id, w.id)
@@ -46,7 +61,12 @@ describe('writing cover lifecycle', () => {
 
   it('updateWriting without coverUrl key leaves cover untouched, no del', async () => {
     const a = await createUser(db, { username: 'alice' })
-    const w = await createWriting(db, a.id, { title: '봄', coverUrl: `${BLOB}/1/keep.png`, tags: [] })
+    const w = await createWriting(db, a.id, {
+      title: '봄',
+      body: '',
+      coverUrl: `${BLOB}/1/keep.png`,
+      tags: [],
+    })
     await updateWriting(db, a.id, w.id, { title: '여름' })
     expect(deleteBlobIfManaged).not.toHaveBeenCalled()
     const got = await getWritingById(db, a.id, w.id)
@@ -55,7 +75,12 @@ describe('writing cover lifecycle', () => {
 
   it('deleteWriting removes the cover blob', async () => {
     const a = await createUser(db, { username: 'alice' })
-    const w = await createWriting(db, a.id, { title: '봄', coverUrl: `${BLOB}/1/x.png`, tags: [] })
+    const w = await createWriting(db, a.id, {
+      title: '봄',
+      body: '',
+      coverUrl: `${BLOB}/1/x.png`,
+      tags: [],
+    })
     await deleteWriting(db, a.id, w.id)
     expect(deleteBlobIfManaged).toHaveBeenCalledWith(`${BLOB}/1/x.png`)
   })
@@ -63,7 +88,12 @@ describe('writing cover lifecycle', () => {
   it('cross-user updateWriting cannot touch another user cover', async () => {
     const a = await createUser(db, { username: 'alice' })
     const b = await createUser(db, { username: 'bob' })
-    const w = await createWriting(db, a.id, { title: '봄', coverUrl: `${BLOB}/1/x.png`, tags: [] })
+    const w = await createWriting(db, a.id, {
+      title: '봄',
+      body: '',
+      coverUrl: `${BLOB}/1/x.png`,
+      tags: [],
+    })
     const res = await updateWriting(db, b.id, w.id, { coverUrl: `${BLOB}/2/hijack.png` })
     expect(res).toBeNull()
     expect(deleteBlobIfManaged).not.toHaveBeenCalled()
@@ -72,7 +102,12 @@ describe('writing cover lifecycle', () => {
   it('cross-user deleteWriting cannot delete another user writing or its blob', async () => {
     const a = await createUser(db, { username: 'alice' })
     const b = await createUser(db, { username: 'bob' })
-    const w = await createWriting(db, a.id, { title: '봄', coverUrl: `${BLOB}/1/x.png`, tags: [] })
+    const w = await createWriting(db, a.id, {
+      title: '봄',
+      body: '',
+      coverUrl: `${BLOB}/1/x.png`,
+      tags: [],
+    })
     expect(await deleteWriting(db, b.id, w.id)).toBe(false)
     expect(deleteBlobIfManaged).not.toHaveBeenCalled()
     // owner can still delete

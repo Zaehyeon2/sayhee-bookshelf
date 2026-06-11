@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/auth'
+import { FreshOnVisible } from '@/components/FreshOnVisible'
 import { ProfileForm } from '@/components/ProfileForm'
 
 export default async function ProfileSettingsPage() {
@@ -11,7 +12,9 @@ export default async function ProfileSettingsPage() {
       <p className="text-[13px] text-[var(--color-text-muted)]">
         서재 제목과 화면에 표시되는 이름입니다.
       </p>
-      <ProfileForm initialDisplayName={me.displayName} />
+      <FreshOnVisible>
+        <ProfileForm initialDisplayName={me.displayName} />
+      </FreshOnVisible>
     </div>
   )
 }

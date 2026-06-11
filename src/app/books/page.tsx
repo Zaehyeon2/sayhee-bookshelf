@@ -136,12 +136,12 @@ async function BooksResults({ sp, userId }: { sp: Awaited<SP['searchParams']>; u
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             {books.map((b) => {
-              const matchesMeta = isSearch
-                ? b.title.toLowerCase().includes(q.toLowerCase()) ||
-                  b.author.toLowerCase().includes(q.toLowerCase())
-                : true
-              const snippet =
-                isSearch && !matchesMeta ? (excerpt(b.content, q) ?? undefined) : undefined
+              // 검색어가 제목·저자에 안 잡히면 본문 매치 — 그때만 발췌 스니펫 표시
+              const matchesMeta =
+                !isSearch ||
+                b.title.toLowerCase().includes(q.toLowerCase()) ||
+                b.author.toLowerCase().includes(q.toLowerCase())
+              const snippet = matchesMeta ? undefined : (excerpt(b.content, q) ?? undefined)
               return (
                 <BookCard key={b.id} book={b} snippet={snippet} query={isSearch ? q : undefined} />
               )

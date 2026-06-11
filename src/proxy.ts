@@ -94,17 +94,16 @@ export async function proxy(req: NextRequest) {
   return NextResponse.next()
 }
 
-// /_next, 정적 자산, favicon, login 페이지 등을 제외한 모든 라우트를 보호.
-// /api/** 도 포함하므로 모든 mutation 엔드포인트가 edge에서 한 번 더 게이트된다.
+// Negative catch-all: 명시적으로 제외한 경로 외 모든 라우트를 보호한다.
+// 세그먼트 allowlist 방식은 새 top-level 라우트 추가 시 누락되면 게이트를 조용히
+// 우회하므로, 제외 목록만 관리하는 방식으로 전환.
+//
+// 제외 대상 (이외 전부 매칭):
+// - `/` (root)        — 비로그인 랜딩 페이지, page.tsx가 자체 분기
+// - `/login`          — 로그인 페이지 (단, /api/login은 매칭되어 CSRF 검사 통과 필요)
+// - `/_next/*`        — Next 내부 자산
+// - 점(.) 포함 경로    — favicon.ico, *.svg 등 정적 파일. slug에 점이 들어가는
+//                       극단 케이스는 페이지 레벨 requireOwn*ForPage가 여전히 방어.
 export const config = {
-  matcher: [
-    '/feed/:path*',
-    '/books/:path*',
-    '/movies/:path*',
-    '/writings/:path*',
-    '/works/:path*',
-    '/admin/:path*',
-    '/settings/:path*',
-    '/api/:path*',
-  ],
+  matcher: ['/((?!_next/|login$|.*\\..*).+)'],
 }

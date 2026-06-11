@@ -1,8 +1,8 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { useCrudForm } from './useCrudForm'
 import { TagInput } from './TagInput'
 import { MarkdownEditor, type MarkdownEditorHandle } from './MarkdownEditor'
 import { ConfirmDialog } from './ConfirmDialog'
@@ -28,13 +28,6 @@ const inputCls =
 const labelCls = 'block text-[13px] font-semibold text-[var(--color-text-muted)] mb-2'
 
 export function WritingForm({ initial, mode }: Props) {
-  const router = useRouter()
-  // BookForm과 동일한 사유로 useTransition 대신 명시적 boolean state 사용 — async 콜백이
-  // await되지 않는 transition 동작으로 인한 중복 제출 방지.
-  const [submitting, setSubmitting] = useState(false)
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
-  const [deleting, setDeleting] = useState(false)
-
   const [title, setTitle] = useState(initial?.title ?? '')
   const [tags, setTags] = useState<string[]>(initial?.tags ?? [])
   const editorRef = useRef<MarkdownEditorHandle>(null)
@@ -74,11 +67,17 @@ export function WritingForm({ initial, mode }: Props) {
     if (coverInputRef.current) coverInputRef.current.value = ''
   }
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault()
-    if (submitting) return
-    setSubmitting(true)
-    try {
+  const {
+    submitting,
+    confirmingDelete,
+    deleting,
+    handleFormSubmit,
+    openDeleteConfirm,
+    onConfirmDialogOpenChange,
+    handleDeleteConfirmed,
+    router,
+  } = useCrudForm({
+    onSubmit: async () => {
       const editor = editorRef.current
       const body = editor?.getMarkdown()
       if (body == null) {
@@ -133,31 +132,24 @@ export function WritingForm({ initial, mode }: Props) {
       toast.success(mode === 'create' ? '글이 등록되었습니다' : '글이 수정되었습니다')
       router.push(`/writings/${encodeURIComponent(data.slug)}`)
       router.refresh()
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  async function handleDelete() {
-    if (!initial?.id || deleting) return
-    setDeleting(true)
-    try {
-      const res = await fetch(`/api/writings/${initial.id}`, { method: 'DELETE' })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        toast.error(data.error || '삭제 실패')
-        return
-      }
-      toast.success('삭제되었습니다')
-      router.push('/writings')
-      router.refresh()
-    } finally {
-      setDeleting(false)
-    }
-  }
+    },
+    onDelete: !initial?.id
+      ? undefined
+      : async () => {
+          const res = await fetch(`/api/writings/${initial.id}`, { method: 'DELETE' })
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}))
+            toast.error(data.error || '삭제 실패')
+            return
+          }
+          toast.success('삭제되었습니다')
+          router.push('/writings')
+          router.refresh()
+        },
+  })
 
   return (
-    <form onSubmit={submit} onKeyDown={focusNextOnEnter} className="space-y-6">
+    <form onSubmit={handleFormSubmit} onKeyDown={focusNextOnEnter} className="space-y-6">
       <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-toss)] space-y-5">
         <div>
           <label className={labelCls}>제목</label>
@@ -220,18 +212,18 @@ export function WritingForm({ initial, mode }: Props) {
           <>
             <button
               type="button"
-              onClick={() => setConfirmingDelete(true)}
+              onClick={openDeleteConfirm}
               className="mr-auto h-12 px-5 rounded-[var(--radius-toss-sm)] text-[14px] font-semibold text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-danger)]/50"
             >
               삭제
             </button>
             <ConfirmDialog
               open={confirmingDelete}
-              onOpenChange={(open) => !deleting && setConfirmingDelete(open)}
+              onOpenChange={onConfirmDialogOpenChange}
               title="이 글을 삭제할까요?"
               description={`'${title || '제목 없음'}' 글이 영구적으로 사라집니다. 되돌릴 수 없어요.`}
               confirmLabel="삭제"
-              onConfirm={handleDelete}
+              onConfirm={handleDeleteConfirmed}
               danger
               loading={deleting}
             />
