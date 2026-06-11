@@ -40,9 +40,9 @@ ESLint 없음 — **Biome 단독**. `npm run lint` 같은 이전 명령은 더 �
 
 **유일한 예외 = 공개 피드**: `listRecentPublicBooks/Movies`·works 집계만 `authorUserId` 필터 없음. 이들은 반드시 `isPublic = 1 AND publishedAt IS NOT NULL` 조건 — 이 조건 없는 cross-user 쿼리는 무조건 버그.
 
-### 2. Middleware (`src/middleware.ts`)
+### 2. Proxy (`src/proxy.ts`)
 
-**`proxy.ts` 아님.** README의 옛 표기를 신뢰하지 말 것.
+Next 16.2.9부터 `middleware` 파일 컨벤션이 deprecated되어 `proxy`로 개명됨 (파일명 + export 함수명 `proxy`). 과거 커밋/문서의 `middleware.ts` 표기는 같은 파일의 옛 이름.
 
 3-layer 게이트 (순서대로):
 1. **CSRF** — POST/PUT/PATCH/DELETE는 `Origin` (없으면 `Referer`) host가 request host와 같아야 함. 다르면 즉시 403.
@@ -115,7 +115,7 @@ src/
 │  ├ blob.ts / image-constraints.ts  Vercel Blob 업로드·제약
 │  ├ public-feed-cache.ts / works-detail-cache.ts
 │  ├ excerpt.ts, highlight.tsx, slug.ts, genres.ts, isbn.ts, username-normalize.ts
-└ middleware.ts                      CSRF + 세션 + mcp 게이트
+└ proxy.ts                           CSRF + 세션 + mcp 게이트 (구 middleware.ts)
 ```
 
 ## DB 스키마 요약

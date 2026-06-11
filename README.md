@@ -17,7 +17,7 @@
 - **삭제 모달** — Radix Dialog 기반 focus-trap·Esc·backdrop 모달
 - **토스트 피드백** — sonner (등록/수정/삭제 알림)
 - **다크모드** — 시스템/라이트/다크 3-state 수동 토글, OS 자동 추종, 0-FOUC inline 부트스트랩
-- **인증** — bcrypt + HS256 JWT 쿠키 (issuer/audience 검증) + Next.js middleware (CSRF Origin/Referer 차단·세션 검증·mcp 강제 변경)
+- **인증** — bcrypt + HS256 JWT 쿠키 (issuer/audience 검증) + Next.js proxy (CSRF Origin/Referer 차단·세션 검증·mcp 강제 변경)
 - **세션 무효화** — `users.tokenVersion` + JWT `tv` 클레임 매칭 — 비번 변경/admin 리셋 시 이전 토큰 자동 거절
 - **권한** — 본인 책/영화/글만 읽기/쓰기/수정/삭제. admin은 사용자 관리(`/admin/users`)와 비번 reset 추가 가능 (마지막 admin 삭제 방지)
 - **사용자 관리** — admin이 신규 멤버 생성, 기본 비밀번호로 첫 로그인 → 강제 변경, 비번 reset 지원, `/settings/password`·`/settings/profile`
@@ -189,7 +189,7 @@ src/
 │  ├ blob.ts, image-constraints.ts ─ Vercel Blob 업로드·제약
 │  ├ excerpt.ts, highlight.tsx, slug.ts, genres.ts, isbn.ts, validations.ts, username-normalize.ts
 │  └ public-feed-cache.ts, works-detail-cache.ts
-└ middleware.ts             ─ CSRF (Origin/Referer) + 세션 검증 + mcp 강제 변경 게이트
+└ proxy.ts                  ─ CSRF (Origin/Referer) + 세션 검증 + mcp 강제 변경 게이트
 
 drizzle/                    ─ 마이그레이션 SQL
 tests/
