@@ -98,11 +98,14 @@ src/
 │  ├ admin/users/, settings/, login/
 │  └ page.tsx                        홈 (getUserStats 단일 쿼리, KST 연도)
 ├ components/                        BookForm/MovieForm/WritingForm/MarkdownEditor 등
+│  │                                 CRUD 폼 = useCrudForm(onSubmit·deleteAction) + FormActionBar
+│  │                                 + form-helpers(getEditorMarkdownOrToast/saveJsonOrToast) 조합
 │  ├ stats/                          StatsPanel(접이식)/StatsDashboard/charts(chart.js lazy)
 │  └ works/                          공개 작품 상세·검색 카드
 ├ lib/
 │  ├ auth.ts / auth-edge.ts          bcrypt + jose HS256 JWT (DUMMY_HASH timing guard)
 │  ├ auth-helpers.ts                 requireUser/Admin/OwnBook/OwnWriting + HttpError
+│  ├ api-handler.ts                  withApiHandler + requireIdParam/JsonBody/Query (Validation 섹션 참고)
 │  ├ db/
 │  │  ├ schema.ts                    users, books, movies, writings, tags, *_tags
 │  │  ├ queries.ts                   barrel — 실제 구현은 queries/{books,movies,writings,tags,stats,shared}.ts
@@ -137,6 +140,12 @@ src/
 `src/lib/validations.ts`에 zod 스키마 집합. API/form 양쪽에서 동일 스키마 재사용 — 라우트에서 직접 zod chain을 새로 만들지 말 것.
 
 페이지네이션은 `paginationSchema` (limit/offset 검증) + 리스트 쿼리는 `count*` 함수로 total 별도 조회. 검색/필터 파라미터를 `count*`에 **반드시 같이 전달** — 안 그러면 페이지네이션 totalPages가 어긋남.
+
+### API route 작성 패턴
+
+핸들러는 `withApiHandler(label, handler)`(`src/lib/api-handler.ts`)로 감싼다 — HttpError→JSON 변환 + 500 fallback 담당. body는 `requireJsonBody(req, schema)`, query는 `requireQuery(req, schema)`, `[id]` 세그먼트는 `requireIdParam(params)` — 전부 실패 시 HttpError(400) throw. 라우트에 try/catch·safeParse 400 분기 직접 작성 금지.
+
+**wrapper 미적용 예외 (건드릴 때 주의)**: `login`(HttpError 변환 경로 없음 — throw하면 미처리 500), `works/search`·`external/*/lookup`(logAdapterError+503 자체 catch), `users/me/password` body 검증(`issues[0].message`를 응답으로 쓰는 특수 shape), `*/by-external` 쿼리(커스텀 파라미터 shape).
 
 ## 테스트
 
