@@ -107,8 +107,8 @@ async function BooksResults({ sp, userId }: { sp: Awaited<SP['searchParams']>; u
       <div className="flex items-baseline justify-between">
         <h2 className="text-[22px] font-bold text-[var(--color-text-strong)]">{title}</h2>
         <div className="flex items-center gap-3">
-          <StatsPageLink href="/books/stats" />
           <span className="text-[13px] text-[var(--color-text-weak)] font-tabular">{total}권</span>
+          <StatsPageLink href="/books/stats" />
           <Link
             href="/books/new"
             className="inline-flex items-center h-9 px-3 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[13px] font-semibold hover:bg-[var(--color-toss-blue-hover)] active:scale-[0.97] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
