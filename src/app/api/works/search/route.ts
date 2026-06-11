@@ -6,6 +6,7 @@ import { searchBooksExternal } from '@/lib/external/books'
 import { searchMoviesExternal } from '@/lib/external/movies'
 import { checkRateLimit } from '@/lib/external/rate-limit'
 import { logAdapterError } from '@/lib/external/log-error'
+import { requireQuery } from '@/lib/api-handler'
 import {
   getBookAggregatesByIsbns,
   getMovieAggregatesByTmdbIds,
@@ -17,12 +18,7 @@ const TIMEOUT_MS = 5000
 export async function GET(req: Request) {
   try {
     const user = await requireUser()
-    const url = new URL(req.url)
-    const parsed = WorksSearchQuerySchema.safeParse(Object.fromEntries(url.searchParams))
-    if (!parsed.success) {
-      return NextResponse.json({ error: '잘못된 검색 요청' }, { status: 400 })
-    }
-    const { type, q, page = 1 } = parsed.data
+    const { type, q, page = 1 } = requireQuery(req, WorksSearchQuerySchema)
     const limited = checkRateLimit(user.id)
     if (!limited.ok) {
       return NextResponse.json(

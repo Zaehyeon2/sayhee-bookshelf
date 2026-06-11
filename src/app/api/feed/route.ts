@@ -8,18 +8,13 @@ import {
 } from '@/lib/db/queries'
 import { FeedQuerySchema } from '@/lib/validations'
 import { requireUser } from '@/lib/auth-helpers'
-import { withApiHandler } from '@/lib/api-handler'
+import { requireQuery, withApiHandler } from '@/lib/api-handler'
 
 const PAGE_SIZE = 24
 
 export const GET = withApiHandler('getFeed', async (req: Request) => {
   await requireUser()
-  const url = new URL(req.url)
-  const parsed = FeedQuerySchema.safeParse(Object.fromEntries(url.searchParams))
-  if (!parsed.success) {
-    return NextResponse.json({ error: '잘못된 쿼리 파라미터' }, { status: 400 })
-  }
-  const { type, page } = parsed.data
+  const { type, page } = requireQuery(req, FeedQuerySchema)
   const currentPage = page ?? 1
   const offset = (currentPage - 1) * PAGE_SIZE
 
