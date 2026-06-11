@@ -2,7 +2,7 @@ import { and, desc, eq, sql } from 'drizzle-orm'
 import { writings, writingTags, tags } from '../schema'
 import { toSlug } from '@/lib/slug'
 import type { CreateWritingInput, UpdateWritingInput } from '@/lib/validations'
-import { escapeLikePattern, isWritingSlugUniqueViolation } from './shared'
+import { escapeLikePattern, insertWithSlugRetry, isWritingSlugUniqueViolation } from './shared'
 import type { Db, WritingWithTags } from './shared'
 import { attachWritingTags, attachWritingTagsBatch, replaceWritingTagsTx } from './tags'
 import { deleteBlobIfManaged } from '@/lib/blob'
@@ -15,39 +15,31 @@ export async function createWriting(
   const base = toSlug(input.title)
   const now = Date.now()
 
-  for (let i = 0; i < 100; i++) {
-    const candidate = i === 0 ? base : `${base}-${i + 1}`
-    try {
-      const result = await db.transaction(async (tx) => {
-        const inserted = await tx
-          .insert(writings)
-          .values({
-            authorUserId,
-            title: input.title,
-            body: input.body ?? '',
-            coverUrl: input.coverUrl ?? null,
-            slug: candidate,
-            createdAt: now,
-            updatedAt: now,
-          })
-          .returning()
+  return insertWithSlugRetry(base, isWritingSlugUniqueViolation, (slug) =>
+    db.transaction(async (tx) => {
+      const inserted = await tx
+        .insert(writings)
+        .values({
+          authorUserId,
+          title: input.title,
+          body: input.body ?? '',
+          coverUrl: input.coverUrl ?? null,
+          slug,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .returning()
 
-        const writing = inserted[0]
-        await replaceWritingTagsTx(tx, writing.id, input.tags ?? [])
-        const tagRows = await tx
-          .select({ name: tags.name })
-          .from(writingTags)
-          .innerJoin(tags, eq(writingTags.tagId, tags.id))
-          .where(eq(writingTags.writingId, writing.id))
-        return { ...writing, tags: tagRows.map((r) => r.name) }
-      })
-      return result
-    } catch (e) {
-      if (isWritingSlugUniqueViolation(e)) continue
-      throw e
-    }
-  }
-  throw new Error(`Could not generate unique slug after 100 attempts for title: ${input.title}`)
+      const writing = inserted[0]
+      await replaceWritingTagsTx(tx, writing.id, input.tags ?? [])
+      const tagRows = await tx
+        .select({ name: tags.name })
+        .from(writingTags)
+        .innerJoin(tags, eq(writingTags.tagId, tags.id))
+        .where(eq(writingTags.writingId, writing.id))
+      return { ...writing, tags: tagRows.map((r) => r.name) }
+    }),
+  )
 }
 
 export async function updateWriting(

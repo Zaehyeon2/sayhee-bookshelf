@@ -61,3 +61,60 @@ export const isWritingSlugUniqueViolation = (e: unknown) =>
 
 export const isMovieSlugUniqueViolation = (e: unknown) =>
   isTableSlugViolation(e, 'idx_movies_user_slug', 'movies')
+
+/**
+ * slug 충돌 retry 루프 공통 헬퍼.
+ * baseSlug에서 시작해 충돌 시 `-2`, `-3`... 을 붙여 최대 100회 재시도.
+ * attempt 클로저 안에서 실제 INSERT가 이뤄지므로 drizzle 동적 테이블 제네릭 없이
+ * 각 도메인 파일에서 완전한 타입 추론을 유지한다.
+ */
+export async function insertWithSlugRetry<T>(
+  baseSlug: string,
+  isViolation: (e: unknown) => boolean,
+  attempt: (slug: string) => Promise<T>,
+): Promise<T> {
+  for (let i = 0; i < 100; i++) {
+    const candidate = i === 0 ? baseSlug : `${baseSlug}-${i + 1}`
+    try {
+      return await attempt(candidate)
+    } catch (e) {
+      if (isViolation(e)) continue
+      throw e
+    }
+  }
+  throw new Error(`Could not generate unique slug after 100 attempts`)
+}
+
+// ─── rating distribution ────────────────────────────────────────────────────
+
+export type RatingDistribution = {
+  avg: number
+  cnt: number
+  buckets: Record<number, number> // keys 1..10
+}
+
+/**
+ * rating/count 행 배열에서 1-10 버킷 채우기 + 가중 평균 계산.
+ * SQL 쿼리는 각 도메인 파일에서 직접 수행하고, 결과 후처리만 이 함수에서 담당한다.
+ */
+export function computeRatingDistribution(
+  rows: { rating: unknown; cnt: unknown }[],
+): RatingDistribution {
+  const buckets: Record<number, number> = {}
+  for (let r = 1; r <= 10; r++) buckets[r] = 0
+  let total = 0
+  let weightedSum = 0
+  for (const row of rows) {
+    const r = Number(row.rating)
+    const c = Number(row.cnt)
+    if (r < 1 || r > 10 || !Number.isInteger(r)) continue
+    buckets[r] = c
+    total += c
+    weightedSum += r * c
+  }
+  return {
+    avg: total === 0 ? 0 : weightedSum / total,
+    cnt: total,
+    buckets,
+  }
+}

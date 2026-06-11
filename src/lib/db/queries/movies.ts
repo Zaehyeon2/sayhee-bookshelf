@@ -1,10 +1,15 @@
+import { cache } from 'react'
 import { and, count, desc, eq, inArray, isNotNull, like, sql } from 'drizzle-orm'
 import { movies, movieTags, tags, users } from '../schema'
 import { toSlug } from '@/lib/slug'
 import type { CreateMovieInput, UpdateMovieInput } from '@/lib/validations'
-import type { RatingDistribution } from './books'
-import { escapeLikePattern, isMovieSlugUniqueViolation } from './shared'
-import type { Db, MovieWithTags } from './shared'
+import {
+  computeRatingDistribution,
+  escapeLikePattern,
+  insertWithSlugRetry,
+  isMovieSlugUniqueViolation,
+} from './shared'
+import type { Db, MovieWithTags, RatingDistribution } from './shared'
 import { attachMovieTags, attachTagsToMoviesBatch, replaceMovieTagsTx } from './tags'
 
 export type PublicMovieCard = {
@@ -38,51 +43,43 @@ export async function createMovie(
   const base = toSlug(input.title)
   const now = Date.now()
 
-  for (let i = 0; i < 100; i++) {
-    const candidate = i === 0 ? base : `${base}-${i + 1}`
-    try {
-      // movie INSERT + tags 교체를 단일 트랜잭션으로 묶어 중간 실패 시 부분 상태가 남지 않게 함.
-      const result = await db.transaction(async (tx) => {
-        const isPublic = input.isPublic ? 1 : 0
-        const publishedAt = isPublic === 1 ? now : null
-        const inserted = await tx
-          .insert(movies)
-          .values({
-            authorUserId,
-            title: input.title,
-            director: input.director,
-            genre: input.genre,
-            watchedDate: input.watchedDate,
-            rating: input.rating,
-            content: input.content ?? '',
-            oneLineReview: input.oneLineReview ?? null,
-            tmdbId: input.tmdbId ?? null,
-            coverUrl: input.coverUrl ?? null,
-            externalSource: input.externalSource ?? null,
-            isPublic,
-            publishedAt,
-            slug: candidate,
-            createdAt: now,
-            updatedAt: now,
-          })
-          .returning()
+  // movie INSERT + tags 교체를 단일 트랜잭션으로 묶어 중간 실패 시 부분 상태가 남지 않게 함.
+  return insertWithSlugRetry(base, isMovieSlugUniqueViolation, (slug) =>
+    db.transaction(async (tx) => {
+      const isPublic = input.isPublic ? 1 : 0
+      const publishedAt = isPublic === 1 ? now : null
+      const inserted = await tx
+        .insert(movies)
+        .values({
+          authorUserId,
+          title: input.title,
+          director: input.director,
+          genre: input.genre,
+          watchedDate: input.watchedDate,
+          rating: input.rating,
+          content: input.content ?? '',
+          oneLineReview: input.oneLineReview ?? null,
+          tmdbId: input.tmdbId ?? null,
+          coverUrl: input.coverUrl ?? null,
+          externalSource: input.externalSource ?? null,
+          isPublic,
+          publishedAt,
+          slug,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .returning()
 
-        const movie = inserted[0]
-        await replaceMovieTagsTx(tx, movie.id, input.tags ?? [])
-        const tagRows = await tx
-          .select({ name: tags.name })
-          .from(movieTags)
-          .innerJoin(tags, eq(movieTags.tagId, tags.id))
-          .where(eq(movieTags.movieId, movie.id))
-        return { ...movie, tags: tagRows.map((r) => r.name) }
-      })
-      return result
-    } catch (e) {
-      if (isMovieSlugUniqueViolation(e)) continue
-      throw e
-    }
-  }
-  throw new Error(`Could not generate unique slug after 100 attempts for title: ${input.title}`)
+      const movie = inserted[0]
+      await replaceMovieTagsTx(tx, movie.id, input.tags ?? [])
+      const tagRows = await tx
+        .select({ name: tags.name })
+        .from(movieTags)
+        .innerJoin(tags, eq(movieTags.tagId, tags.id))
+        .where(eq(movieTags.movieId, movie.id))
+      return { ...movie, tags: tagRows.map((r) => r.name) }
+    }),
+  )
 }
 
 export async function updateMovie(
@@ -155,21 +152,20 @@ export async function deleteMovie(db: Db, authorUserId: number, id: number): Pro
   return result.length > 0
 }
 
-export async function getMovieBySlug(
-  db: Db,
-  authorUserId: number,
-  slug: string,
-): Promise<MovieWithTags | null> {
-  const rows = await db
-    .select()
-    .from(movies)
-    .where(and(eq(movies.slug, slug), eq(movies.authorUserId, authorUserId)))
-    .limit(1)
-  if (rows.length === 0) return null
-  const movie = rows[0]
-  const tagNames = await attachMovieTags(db, movie.id)
-  return { ...movie, tags: tagNames }
-}
+// cache(): generateMetadata와 페이지 본문이 같은 요청에서 각각 호출해도 DB 왕복 1회로 dedupe
+export const getMovieBySlug = cache(
+  async (db: Db, authorUserId: number, slug: string): Promise<MovieWithTags | null> => {
+    const rows = await db
+      .select()
+      .from(movies)
+      .where(and(eq(movies.slug, slug), eq(movies.authorUserId, authorUserId)))
+      .limit(1)
+    if (rows.length === 0) return null
+    const movie = rows[0]
+    const tagNames = await attachMovieTags(db, movie.id)
+    return { ...movie, tags: tagNames }
+  },
+)
 
 export async function getMovieById(
   db: Db,
@@ -531,17 +527,5 @@ export async function getMovieRatingDistributionByTmdbId(
     .from(movies)
     .where(and(eq(movies.isPublic, 1), isNotNull(movies.publishedAt), eq(movies.tmdbId, tmdbId)))
     .groupBy(movies.rating)
-  const buckets: Record<number, number> = {}
-  for (let r = 1; r <= 10; r++) buckets[r] = 0
-  let total = 0
-  let weightedSum = 0
-  for (const row of rows) {
-    const r = Number(row.rating)
-    const c = Number(row.cnt)
-    if (r < 1 || r > 10 || !Number.isInteger(r)) continue
-    buckets[r] = c
-    total += c
-    weightedSum += r * c
-  }
-  return { avg: total === 0 ? 0 : weightedSum / total, cnt: total, buckets }
+  return computeRatingDistribution(rows)
 }

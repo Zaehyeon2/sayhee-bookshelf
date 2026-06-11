@@ -1,9 +1,15 @@
+import { cache } from 'react'
 import { and, count, desc, eq, inArray, isNotNull, like, sql } from 'drizzle-orm'
 import { books, bookTags, tags, users } from '../schema'
 import { toSlug } from '@/lib/slug'
 import type { CreateBookInput, UpdateBookInput } from '@/lib/validations'
-import { escapeLikePattern, isSlugUniqueViolation } from './shared'
-import type { Db, BookWithTags } from './shared'
+import {
+  computeRatingDistribution,
+  escapeLikePattern,
+  insertWithSlugRetry,
+  isSlugUniqueViolation,
+} from './shared'
+import type { Db, BookWithTags, RatingDistribution } from './shared'
 import { attachTags, attachTagsBatch, replaceBookTagsTx } from './tags'
 
 export interface ListBookFilters {
@@ -37,51 +43,43 @@ export async function createBook(
   const base = toSlug(input.title)
   const now = Date.now()
 
-  for (let i = 0; i < 100; i++) {
-    const candidate = i === 0 ? base : `${base}-${i + 1}`
-    try {
-      // book INSERT + tags 교체를 단일 트랜잭션으로 묶어 중간 실패 시 부분 상태가 남지 않게 함.
-      const result = await db.transaction(async (tx) => {
-        const isPublic = input.isPublic ? 1 : 0
-        const publishedAt = isPublic === 1 ? now : null
-        const inserted = await tx
-          .insert(books)
-          .values({
-            authorUserId,
-            title: input.title,
-            author: input.author,
-            genre: input.genre,
-            readDate: input.readDate,
-            rating: input.rating,
-            content: input.content ?? '',
-            oneLineReview: input.oneLineReview ?? null,
-            isbn: input.isbn ?? null,
-            coverUrl: input.coverUrl ?? null,
-            externalSource: input.externalSource ?? null,
-            isPublic,
-            publishedAt,
-            slug: candidate,
-            createdAt: now,
-            updatedAt: now,
-          })
-          .returning()
+  // book INSERT + tags 교체를 단일 트랜잭션으로 묶어 중간 실패 시 부분 상태가 남지 않게 함.
+  return insertWithSlugRetry(base, isSlugUniqueViolation, (slug) =>
+    db.transaction(async (tx) => {
+      const isPublic = input.isPublic ? 1 : 0
+      const publishedAt = isPublic === 1 ? now : null
+      const inserted = await tx
+        .insert(books)
+        .values({
+          authorUserId,
+          title: input.title,
+          author: input.author,
+          genre: input.genre,
+          readDate: input.readDate,
+          rating: input.rating,
+          content: input.content ?? '',
+          oneLineReview: input.oneLineReview ?? null,
+          isbn: input.isbn ?? null,
+          coverUrl: input.coverUrl ?? null,
+          externalSource: input.externalSource ?? null,
+          isPublic,
+          publishedAt,
+          slug,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .returning()
 
-        const book = inserted[0]
-        await replaceBookTagsTx(tx, book.id, input.tags ?? [])
-        const tagRows = await tx
-          .select({ name: tags.name })
-          .from(bookTags)
-          .innerJoin(tags, eq(bookTags.tagId, tags.id))
-          .where(eq(bookTags.bookId, book.id))
-        return { ...book, tags: tagRows.map((r) => r.name) }
-      })
-      return result
-    } catch (e) {
-      if (isSlugUniqueViolation(e)) continue
-      throw e
-    }
-  }
-  throw new Error(`Could not generate unique slug after 100 attempts for title: ${input.title}`)
+      const book = inserted[0]
+      await replaceBookTagsTx(tx, book.id, input.tags ?? [])
+      const tagRows = await tx
+        .select({ name: tags.name })
+        .from(bookTags)
+        .innerJoin(tags, eq(bookTags.tagId, tags.id))
+        .where(eq(bookTags.bookId, book.id))
+      return { ...book, tags: tagRows.map((r) => r.name) }
+    }),
+  )
 }
 
 export async function updateBook(
@@ -154,21 +152,20 @@ export async function deleteBook(db: Db, authorUserId: number, id: number): Prom
   return result.length > 0
 }
 
-export async function getBookBySlug(
-  db: Db,
-  authorUserId: number,
-  slug: string,
-): Promise<BookWithTags | null> {
-  const rows = await db
-    .select()
-    .from(books)
-    .where(and(eq(books.slug, slug), eq(books.authorUserId, authorUserId)))
-    .limit(1)
-  if (rows.length === 0) return null
-  const book = rows[0]
-  const tagNames = await attachTags(db, book.id)
-  return { ...book, tags: tagNames }
-}
+// cache(): generateMetadata와 페이지 본문이 같은 요청에서 각각 호출해도 DB 왕복 1회로 dedupe
+export const getBookBySlug = cache(
+  async (db: Db, authorUserId: number, slug: string): Promise<BookWithTags | null> => {
+    const rows = await db
+      .select()
+      .from(books)
+      .where(and(eq(books.slug, slug), eq(books.authorUserId, authorUserId)))
+      .limit(1)
+    if (rows.length === 0) return null
+    const book = rows[0]
+    const tagNames = await attachTags(db, book.id)
+    return { ...book, tags: tagNames }
+  },
+)
 
 export async function getBookById(
   db: Db,
@@ -516,12 +513,6 @@ export async function countBookReviewsByIsbn(db: Db, isbn: string): Promise<numb
   return Number(rows[0]?.n ?? 0)
 }
 
-export type RatingDistribution = {
-  avg: number
-  cnt: number
-  buckets: Record<number, number> // keys 1..10
-}
-
 export async function getBookRatingDistributionByIsbn(
   db: Db,
   isbn: string,
@@ -535,21 +526,5 @@ export async function getBookRatingDistributionByIsbn(
     .where(and(eq(books.isPublic, 1), isNotNull(books.publishedAt), eq(books.isbn, isbn)))
     .groupBy(books.rating)
 
-  const buckets: Record<number, number> = {}
-  for (let r = 1; r <= 10; r++) buckets[r] = 0
-  let total = 0
-  let weightedSum = 0
-  for (const row of rows) {
-    const r = Number(row.rating)
-    const c = Number(row.cnt)
-    if (r < 1 || r > 10 || !Number.isInteger(r)) continue
-    buckets[r] = c
-    total += c
-    weightedSum += r * c
-  }
-  return {
-    avg: total === 0 ? 0 : weightedSum / total,
-    cnt: total,
-    buckets,
-  }
+  return computeRatingDistribution(rows)
 }

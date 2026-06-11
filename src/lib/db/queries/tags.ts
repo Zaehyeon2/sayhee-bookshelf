@@ -29,25 +29,33 @@ export async function attachTagsBatch(db: Db, bookIds: number[]): Promise<Map<nu
 }
 
 /**
- * INSERT...ON CONFLICT...RETURNING으로 단일 statement에서 atomic하게 처리.
- * libSQL은 RETURNING을 지원하며, DO UPDATE를 통해 conflict 발생 시에도 row를 반환한다.
+ * 태그 이름 배열을 한 번의 INSERT(ON CONFLICT DO NOTHING) + 한 번의 SELECT로 처리.
+ * N개 태그 → 2 round trips (기존: N×2).
+ * 반환값은 names 순서와 동일한 id 배열.
  */
-export async function getOrCreateTag(db: Tx, name: string): Promise<number> {
-  const result = await db
+async function getOrCreateTagsBatch(tx: Tx, names: string[]): Promise<number[]> {
+  if (names.length === 0) return []
+  await tx
     .insert(tags)
-    .values({ name })
-    .onConflictDoUpdate({ target: tags.name, set: { name } })
-    .returning({ id: tags.id })
-  if (!result[0]) throw new Error(`Tag upsert failed for ${name}`)
-  return result[0].id
+    .values(names.map((name) => ({ name })))
+    .onConflictDoNothing()
+  const rows = await tx
+    .select({ id: tags.id, name: tags.name })
+    .from(tags)
+    .where(inArray(tags.name, names))
+  const nameToId = new Map(rows.map((r) => [r.name, r.id]))
+  return names.map((name) => {
+    const id = nameToId.get(name)
+    if (id === undefined) throw new Error(`Tag lookup failed for ${name}`)
+    return id
+  })
 }
 
 export async function replaceBookTagsTx(tx: Tx, bookId: number, tagNames: string[]): Promise<void> {
   await tx.delete(bookTags).where(eq(bookTags.bookId, bookId))
-  for (const name of tagNames) {
-    const tagId = await getOrCreateTag(tx, name)
-    await tx.insert(bookTags).values({ bookId, tagId })
-  }
+  if (tagNames.length === 0) return
+  const tagIds = await getOrCreateTagsBatch(tx, tagNames)
+  await tx.insert(bookTags).values(tagIds.map((tagId) => ({ bookId, tagId })))
 }
 
 export async function attachWritingTags(db: Db, writingId: number): Promise<string[]> {
@@ -84,10 +92,9 @@ export async function replaceWritingTagsTx(
   tagNames: string[],
 ): Promise<void> {
   await tx.delete(writingTags).where(eq(writingTags.writingId, writingId))
-  for (const name of tagNames) {
-    const tagId = await getOrCreateTag(tx, name)
-    await tx.insert(writingTags).values({ writingId, tagId })
-  }
+  if (tagNames.length === 0) return
+  const tagIds = await getOrCreateTagsBatch(tx, tagNames)
+  await tx.insert(writingTags).values(tagIds.map((tagId) => ({ writingId, tagId })))
 }
 
 export async function attachMovieTags(db: Db, movieId: number): Promise<string[]> {
@@ -124,10 +131,9 @@ export async function replaceMovieTagsTx(
   tagNames: string[],
 ): Promise<void> {
   await tx.delete(movieTags).where(eq(movieTags.movieId, movieId))
-  for (const name of tagNames) {
-    const tagId = await getOrCreateTag(tx, name)
-    await tx.insert(movieTags).values({ movieId, tagId })
-  }
+  if (tagNames.length === 0) return
+  const tagIds = await getOrCreateTagsBatch(tx, tagNames)
+  await tx.insert(movieTags).values(tagIds.map((tagId) => ({ movieId, tagId })))
 }
 
 export async function suggestTags(db: Db, authorUserId: number, q: string): Promise<string[]> {
