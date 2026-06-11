@@ -8,9 +8,13 @@ import {
   listMovieReviewsByTmdbId,
   countMovieReviewsByTmdbId,
   getMovieRatingDistributionByTmdbId,
+  getGameAggregatesByRawgIds,
+  listGameReviewsByRawgId,
+  countGameReviewsByRawgId,
+  getGameRatingDistributionByRawgId,
 } from '@/lib/db/queries'
 import { makeTestDb, type TestDb } from '../setup-db'
-import { createUser, createBook, createMovie } from '../factories'
+import { createUser, createBook, createMovie, createGame } from '../factories'
 
 describe('books works aggregation', () => {
   let db: TestDb
@@ -133,5 +137,69 @@ describe('movies works aggregation', () => {
     const rows = await listMovieReviewsByTmdbId(db, 99999, { limit: 10 })
     expect(rows[0].authorDisplayName).toBe('앨리스')
     expect(rows[0].authorUsername).toBe('alice')
+  })
+})
+
+describe('games works aggregation', () => {
+  let db: TestDb
+  beforeEach(async () => {
+    ;({ db } = await makeTestDb())
+  })
+
+  it('aggregates published items by rawgId — counts + average rating', async () => {
+    const a = await createUser(db, { username: 'alice' })
+    const b = await createUser(db, { username: 'bob' })
+    const c = await createUser(db, { username: 'carol' })
+    const t = Date.now()
+    await createGame(db, a.id, { rawgId: 12345, rating: 10, isPublic: 1, publishedAt: t })
+    await createGame(db, b.id, { rawgId: 12345, rating: 8, isPublic: 1, publishedAt: t - 1000 })
+    await createGame(db, c.id, { rawgId: 12345, rating: 6, isPublic: 1, publishedAt: t - 2000 })
+
+    const map = await getGameAggregatesByRawgIds(db, [12345])
+    const agg = map.get(12345)
+    expect(agg?.cnt).toBe(3)
+    expect(agg?.avg).toBe(8)
+  })
+
+  it('excludes non-public and unpublished', async () => {
+    const a = await createUser(db, { username: 'alice' })
+    await createGame(db, a.id, { rawgId: 11111, rating: 9, isPublic: 1, publishedAt: Date.now() })
+    await createGame(db, a.id, { rawgId: 11111, rating: 5, isPublic: 0, publishedAt: null })
+    await createGame(db, a.id, { rawgId: 11111, rating: 7, isPublic: 1, publishedAt: null })
+
+    const map = await getGameAggregatesByRawgIds(db, [11111])
+    expect(map.get(11111)?.cnt).toBe(1)
+    expect(map.get(11111)?.avg).toBe(9)
+  })
+
+  it('INCLUDES published games with null oneLineReview (regression guard)', async () => {
+    const a = await createUser(db, { username: 'alice' })
+    await createGame(db, a.id, { rawgId: 22222, rating: 9, oneLineReview: null, isPublic: 1, publishedAt: Date.now() })
+    await createGame(db, a.id, { rawgId: 22222, rating: 7, oneLineReview: '좋아요', isPublic: 1, publishedAt: Date.now() })
+
+    const d = await getGameRatingDistributionByRawgId(db, 22222)
+    expect(d.cnt).toBe(2)
+    expect(d.avg).toBe(8)
+  })
+
+  it('returns empty Map when rawgId list is empty', async () => {
+    const map = await getGameAggregatesByRawgIds(db, [])
+    expect(map.size).toBe(0)
+  })
+
+  it('listGameReviewsByRawgId joins username and orders DESC', async () => {
+    const a = await createUser(db, { username: 'alice', displayName: '앨리스' })
+    await createGame(db, a.id, { rawgId: 99999, rating: 10, oneLineReview: '★', isPublic: 1, publishedAt: Date.now() })
+    const rows = await listGameReviewsByRawgId(db, 99999, { limit: 10 })
+    expect(rows[0].authorDisplayName).toBe('앨리스')
+    expect(rows[0].authorUsername).toBe('alice')
+  })
+
+  it('countGameReviewsByRawgId matches list size', async () => {
+    const a = await createUser(db, { username: 'alice' })
+    for (let i = 0; i < 4; i++) {
+      await createGame(db, a.id, { rawgId: 77777, rating: 8, isPublic: 1, publishedAt: Date.now() - i * 1000 })
+    }
+    expect(await countGameReviewsByRawgId(db, 77777)).toBe(4)
   })
 })

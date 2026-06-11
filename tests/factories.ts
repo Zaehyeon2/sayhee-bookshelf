@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs'
-import { users, books, writings, movies } from '@/lib/db/schema'
+import { users, books, writings, movies, games } from '@/lib/db/schema'
 import { normalizeUsername } from '@/lib/username-normalize'
 import type { TestDb } from './setup-db'
 
@@ -107,4 +107,34 @@ export async function createMovie(
     })
     .returning()
   return m
+}
+
+export async function createGame(
+  db: TestDb,
+  authorUserId: number,
+  overrides: Partial<typeof games.$inferInsert> = {},
+) {
+  const now = Date.now()
+  const [g] = await db
+    .insert(games)
+    .values({
+      authorUserId,
+      title: overrides.title ?? '테스트 게임',
+      developer: overrides.developer ?? '개발사',
+      genre: overrides.genre ?? 'RPG',
+      playedDate: overrides.playedDate ?? '2026-01-01',
+      rating: overrides.rating ?? 8,
+      content: overrides.content ?? '',
+      slug: overrides.slug ?? `game-${now}-${Math.random().toString(36).slice(2, 6)}`,
+      createdAt: overrides.createdAt ?? now,
+      updatedAt: overrides.updatedAt ?? now,
+      ...(overrides.isPublic !== undefined && { isPublic: overrides.isPublic }),
+      ...(overrides.publishedAt !== undefined && { publishedAt: overrides.publishedAt }),
+      ...(overrides.oneLineReview !== undefined && { oneLineReview: overrides.oneLineReview }),
+      ...(overrides.rawgId !== undefined && { rawgId: overrides.rawgId }),
+      ...(overrides.coverUrl !== undefined && { coverUrl: overrides.coverUrl }),
+      ...(overrides.externalSource !== undefined && { externalSource: overrides.externalSource }),
+    })
+    .returning()
+  return g
 }

@@ -19,6 +19,9 @@ const E2E_USERS = [
 // visibility without depending on dynamically created entries.
 const MOVIE_COUNT = 5
 
+// 5 games per user — same rationale as movies.
+const GAME_COUNT = 5
+
 async function main() {
   const url = process.env.TURSO_URL
   if (!url) throw new Error('TURSO_URL is not set')
@@ -80,6 +83,33 @@ async function main() {
         })
         .onConflictDoNothing()
       console.log(`[e2e seed] movie ${i + 1}/${MOVIE_COUNT} for ${username}`)
+    }
+
+    // Seed games — idempotent via unique slug; skip if already present.
+    const gameGenres = ['RPG', '액션', '어드벤처', '시뮬레이션', '인디'] as const
+    for (let i = 0; i < GAME_COUNT; i++) {
+      const slug = `${displayShort}-game-${i + 1}-seed`
+      const month = String((i % 12) + 1).padStart(2, '0')
+      const day = String((i % 28) + 1).padStart(2, '0')
+      await db
+        .insert(schema.games)
+        .values({
+          authorUserId: user.id,
+          title: `${u.displayName} game ${i + 1}`,
+          developer: `개발사 ${i + 1}`,
+          genre: gameGenres[i % gameGenres.length],
+          playedDate: `2026-${month}-${day}`,
+          rating: 6 + (i % 4), // 6-9
+          content: '',
+          oneLineReview: null,
+          isPublic: 1,
+          publishedAt: now + i,
+          slug,
+          createdAt: now + i,
+          updatedAt: now + i,
+        })
+        .onConflictDoNothing()
+      console.log(`[e2e seed] game ${i + 1}/${GAME_COUNT} for ${username}`)
     }
   }
 

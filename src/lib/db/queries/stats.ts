@@ -1,13 +1,13 @@
 import { sql } from 'drizzle-orm'
 import type { AnySQLiteColumn, SQLiteTable } from 'drizzle-orm/sqlite-core'
-import { books, writings, movies, tags, bookTags, movieTags, writingTags } from '../schema'
+import { books, writings, movies, games, tags, bookTags, movieTags, writingTags, gameTags } from '../schema'
 import type { Db } from './shared'
 import { formatRatingCompact } from '../../rating'
-import type { CountItem, BookDashboard, MovieDashboard, WritingDashboard } from '../../stats-types'
+import type { CountItem, BookDashboard, MovieDashboard, WritingDashboard, GameDashboard } from '../../stats-types'
 
 // 클라이언트 컴포넌트는 이 모듈이 아닌 '@/lib/stats-types'에서 타입을 가져갈 것
 // (여기서 가져가면 import type → import 실수 한 번에 drizzle이 클라이언트 번들로 유입).
-export type { CountItem, BookDashboard, MovieDashboard, WritingDashboard }
+export type { CountItem, BookDashboard, MovieDashboard, WritingDashboard, GameDashboard }
 
 export interface UserStats {
   booksTotal: number
@@ -98,6 +98,38 @@ export async function getUserMovieStats(
     moviesTotal: Number(r.movies_total ?? 0),
     moviesThisYear: Number(r.movies_year ?? 0),
     avgMovieRating:
+      r.avg_rating !== null && r.avg_rating !== undefined ? Number(r.avg_rating) : null,
+  }
+}
+
+export interface UserGameStats {
+  gamesTotal: number
+  gamesThisYear: number
+  avgGameRating: number | null
+}
+
+export async function getUserGameStats(
+  db: Db,
+  userId: number,
+  year: number,
+): Promise<UserGameStats> {
+  const yearPrefix = `${year}-%`
+
+  const rows = await db.all(sql`
+    SELECT
+      (SELECT COUNT(*) FROM ${games} WHERE ${games.authorUserId} = ${userId}) AS games_total,
+      (SELECT COUNT(*) FROM ${games}
+         WHERE ${games.authorUserId} = ${userId}
+           AND ${games.playedDate} LIKE ${yearPrefix} ESCAPE '\\') AS games_year,
+      (SELECT AVG(${games.rating}) FROM ${games}
+         WHERE ${games.authorUserId} = ${userId}) AS avg_rating
+  `)
+
+  const r = firstRow(rows)
+  return {
+    gamesTotal: Number(r.games_total ?? 0),
+    gamesThisYear: Number(r.games_year ?? 0),
+    avgGameRating:
       r.avg_rating !== null && r.avg_rating !== undefined ? Number(r.avg_rating) : null,
   }
 }
@@ -280,6 +312,36 @@ export async function getMovieDashboard(
     yearTimeline: d.yearTimeline,
     topTags: d.topTags,
     topDirectors: d.personTop,
+  }
+}
+
+const GAME_SOURCE: ContentDashboardSource = {
+  table: games,
+  id: games.id,
+  authorUserId: games.authorUserId,
+  date: games.playedDate,
+  rating: games.rating,
+  genre: games.genre,
+  person: games.developer,
+  tagJoin: gameTags,
+  tagEntityFk: gameTags.gameId,
+  tagFk: gameTags.tagId,
+}
+
+/** 게임 대시보드 — getMovieDashboard와 동형 (playedDate/developer/gameTags). */
+export async function getGameDashboard(
+  db: Db,
+  userId: number,
+  year: number,
+): Promise<GameDashboard> {
+  const d = await contentDashboard(db, userId, year, GAME_SOURCE)
+  return {
+    summary: d.summary,
+    ratingDist: d.ratingDist,
+    genreDist: d.genreDist,
+    yearTimeline: d.yearTimeline,
+    topTags: d.topTags,
+    topDevelopers: d.personTop,
   }
 }
 

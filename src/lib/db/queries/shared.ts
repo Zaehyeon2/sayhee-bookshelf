@@ -1,10 +1,11 @@
 import type { LibSQLDatabase } from 'drizzle-orm/libsql'
-import type { books, writings, movies } from '../schema'
+import type { books, writings, movies, games } from '../schema'
 import type * as schema from '../schema'
 
 export type BookWithTags = typeof books.$inferSelect & { tags: string[] }
 export type WritingWithTags = typeof writings.$inferSelect & { tags: string[] }
 export type MovieWithTags = typeof movies.$inferSelect & { tags: string[] }
+export type GameWithTags = typeof games.$inferSelect & { tags: string[] }
 
 export type Db = LibSQLDatabase<typeof schema>
 // db.transaction 콜백의 인자 타입 — SQLiteTransaction은 Db와 일부 메서드(batch)가 다르므로
@@ -61,6 +62,9 @@ export const isWritingSlugUniqueViolation = (e: unknown) =>
 
 export const isMovieSlugUniqueViolation = (e: unknown) =>
   isTableSlugViolation(e, 'idx_movies_user_slug', 'movies')
+
+export const isGameSlugUniqueViolation = (e: unknown) =>
+  isTableSlugViolation(e, 'idx_games_user_slug', 'games')
 
 /**
  * slug 충돌 retry 루프 공통 헬퍼.

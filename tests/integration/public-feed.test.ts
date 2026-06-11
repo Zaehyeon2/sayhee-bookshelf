@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { listRecentPublicBooks, countPublicBooks } from '@/lib/db/queries'
+import { listRecentPublicBooks, countPublicBooks, listRecentPublicGames, countPublicGames } from '@/lib/db/queries'
 import { makeTestDb, type TestDb } from '../setup-db'
-import { createUser, createBook } from '../factories'
+import { createUser, createBook, createGame } from '../factories'
 
 describe('public feed queries', () => {
   let db: TestDb
@@ -89,6 +89,58 @@ describe('public feed queries', () => {
     await createBook(db, a.id, { isPublic: 1, publishedAt: null })
 
     expect(await countPublicBooks(db)).toBe(2)
+  })
+})
+
+describe('public games feed queries', () => {
+  let db: TestDb
+
+  beforeEach(async () => {
+    ;({ db } = await makeTestDb())
+  })
+
+  it('returns only games with is_public=1 AND published_at IS NOT NULL', async () => {
+    const a = await createUser(db, { username: 'alice', displayName: 'Alice' })
+    const b = await createUser(db, { username: 'bob', displayName: 'Bob' })
+
+    const t = Date.now()
+    await createGame(db, a.id, { title: '공개 + publishedAt', isPublic: 1, publishedAt: t })
+    await createGame(db, a.id, { title: '비공개', isPublic: 0, publishedAt: null })
+    await createGame(db, b.id, {
+      title: '공개지만 publishedAt NULL',
+      isPublic: 1,
+      publishedAt: null,
+    })
+    await createGame(db, b.id, { title: 'B의 공개', isPublic: 1, publishedAt: t - 1000 })
+
+    const list = await listRecentPublicGames(db, { limit: 10 })
+    const titles = list.map((x) => x.title)
+    expect(titles).toContain('공개 + publishedAt')
+    expect(titles).toContain('B의 공개')
+    expect(titles).not.toContain('비공개')
+    expect(titles).not.toContain('공개지만 publishedAt NULL')
+  })
+
+  it('orders by published_at DESC', async () => {
+    const a = await createUser(db, { username: 'alice' })
+    const t = Date.now()
+    await createGame(db, a.id, { title: 'older', isPublic: 1, publishedAt: t - 10000 })
+    await createGame(db, a.id, { title: 'middle', isPublic: 1, publishedAt: t - 5000 })
+    await createGame(db, a.id, { title: 'newest', isPublic: 1, publishedAt: t })
+
+    const list = await listRecentPublicGames(db, { limit: 10 })
+    expect(list.map((x) => x.title)).toEqual(['newest', 'middle', 'older'])
+  })
+
+  it('countPublicGames matches the same filter', async () => {
+    const a = await createUser(db, { username: 'alice' })
+    const t = Date.now()
+    await createGame(db, a.id, { isPublic: 1, publishedAt: t })
+    await createGame(db, a.id, { isPublic: 1, publishedAt: t - 1000 })
+    await createGame(db, a.id, { isPublic: 0, publishedAt: null })
+    await createGame(db, a.id, { isPublic: 1, publishedAt: null })
+
+    expect(await countPublicGames(db)).toBe(2)
   })
 })
 

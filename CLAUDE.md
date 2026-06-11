@@ -28,17 +28,17 @@ ESLint 없음 — **Biome 단독**. `npm run lint` 같은 이전 명령은 더 �
 
 **모든 책/글 접근은 본인 것인지 확인해야 합니다.** 직접 `db.select().from(books).where(eq(books.id, id))` 같은 식으로 ID만 보고 조회하면 **다른 사용자 데이터가 누출됩니다**.
 
-| 컨텍스트 | 책 | 글 |
-|---|---|---|
-| API route | `requireOwnBook(id)` → `HttpError` throw | `requireOwnWriting(id)` |
-| Server component / page | `requireOwnBookForPage(id)` → `notFound()` | `requireOwnWritingForPage(id)` |
+| 컨텍스트 | 책 | 영화 | 게임 | 글 |
+|---|---|---|---|---|
+| API route | `requireOwnBook(id)` → `HttpError` throw | `requireOwnMovie(id)` | `requireOwnGame(id)` | `requireOwnWriting(id)` |
+| Server component / page | `requireOwnBookForPage(id)` → `notFound()` | `requireOwnMovieForPage(id)` | `requireOwnGameForPage(id)` | `requireOwnWritingForPage(id)` |
 | Admin-only API | `requireAdmin()` (먼저) |
 | 인증만 필요 | `requireUser()` |
 | 비번 변경 endpoint 자체 | `requireUser({ allowMustChangePassword: true })` |
 
 전부 `src/lib/auth-helpers.ts`. `mustChangePassword=1` 사용자는 기본적으로 **모든 mutation에서 차단**됨 — `requireUser`가 throw. 비번 변경 endpoint만 opt-in.
 
-**유일한 예외 = 공개 피드**: `listRecentPublicBooks/Movies`·works 집계만 `authorUserId` 필터 없음. 이들은 반드시 `isPublic = 1 AND publishedAt IS NOT NULL` 조건 — 이 조건 없는 cross-user 쿼리는 무조건 버그.
+**유일한 예외 = 공개 피드**: `listRecentPublicBooks/Movies/Games`·works 집계만 `authorUserId` 필터 없음. 이들은 반드시 `isPublic = 1 AND publishedAt IS NOT NULL` 조건 — 이 조건 없는 cross-user 쿼리는 무조건 버그.
 
 ### 2. Proxy (`src/proxy.ts`)
 
@@ -61,11 +61,11 @@ Next 16.2.9부터 `middleware` 파일 컨벤션이 deprecated되어 `proxy`로 �
 
 ### 5. Slug 충돌 retry
 
-`createBook`/`createWriting`은 `(authorUserId, slug)` 유니크 인덱스 위배 시 최대 100번 `-2`, `-3`... 으로 재시도. 에러 메시지 시그니처는 driver/version별로 다양 — `isSlugUniqueViolation`이 컬럼 시그니처와 인덱스 이름을 **모두** 매칭. 새 unique 인덱스 추가 시 이 함수에 패턴 추가 필요.
+`createBook`/`createMovie`/`createGame`/`createWriting`은 `(authorUserId, slug)` 유니크 인덱스 위배 시 최대 100번 `-2`, `-3`... 으로 재시도. 에러 메시지 시그니처는 driver/version별로 다양 — `isSlugUniqueViolation`/`isMovieSlugUniqueViolation`/`isGameSlugUniqueViolation`이 컬럼 시그니처와 인덱스 이름을 **모두** 매칭 (각 `idx_*_user_slug`). 새 unique 인덱스 추가 시 이 함수에 패턴 추가 필요.
 
 ### 6. 트랜잭션 + N+1 회피
 
-- `createBook`/`updateBook`/`createWriting`/`updateWriting`은 **트랜잭션 내에서** tag 교체 + 본문 mutation 둘 다 처리. 중간 실패 시 부분 상태 남지 않게.
+- `createBook`/`updateBook`/`createMovie`/`updateMovie`/`createGame`/`updateGame`/`createWriting`/`updateWriting`은 **트랜잭션 내에서** tag 교체 + 본문 mutation 둘 다 처리. 중간 실패 시 부분 상태 남지 않게.
 - 리스트 조회의 tag 부착은 `attachTagsBatch(bookIds[])`로 한 번에 — 각 row마다 따로 조회하는 N+1 패턴 금지.
 
 ### 7. 쿼리 작성: ORM builder가 기본, raw `sql`은 예외 사유 있을 때만
@@ -87,31 +87,33 @@ Next 16.2.9부터 `middleware` 파일 컨벤션이 deprecated되어 `proxy`로 �
 src/
 ├ app/
 │  ├ api/
-│  │  ├ books/, movies/, writings/   CRUD + 각 stats/ (대시보드 집계 GET)
+│  │  ├ books/, movies/, games/      CRUD + by-external (외부 ID 기반 기록 조회)
+│  │  ├ writings/                    CRUD
 │  │  ├ uploads/                     글방 cover 이미지 업로드/보상삭제 (Vercel Blob)
-│  │  ├ external/                    외부 작품 검색 프록시 (네이버 책/TMDB)
+│  │  ├ external/                    외부 작품 검색 프록시 (네이버 책/TMDB/RAWG)
 │  │  ├ users/                       admin-only 사용자 관리 + me/password, me/profile
 │  │  ├ login/, logout/, admin/, tags/
-│  ├ books/, movies/, writings/      목록(+접이식 통계 패널)·상세·new·edit
-│  ├ works/                          공개 작품 집계 (book/[isbn], movie/[tmdbId])
-│  ├ feed/                           공개 피드
+│  ├ books/, movies/, games/         목록·상세·new·edit·stats
+│  ├ writings/                       글방 목록·상세·new·edit
+│  ├ works/                          공개 작품 집계 (book/[isbn], movie/[tmdbId], game/[rawgId])
+│  ├ feed/                           공개 피드 (책/영화/게임 탭)
 │  ├ admin/users/, settings/, login/
 │  └ page.tsx                        홈 (getUserStats 단일 쿼리, KST 연도)
-├ components/                        BookForm/MovieForm/WritingForm/MarkdownEditor 등
+├ components/                        BookForm/MovieForm/GameForm/WritingForm/MarkdownEditor 등
 │  │                                 CRUD 폼 = useCrudForm(onSubmit·deleteAction) + FormActionBar
 │  │                                 + form-helpers(getEditorMarkdownOrToast/saveJsonOrToast) 조합
-│  ├ stats/                          StatsPanel(접이식)/StatsDashboard/charts(chart.js lazy)
+│  ├ stats/                          StatsDashboard/SummaryCards/charts(chart.js lazy) — /:domain/stats 페이지가 사용
 │  └ works/                          공개 작품 상세·검색 카드
 ├ lib/
 │  ├ auth.ts / auth-edge.ts          bcrypt + jose HS256 JWT (DUMMY_HASH timing guard)
-│  ├ auth-helpers.ts                 requireUser/Admin/OwnBook/OwnWriting + HttpError
+│  ├ auth-helpers.ts                 requireUser/Admin/OwnBook/OwnMovie/OwnGame/OwnWriting + HttpError
 │  ├ api-handler.ts                  withApiHandler + requireIdParam/JsonBody/Query (Validation 섹션 참고)
 │  ├ db/
-│  │  ├ schema.ts                    users, books, movies, writings, tags, *_tags
-│  │  ├ queries.ts                   barrel — 실제 구현은 queries/{books,movies,writings,tags,stats,shared}.ts
+│  │  ├ schema.ts                    users, books, movies, games, writings, tags, *_tags
+│  │  ├ queries.ts                   barrel — 실제 구현은 queries/{books,movies,games,writings,tags,stats,shared}.ts
 │  │  └ client.ts                    libsql/drizzle
-│  ├ external/                       외부 API lookup + rate-limit + route-factory
-│  ├ validations.ts                  zod 스키마 (책/영화/글/사용자/페이지네이션)
+│  ├ external/                       외부 API lookup + rate-limit + route-factory (네이버/TMDB/RAWG)
+│  ├ validations.ts                  zod 스키마 (책/영화/게임/글/사용자/페이지네이션)
 │  ├ rating.ts                       별점 ÷2 표시 변환 단일 지점
 │  ├ kst.ts                          currentKstYear() — "올해" 집계 연도 단일 소스
 │  ├ stats-types.ts                  대시보드 공유 타입 (클라이언트는 여기서만 import)
@@ -127,11 +129,12 @@ src/
 - **books** (id, **authorUserId**, title, author, genre, readDate, rating CHECK 1-10, content, oneLineReview?, isPublic 0|1, publishedAt?, slug, isbn?, coverUrl?, externalSource?, ts)
   - composite: `(user, date DESC)`, `(user, genre)`, `(user, rating DESC)`, `(user, slug) UNIQUE`, `(isPublic, publishedAt DESC)`, `(isPublic, isbn)`
 - **movies** — books와 동형 (director/watchedDate/tmdbId가 author/readDate/isbn 자리). 인덱스도 동형.
+- **games** — movies와 동형 (developer/playedDate/rawgId가 director/watchedDate/tmdbId 자리). 인덱스도 동형.
 - **writings** (id, **authorUserId**, title, body, coverUrl?, slug, ts)
   - composite: `(user, createdAt DESC)`, `(user, slug) UNIQUE`
-- **tags** + **book_tags** + **writing_tags** + **movie_tags** — 태그는 books/writings/movies가 **공유** (`tags.name UNIQUE`). junction PK `(entity, tag)` + 역방향 `(tag)` 인덱스로 양방향 커버.
+- **tags** + **book_tags** + **writing_tags** + **movie_tags** + **game_tags** — 태그는 books/writings/movies/games가 **공유** (`tags.name UNIQUE`). junction PK `(entity, tag)` + 역방향 `(tag)` 인덱스로 양방향 커버.
 
-**rating 스케일**: DB 저장은 **1~10 정수** (books·movies 동일, CHECK `BETWEEN 1 AND 10`). UI 표시는 항상 **÷2 = 0.5~5 별점** (`RatingScore` 관례). 통계·차트·라벨 등 사용자에게 보이는 모든 별점 값은 /2 스케일로 변환할 것 — 1~10 그대로 노출 금지.
+**rating 스케일**: DB 저장은 **1~10 정수** (books·movies·games 동일, CHECK `BETWEEN 1 AND 10`). UI 표시는 항상 **÷2 = 0.5~5 별점** (`RatingScore` 관례). 통계·차트·라벨 등 사용자에게 보이는 모든 별점 값은 /2 스케일로 변환할 것 — 1~10 그대로 노출 금지.
 
 `authorUserId`는 모든 user-scoped 테이블의 NOT NULL FK. 새 user-scoped 테이블 추가 시 동일 패턴 (FK + composite index + slug retry + requireOwn* 헬퍼) 따라가세요.
 
@@ -157,8 +160,8 @@ tests/
 └ e2e/            Playwright — golden-path(책/영화), stats-panel, public-feed, works-search 등
 ```
 
-- `tests/setup-db.ts`가 임시 파일 libSQL을 띄우고 `tests/factories.ts`가 user/book/movie/writing factory 제공.
-- e2e는 `global-setup.ts`가 `seed:e2e`를 자동 실행 — 표준 계정 `e2e-alice`/`e2e-bob` (`e2etestpass1234`, alice는 영화 시드 보유). 로그인은 `tests/e2e/helpers.ts`의 `login()` 사용 — spec마다 복제 금지.
+- `tests/setup-db.ts`가 임시 파일 libSQL을 띄우고 `tests/factories.ts`가 user/book/movie/game/writing factory 제공.
+- e2e는 `global-setup.ts`가 `seed:e2e`를 자동 실행 — 표준 계정 `e2e-alice`/`e2e-bob` (`e2etestpass1234`, alice는 영화·게임 시드 보유). 로그인은 `tests/e2e/helpers.ts`의 `login()` 사용 — spec마다 복제 금지.
 - factory는 `createdAt`/`updatedAt` **override를 존중** — 통계 연도 필터링 테스트가 이걸 필요로 함.
 - 통합 테스트는 멀티테넌트 격리가 진짜로 작동하는지 검증하는 회귀 가드 — 새 user-scoped 쿼리 추가 시 cross-user 격리 케이스 1개씩 추가.
 
@@ -179,3 +182,4 @@ tests/
 - **`DEFAULT_USER_PASSWORD` 변경 시**: 이미 발급된 신규 계정엔 영향 없음 (해시는 생성 시 한 번 굳음).
 - **WSL2 next dev hang**: 60s 안에 안 뜨면 README의 트러블슈팅 섹션 참고 (`pkill next-server` + `rm local.db`는 **destructive**라 Claude는 사용자 승인 후에만 실행).
 - **Vercel Blob 토큰**: 글방 대표 이미지 업로드(`/api/uploads`)는 `BLOB_READ_WRITE_TOKEN` 필요. Vercel은 Blob store 연결 시 자동 주입, 로컬은 `.env.local`에 수동 추가. 없으면 업로드만 비동작(나머지 영향 없음). 글방 cover는 `writings.coverUrl`(nullable) 컬럼에 Blob public URL로 저장 — 교체/제거·글 삭제 시 `deleteBlobIfManaged`로 옛 Blob 정리(트랜잭션 밖).
+- **RAWG_API_KEY**: 게임 외부 검색(`/api/external/games/search`·`lookup`)에 필요. Vercel 환경변수 또는 로컬 `.env.local`에 수동 추가. 없으면 게임 외부 검색만 비동작(나머지 영향 없음). **주의: RAWG 키는 URL 쿼리 파라미터(`?key=...`)로 전달됨 — 어댑터 에러 메시지나 로그에 요청 URL을 그대로 포함하면 키가 노출되므로 금지.**

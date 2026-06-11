@@ -66,6 +66,13 @@ export function MobileMenu({ displayName, role }: Props) {
             🎬 내 영화관
           </Link>
           <Link
+            href="/games"
+            onClick={close}
+            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
+          >
+            🎮 내 게임
+          </Link>
+          <Link
             href="/works"
             onClick={close}
             className="block mx-1 px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"

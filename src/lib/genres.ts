@@ -39,3 +39,23 @@ export type MovieGenre = (typeof MOVIE_GENRES)[number]
 export function isMovieGenre(value: unknown): value is MovieGenre {
   return typeof value === 'string' && (MOVIE_GENRES as readonly string[]).includes(value)
 }
+
+export const GAME_GENRES = [
+  'RPG',
+  '액션',
+  '어드벤처',
+  '슈팅',
+  '시뮬레이션',
+  '전략',
+  '퍼즐',
+  '스포츠',
+  '레이싱',
+  '인디',
+  '기타',
+] as const
+
+export type GameGenre = (typeof GAME_GENRES)[number]
+
+export function isGameGenre(value: unknown): value is GameGenre {
+  return typeof value === 'string' && (GAME_GENRES as readonly string[]).includes(value)
+}

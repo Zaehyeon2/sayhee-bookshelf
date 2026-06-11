@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { db } from '@/lib/db/client'
-import { listWritings, getUserStats, getUserMovieStats } from '@/lib/db/queries'
+import { listWritings, getUserStats, getUserMovieStats, getUserGameStats } from '@/lib/db/queries'
 import { getPublicBooksFeed, getPublicMoviesFeed } from '@/lib/public-feed-cache'
 import { PublicReviewCard } from '@/components/PublicReviewCard'
 import { PublicMovieCard } from '@/components/PublicMovieCard'
@@ -34,10 +34,11 @@ export default async function HomePage() {
 
   // KST 기준 연도 — 대시보드 stats 라우트와 동일 소스 (src/lib/kst.ts 참고)
   const thisYear = currentKstYear()
-  const [stats, movieStats, recentPublicBooks, recentPublicMovies, recentWritings] =
+  const [stats, movieStats, gameStats, recentPublicBooks, recentPublicMovies, recentWritings] =
     await Promise.all([
       getUserStats(db, me.id, thisYear),
       getUserMovieStats(db, me.id, thisYear),
+      getUserGameStats(db, me.id, thisYear),
       getPublicBooksFeed(6, 0),
       getPublicMoviesFeed(6, 0),
       listWritings(db, me.id, { limit: 6 }),
@@ -91,6 +92,20 @@ export default async function HomePage() {
               : null,
           ]}
           subAction={{ href: '/movies/new', label: '새 영화' }}
+        />
+        <EntryCard
+          href="/games"
+          emoji="🎮"
+          label="게임"
+          count={gameStats.gamesTotal}
+          unit="개"
+          metrics={[
+            `${thisYear}년 ${gameStats.gamesThisYear}개`,
+            gameStats.gamesTotal > 0 && gameStats.avgGameRating !== null
+              ? `평균 ★${formatRating(gameStats.avgGameRating)}`
+              : null,
+          ]}
+          subAction={{ href: '/games/new', label: '새 게임' }}
         />
       </section>
 

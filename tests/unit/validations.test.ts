@@ -15,6 +15,8 @@ import {
   WorksSearchQuerySchema,
   IsbnParamSchema,
   TmdbIdParamSchema,
+  CreateGameSchema,
+  UpdateGameSchema,
 } from '@/lib/validations'
 
 describe('LoginSchema', () => {
@@ -393,5 +395,56 @@ describe('TmdbIdParamSchema', () => {
   test('rejects non-integer', () => {
     expect(TmdbIdParamSchema.safeParse('1.5').success).toBe(false)
     expect(TmdbIdParamSchema.safeParse('abc').success).toBe(false)
+  })
+})
+
+describe('CreateGameSchema', () => {
+  const valid = {
+    title: '엘든 링',
+    developer: 'FromSoftware',
+    genre: 'RPG',
+    playedDate: '2026-05-01',
+    rating: 9,
+  }
+
+  it('accepts minimal valid input with defaults', () => {
+    const r = CreateGameSchema.safeParse(valid)
+    expect(r.success).toBe(true)
+    if (r.success) {
+      expect(r.data.content).toBe('')
+      expect(r.data.tags).toEqual([])
+      expect(r.data.isPublic).toBe(true)
+    }
+  })
+
+  it('rejects unknown genre', () => {
+    expect(CreateGameSchema.safeParse({ ...valid, genre: '액숀' }).success).toBe(false)
+  })
+
+  it('rejects rating out of 1-10', () => {
+    expect(CreateGameSchema.safeParse({ ...valid, rating: 11 }).success).toBe(false)
+    expect(CreateGameSchema.safeParse({ ...valid, rating: 0 }).success).toBe(false)
+  })
+
+  it('accepts nullable rawgId and rawg externalSource', () => {
+    const r = CreateGameSchema.safeParse({
+      ...valid,
+      rawgId: 3498,
+      externalSource: 'rawg',
+      coverUrl: 'https://media.rawg.io/media/games/x.jpg',
+    })
+    expect(r.success).toBe(true)
+  })
+
+  it('rejects extra keys (strict)', () => {
+    expect(CreateGameSchema.safeParse({ ...valid, platform: 'PC' }).success).toBe(false)
+  })
+})
+
+describe('UpdateGameSchema', () => {
+  it('parse({}) returns {}', () => {
+    const r = UpdateGameSchema.safeParse({})
+    expect(r.success).toBe(true)
+    if (r.success) expect(Object.keys(r.data)).toHaveLength(0)
   })
 })

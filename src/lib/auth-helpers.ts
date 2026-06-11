@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { NextResponse } from 'next/server'
 import { eq, and } from 'drizzle-orm'
 import { db } from '@/lib/db/client'
-import { books, writings, movies, type Book, type Writing, type Movie } from '@/lib/db/schema'
+import { books, writings, movies, games, type Book, type Writing, type Movie, type Game } from '@/lib/db/schema'
 import { getCurrentUser } from '@/lib/auth'
 import type { User } from '@/lib/db/schema'
 
@@ -106,6 +106,18 @@ const ownMovie = makeOwnershipHelpers<Movie>(
   '영화를 찾을 수 없습니다',
 )
 
+const ownGame = makeOwnershipHelpers<Game>(
+  async (id, userId) =>
+    (
+      await db
+        .select()
+        .from(games)
+        .where(and(eq(games.id, id), eq(games.authorUserId, userId)))
+        .limit(1)
+    )[0],
+  '게임을 찾을 수 없습니다',
+)
+
 export async function requireOwnBook(bookId: number): Promise<{ user: User; book: Book }> {
   const { user, row: book } = await ownBook.forApi(bookId)
   return { user, book }
@@ -140,4 +152,16 @@ export async function requireOwnMovieForPage(
 ): Promise<{ user: User; movie: Movie }> {
   const { user, row: movie } = await ownMovie.forPage(movieId)
   return { user, movie }
+}
+
+export async function requireOwnGame(gameId: number): Promise<{ user: User; game: Game }> {
+  const { user, row: game } = await ownGame.forApi(gameId)
+  return { user, game }
+}
+
+export async function requireOwnGameForPage(
+  gameId: number,
+): Promise<{ user: User; game: Game }> {
+  const { user, row: game } = await ownGame.forPage(gameId)
+  return { user, game }
 }

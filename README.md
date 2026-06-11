@@ -8,10 +8,11 @@
 
 - **독후감 CRUD** — 제목·작가·읽은 날짜·14개 장르·별점·태그·한줄평·마크다운 본문 (Toast UI Editor). ISBN 기반 외부 메타 자동 채우기
 - **영화 기록 CRUD (`/movies`)** — 감독·본 날짜·10개 장르·별점·태그·한줄평. TMDB 자동 채우기. 독후감과 동형 구조
-- **글방 CRUD** — 책과 분리된 자유 글 — 제목·태그·마크다운 본문 + **대표 이미지** (Vercel Blob 업로드, rate limit, 고아 blob 정리). 독후감·영화와 태그 풀 공유
+- **게임 기록 CRUD (`/games`)** — 개발사·플레이 날짜·장르·별점·태그·한줄평. RAWG 자동 채우기. 영화와 동형 구조
+- **글방 CRUD** — 책과 분리된 자유 글 — 제목·태그·마크다운 본문 + **대표 이미지** (Vercel Blob 업로드, rate limit, 고아 blob 정리). 독후감·영화·게임과 태그 풀 공유
 - **별점 half-star** — 저장은 1~10 정수, 표시는 0.5~5 별점 (반 칸 단위 선택)
-- **공개 피드 (`/feed`)** — 리뷰별 공개 토글 → 공개된 책/영화 리뷰가 모두에게 노출. 멀티테넌트의 유일한 의도적 예외
-- **통계 대시보드** — 책장/영화관/글방 목록 상단 접이식 패널. chart.js로 별점 분포·장르 도넛·연도 타임라인·태그/저자/감독 Top 5 (글방은 월별 작성·글자수). 펼칠 때만 lazy fetch
+- **공개 피드 (`/feed`)** — 리뷰별 공개 토글 → 공개된 책/영화/게임 리뷰가 모두에게 노출. 멀티테넌트의 유일한 의도적 예외
+- **통계 대시보드** — 책장/영화관/게임/글방 전용 통계 페이지 (`/:domain/stats`). chart.js로 별점 분포·장르 도넛·연도 타임라인·태그/저자/감독/개발사 Top 5 (글방은 월별 작성·글자수)
 - **검색** — 제목·작가·**본문 LIKE** 매칭, 가중치 랭킹(제목→작가→본문), 매칭 부근 스니펫 + `<mark>` 키워드 하이라이트, LIKE 패턴 escape
 - **장르/태그 필터링**, 최근/별점 정렬, **페이지네이션** (limit/offset + total count)
 - **삭제 모달** — Radix Dialog 기반 focus-trap·Esc·backdrop 모달
@@ -68,8 +69,9 @@ admin으로 로그인 → 우측 메뉴 → "사용자 관리" → "신규 사�
 
 - `NAVER_CLIENT_ID` + `NAVER_CLIENT_SECRET` — [네이버 개발자센터](https://developers.naver.com/apps/#/register?api=search)에서 발급 (비로그인 오픈 API, 책 검색만 사용)
 - `TMDB_API_KEY` — [TMDB v3](https://www.themoviedb.org/settings/api)의 **API Read Access Token (v4)** (Bearer 헤더로 전송하므로 짧은 v3 키가 아닌 긴 JWT 형식 사용)
+- `RAWG_API_KEY` — [RAWG](https://rawg.io/apidocs)에서 발급. URL 쿼리 파라미터로 전달 — 에러 로그에 URL 포함 금지
 
-키 없이도 사이트는 정상 작동합니다 — 검색 바에서만 503 에러 toast가 표시되고, 사용자는 폼 필드를 직접 입력할 수 있습니다.
+키 없이도 사이트는 정상 작동합니다 — 해당 검색 바에서만 503 에러 toast가 표시되고, 사용자는 폼 필드를 직접 입력할 수 있습니다.
 
 ### `/works` — 작품 검색
 
@@ -78,14 +80,15 @@ admin으로 로그인 → 우측 메뉴 → "사용자 관리" → "신규 사�
 - `/works?type=book&q=어린왕자` — 검색
 - `/works/book/<isbn>` — 책 상세 (사이트 별점 분포 + 한줄평 리스트)
 - `/works/movie/<tmdbId>` — 영화 상세
+- `/works/game/<rawgId>` — 게임 상세
 
-요구 환경 변수는 위 외부 작품 검색 API 섹션과 동일 — `NAVER_CLIENT_ID`/`NAVER_CLIENT_SECRET`, `TMDB_API_KEY`. DB 마이그레이션 없음.
+요구 환경 변수는 위 외부 작품 검색 API 섹션과 동일 — `NAVER_CLIENT_ID`/`NAVER_CLIENT_SECRET`, `TMDB_API_KEY`, `RAWG_API_KEY`. DB 마이그레이션 없음.
 
 ## 테스트
 
 ```bash
-pnpm test         # Vitest 단위 + 통합 (286개)
-pnpm e2e          # Playwright E2E (골든패스·공개 피드·작품 검색·통계 패널 등 14 spec / 25 테스트)
+pnpm test         # Vitest 단위 + 통합 (338개)
+pnpm e2e          # Playwright E2E (골든패스·공개 피드·작품 검색·통계 패널 등 15 spec)
 pnpm lint         # Biome check (lint + format 검사)
 pnpm format       # Biome 자동 수정 (safe)
 ```

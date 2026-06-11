@@ -5,9 +5,12 @@ import {
   getPublicBooksFeedCount,
   getPublicMoviesFeed,
   getPublicMoviesFeedCount,
+  getPublicGamesFeed,
+  getPublicGamesFeedCount,
 } from '@/lib/public-feed-cache'
 import { PublicReviewCard } from '@/components/PublicReviewCard'
 import { PublicMovieCard } from '@/components/PublicMovieCard'
+import { PublicGameCard } from '@/components/PublicGameCard'
 import { Pagination } from '@/components/Pagination'
 import { EmptyState } from '@/components/EmptyState'
 import { getCurrentUser } from '@/lib/auth'
@@ -15,9 +18,11 @@ import { PageParamSchema } from '@/lib/validations'
 
 const PAGE_SIZE = 24
 
-type FeedType = 'book' | 'movie'
+type FeedType = 'book' | 'movie' | 'game'
 function parseType(v: string | undefined): FeedType {
-  return v === 'movie' ? 'movie' : 'book'
+  if (v === 'movie') return 'movie'
+  if (v === 'game') return 'game'
+  return 'book'
 }
 
 interface SP {
@@ -36,17 +41,20 @@ export default async function FeedPage({ searchParams }: SP) {
     <div className="space-y-6">
       <div className="flex items-baseline justify-between">
         <h1 className="text-[28px] font-bold tracking-tight text-[var(--color-text-strong)]">
-          모두의 {type === 'movie' ? '영화관' : '서재'}
+          {type === 'movie' ? '모두의 영화관' : type === 'game' ? '모두의 게임방' : '모두의 서재'}
         </h1>
       </div>
 
       <div className="flex gap-2">
         <TabLink href="/feed?type=book" active={type === 'book'} label="📚 책" />
         <TabLink href="/feed?type=movie" active={type === 'movie'} label="🎬 영화" />
+        <TabLink href="/feed?type=game" active={type === 'game'} label="🎮 게임" />
       </div>
 
       {type === 'movie' ? (
         <MovieFeedContent page={page} offset={(page - 1) * PAGE_SIZE} />
+      ) : type === 'game' ? (
+        <GameFeedContent page={page} offset={(page - 1) * PAGE_SIZE} />
       ) : (
         <BookFeedContent page={page} offset={(page - 1) * PAGE_SIZE} />
       )}
@@ -117,6 +125,40 @@ async function MovieFeedContent({ page, offset }: { page: number; offset: number
         totalPages={totalPages}
         basePath="/feed"
         preservedQuery={{ type: 'movie' }}
+      />
+    </>
+  )
+}
+
+async function GameFeedContent({ page, offset }: { page: number; offset: number }) {
+  const [items, total] = await Promise.all([
+    getPublicGamesFeed(PAGE_SIZE, offset),
+    getPublicGamesFeedCount(),
+  ])
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  if (items.length === 0) {
+    return (
+      <EmptyState
+        emoji="🎮"
+        title="아직 공개된 게임이 없어요"
+        description="내 게임을 공개하면 모두의 게임방에 올라와요"
+        action={{ href: '/games', label: '내 게임방으로 가기' }}
+      />
+    )
+  }
+  return (
+    <>
+      <div className="text-[13px] text-[var(--color-text-weak)] font-tabular">{total}개</div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+        {items.map((g) => (
+          <PublicGameCard key={g.id} item={g} />
+        ))}
+      </div>
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        basePath="/feed"
+        preservedQuery={{ type: 'game' }}
       />
     </>
   )

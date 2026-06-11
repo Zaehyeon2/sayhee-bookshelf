@@ -30,6 +30,15 @@ export interface MovieDashboard {
   topDirectors: CountItem[]
 }
 
+export interface GameDashboard {
+  summary: { total: number; thisYear: number; avgRating: number | null }
+  ratingDist: CountItem[]
+  genreDist: CountItem[]
+  yearTimeline: CountItem[]
+  topTags: CountItem[]
+  topDevelopers: CountItem[]
+}
+
 export interface WritingDashboard {
   summary: { total: number; thisYear: number }
   monthlyTimeline: CountItem[] // 최근 12개월, label='YYYY-MM', 빈 달 0

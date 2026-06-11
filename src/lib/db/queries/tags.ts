@@ -1,5 +1,5 @@
 import { eq, inArray, sql } from 'drizzle-orm'
-import { books, bookTags, tags, writingTags, writings, movieTags, movies } from '../schema'
+import { books, bookTags, tags, writingTags, writings, movieTags, movies, gameTags, games } from '../schema'
 import { escapeLikePattern } from './shared'
 import type { Db, Tx } from './shared'
 
@@ -136,9 +136,48 @@ export async function replaceMovieTagsTx(
   await tx.insert(movieTags).values(tagIds.map((tagId) => ({ movieId, tagId })))
 }
 
+export async function attachGameTags(db: Db, gameId: number): Promise<string[]> {
+  const rows = await db
+    .select({ name: tags.name })
+    .from(gameTags)
+    .innerJoin(tags, eq(gameTags.tagId, tags.id))
+    .where(eq(gameTags.gameId, gameId))
+  return rows.map((r) => r.name)
+}
+
+export async function attachTagsToGamesBatch(
+  db: Db,
+  gameIds: number[],
+): Promise<Map<number, string[]>> {
+  if (gameIds.length === 0) return new Map()
+  const rows = await db
+    .select({ gameId: gameTags.gameId, name: tags.name })
+    .from(gameTags)
+    .innerJoin(tags, eq(gameTags.tagId, tags.id))
+    .where(inArray(gameTags.gameId, gameIds))
+  const map = new Map<number, string[]>()
+  for (const r of rows) {
+    const existing = map.get(r.gameId) ?? []
+    existing.push(r.name)
+    map.set(r.gameId, existing)
+  }
+  return map
+}
+
+export async function replaceGameTagsTx(
+  tx: Tx,
+  gameId: number,
+  tagNames: string[],
+): Promise<void> {
+  await tx.delete(gameTags).where(eq(gameTags.gameId, gameId))
+  if (tagNames.length === 0) return
+  const tagIds = await getOrCreateTagsBatch(tx, tagNames)
+  await tx.insert(gameTags).values(tagIds.map((tagId) => ({ gameId, tagId })))
+}
+
 export async function suggestTags(db: Db, authorUserId: number, q: string): Promise<string[]> {
   const pattern = `${escapeLikePattern(q)}%`
-  // 본인 풀(책 + 글 + 영화)의 태그 합집합에서 자동완성. ORDER BY로 결과 안정화 — prefix 매칭은
+  // 본인 풀(책 + 글 + 영화 + 게임)의 태그 합집합에서 자동완성. ORDER BY로 결과 안정화 — prefix 매칭은
   // 길이가 짧을수록 더 정확한 매칭일 가능성이 높으므로 length ASC, 동률은 이름 사전순.
   const rows = await db.all(sql`
     SELECT DISTINCT t.name
@@ -160,6 +199,11 @@ export async function suggestTags(db: Db, authorUserId: number, q: string): Prom
           INNER JOIN ${movies} m ON m.id = mt.movie_id
           WHERE mt.tag_id = t.id AND m.author_user_id = ${authorUserId}
         )
+        OR EXISTS (
+          SELECT 1 FROM ${gameTags} gt
+          INNER JOIN ${games} g ON g.id = gt.game_id
+          WHERE gt.tag_id = t.id AND g.author_user_id = ${authorUserId}
+        )
       )
     ORDER BY length(t.name) ASC, t.name ASC
     LIMIT 8
@@ -177,4 +221,8 @@ export async function listTagsForWriting(db: Db, writingId: number): Promise<str
 
 export async function listTagsForMovie(db: Db, movieId: number): Promise<string[]> {
   return attachMovieTags(db, movieId)
+}
+
+export async function listTagsForGame(db: Db, gameId: number): Promise<string[]> {
+  return attachGameTags(db, gameId)
 }
