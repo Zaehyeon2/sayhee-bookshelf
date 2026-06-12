@@ -6,11 +6,11 @@ export const MAX_TAGS = 20
 export const MAX_TAG_LEN = 30
 export const MAX_CONTENT_LEN = 50_000
 
-const tagsArraySchema = z
+export const tagsArraySchema = z
   .array(z.string().max(MAX_TAG_LEN, '태그는 최대 30자입니다'))
   .max(MAX_TAGS, '태그는 최대 20개까지 등록할 수 있습니다')
 
-const dedupeTags = (arr: string[]) =>
+export const dedupeTags = (arr: string[]) =>
   Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0)))
 
 export const coverUrlSchema = z
@@ -26,7 +26,12 @@ export const mediaDateSchema = z.string().regex(dateRe, '날짜 형식은 YYYY-M
 
 export const personSchema = (message: string) => z.string().trim().min(1, message).max(100)
 
-/** Create 스키마 공통 필드 — 도메인 파일이 spread 후 person/date/genre/externalId를 extend */
+/**
+ * Create 스키마 공통 필드: title/rating/content/tags/oneLineReview/isPublic/coverUrl.
+ * 도메인 파일(validations.ts)이 spread 후 person(author|director|developer)·
+ * date(readDate|watchedDate|playedDate)·genre enum·externalId(isbn|tmdbId|rawgId)·
+ * externalSource enum을 extend한다.
+ */
 export const mediaCreateBaseFields = {
   title: z.string().trim().min(1, '제목을 입력하세요').max(200),
   rating: z.number().int().min(1).max(10),

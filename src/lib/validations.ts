@@ -6,6 +6,7 @@ import { isManagedBlobUrl } from './image-constraints'
 import {
   coverUrlSchema,
   createListQuerySchema,
+  dedupeTags,
   MAX_CONTENT_LEN,
   MAX_TAG_LEN,
   MAX_TAGS,
@@ -13,6 +14,7 @@ import {
   mediaDateSchema,
   mediaUpdateBaseFields,
   personSchema,
+  tagsArraySchema,
 } from './domains/schemas'
 import { DOMAIN_TYPES } from './domains/config'
 
@@ -22,11 +24,6 @@ export { MAX_TAGS, MAX_TAG_LEN, MAX_CONTENT_LEN } from './domains/schemas'
 export const MAX_SEARCH_Q = 100
 export const MAX_SLUG_LEN = 80
 export const MAX_EXTERNAL_IDS = 50
-
-// 글방(writings)은 미디어 base 필드를 공유하지 않으므로 tags 스키마를 로컬 정의로 유지.
-const tagsArraySchema = z
-  .array(z.string().max(MAX_TAG_LEN, '태그는 최대 30자입니다'))
-  .max(MAX_TAGS, '태그는 최대 20개까지 등록할 수 있습니다')
 
 // 글방 cover는 항상 업로드된 Vercel Blob URL — 외부 URL은 next/image allow-list 밖이라
 // 렌더 시 400. 직접 API 호출 방어를 위해 managed Blob host로 제한 (books/movies는
@@ -192,11 +189,7 @@ export const CreateWritingSchema = z
   .object({
     title: z.string().trim().min(1, '제목을 입력하세요').max(200),
     body: z.string().max(MAX_CONTENT_LEN, '본문이 너무 깁니다').default(''),
-    tags: tagsArraySchema
-      .default([])
-      .transform((arr) =>
-        Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))),
-      ),
+    tags: tagsArraySchema.default([]).transform(dedupeTags),
     coverUrl: writingCoverUrlSchema,
   })
   .strict()
@@ -207,9 +200,7 @@ export const UpdateWritingSchema = z
   .object({
     title: z.string().trim().min(1, '제목을 입력하세요').max(200).optional(),
     body: z.string().max(MAX_CONTENT_LEN, '본문이 너무 깁니다').optional(),
-    tags: tagsArraySchema
-      .transform((arr) => Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))))
-      .optional(),
+    tags: tagsArraySchema.transform(dedupeTags).optional(),
     coverUrl: writingCoverUrlSchema,
   })
   .strict()
