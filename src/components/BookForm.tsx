@@ -28,7 +28,8 @@ const BOOK_FORM_CONFIG: MediaFormConfig<string> = {
   dateLabel: '읽은 날짜',
   oneLinePlaceholder: '이 책을 한 줄로 표현한다면?',
   publicToggleLabel: '모두의 서재에 공개',
-  publicToggleDescription: '이 책의 한줄평·별점·제목·저자를 모두의 서재에서 다른 사람도 볼 수 있어요',
+  publicToggleDescription:
+    '이 책의 한줄평·별점·제목·저자를 모두의 서재에서 다른 사람도 볼 수 있어요',
   deleteConfirmTitle: '이 독후감을 삭제할까요?',
   deleteConfirmDescription: (title) =>
     `'${title || '제목 없음'}' 기록이 영구적으로 사라집니다. 되돌릴 수 없어요.`,

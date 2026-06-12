@@ -4,7 +4,6 @@ import { isValidUsername } from './username-normalize'
 import { canonicalIsbn } from './isbn'
 import { isManagedBlobUrl } from './image-constraints'
 import {
-  coverUrlSchema,
   createListQuerySchema,
   dedupeTags,
   MAX_CONTENT_LEN,

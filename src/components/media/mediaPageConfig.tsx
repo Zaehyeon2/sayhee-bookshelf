@@ -24,7 +24,11 @@ import { BookCard } from '@/components/BookCard'
 import { MovieCard } from '@/components/MovieCard'
 import { GameCard } from '@/components/GameCard'
 import { BOOK_GENRES, GAME_GENRES, MOVIE_GENRES } from '@/lib/genres'
-import { ListBooksQuerySchema, ListGamesQuerySchema, ListMoviesQuerySchema } from '@/lib/validations'
+import {
+  ListBooksQuerySchema,
+  ListGamesQuerySchema,
+  ListMoviesQuerySchema,
+} from '@/lib/validations'
 import { formatRatingCompact } from '@/lib/rating'
 
 /** 목록/상세 페이지가 도메인별로 달라지는 모든 값 — 원문 그대로 보존 */
@@ -43,7 +47,14 @@ export interface MediaPageConfig<Row extends { id: number; slug: string }> {
   emptySearch: { emoji: string; title: string; description: (q: string) => string }
   emptyList: { emoji: string; title: string; description: string; actionLabel: string }
   listQuerySchema: z.ZodType<
-    { genre?: string; tag?: string; year?: number; sort?: 'date' | 'rating'; q?: string; page?: number },
+    {
+      genre?: string
+      tag?: string
+      year?: number
+      sort?: 'date' | 'rating'
+      q?: string
+      page?: number
+    },
     unknown
   >
   /** 카드 렌더 — 도메인별 named-prop 카드를 정규화 props로 래핑. key는 그리드 직계 자식에 부착 */

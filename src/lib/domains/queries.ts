@@ -276,7 +276,8 @@ export function createMediaQueries<Row extends MediaRowBase, ExtId extends strin
 
     if (filters.tag) {
       // tagId 선조회 값이 주입되면 재조회 생략 (list/count 중복 lookup 제거 — 백로그 8)
-      const tagId = filters.tagId !== undefined ? filters.tagId : await resolveTagId(db, filters.tag)
+      const tagId =
+        filters.tagId !== undefined ? filters.tagId : await resolveTagId(db, filters.tag)
       if (tagId === null) return []
 
       const q = applyPaging(
@@ -387,7 +388,8 @@ export function createMediaQueries<Row extends MediaRowBase, ExtId extends strin
     const conditions = baseConditions(authorUserId, filters)
 
     if (filters.tag) {
-      const tagId = filters.tagId !== undefined ? filters.tagId : await resolveTagId(db, filters.tag)
+      const tagId =
+        filters.tagId !== undefined ? filters.tagId : await resolveTagId(db, filters.tag)
       if (tagId === null) return 0
       const rows = await db
         .select({ n: sql<number>`COUNT(*)` })
@@ -439,14 +441,14 @@ export function createMediaQueries<Row extends MediaRowBase, ExtId extends strin
     )
     const rows = await q
     // publishedAt은 위 WHERE로 NOT NULL 보장 — number로 narrow
-    return rows.map((r) => ({ ...r, publishedAt: r.publishedAt as number })) as PublicMediaCard<ExtId>[]
+    return rows.map((r) => ({
+      ...r,
+      publishedAt: r.publishedAt as number,
+    })) as PublicMediaCard<ExtId>[]
   }
 
   async function countPublic(db: Db): Promise<number> {
-    const rows = await db
-      .select({ n: sql<number>`COUNT(*)` })
-      .from(cfg.table)
-      .where(publicWhere())
+    const rows = await db.select({ n: sql<number>`COUNT(*)` }).from(cfg.table).where(publicWhere())
     return Number(rows[0]?.n ?? 0)
   }
 
@@ -460,7 +462,9 @@ export function createMediaQueries<Row extends MediaRowBase, ExtId extends strin
       .where(and(publicWhere(), eq(c.externalId, externalId)))
       .orderBy(desc(c.publishedAt))
       .limit(1)
-    return (rows[0] as { title: string; person: string; coverUrl: string | null } | undefined) ?? null
+    return (
+      (rows[0] as { title: string; person: string; coverUrl: string | null } | undefined) ?? null
+    )
   }
 
   async function countByExternalIds(

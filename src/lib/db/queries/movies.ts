@@ -131,7 +131,11 @@ export async function listRecentPublicMovies(
   opts: { limit: number; offset?: number },
 ): Promise<PublicMovieCard[]> {
   const rows = await q.listRecentPublic(db, opts)
-  return rows.map(({ person, externalId, ...r }) => ({ ...r, director: person, tmdbId: externalId }))
+  return rows.map(({ person, externalId, ...r }) => ({
+    ...r,
+    director: person,
+    tmdbId: externalId,
+  }))
 }
 
 export const countPublicMovies = q.countPublic

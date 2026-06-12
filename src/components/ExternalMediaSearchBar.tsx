@@ -26,7 +26,13 @@ export interface ExternalMediaSearchBarProps<TId extends string | number> {
     byline?: string
     coverUrl?: string | null
   }
-  onSelect: (sel: { externalId: TId; title: string; byline: string; genre?: string; coverUrl?: string }) => void
+  onSelect: (sel: {
+    externalId: TId
+    title: string
+    byline: string
+    genre?: string
+    coverUrl?: string
+  }) => void
   onClear: () => void
 }
 
@@ -40,9 +46,7 @@ export function ExternalMediaSearchBar<TId extends string | number>({
   onSelect,
   onClear,
 }: ExternalMediaSearchBarProps<TId>) {
-  const [showChip, setShowChip] = useState(
-    initial?.externalId != null && Boolean(initial?.title),
-  )
+  const [showChip, setShowChip] = useState(initial?.externalId != null && Boolean(initial?.title))
 
   // Sync chip visibility with prop changes (e.g. after router.refresh()).
   useEffect(() => {
@@ -96,7 +100,6 @@ export function ExternalMediaSearchBar<TId extends string | number>({
         <div className="flex items-center gap-3">
           {item.coverUrl ? (
             // biome-ignore lint/performance/noImgElement: dynamic external URL, not bound to remotePatterns
-            // biome-ignore lint/a11y/useAltText: decorative search-result thumbnail
             <img
               src={item.coverUrl}
               alt=""

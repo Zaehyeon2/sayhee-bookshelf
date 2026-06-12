@@ -131,7 +131,11 @@ export async function listRecentPublicGames(
   opts: { limit: number; offset?: number },
 ): Promise<PublicGameCard[]> {
   const rows = await q.listRecentPublic(db, opts)
-  return rows.map(({ person, externalId, ...r }) => ({ ...r, developer: person, rawgId: externalId }))
+  return rows.map(({ person, externalId, ...r }) => ({
+    ...r,
+    developer: person,
+    rawgId: externalId,
+  }))
 }
 
 export const countPublicGames = q.countPublic

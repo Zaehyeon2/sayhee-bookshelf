@@ -47,7 +47,9 @@ export function MediaCard({ item, basePath, publicBadgeTitle, snippet, query }: 
             </h3>
             <GenreBadge genre={item.genre} />
           </div>
-          <p className="mt-1 text-[14px] text-[var(--color-text-muted)] line-clamp-1">{item.person}</p>
+          <p className="mt-1 text-[14px] text-[var(--color-text-muted)] line-clamp-1">
+            {item.person}
+          </p>
           {snippet && (
             <p className="mt-2 text-[13px] text-[var(--color-text-muted)] line-clamp-2 leading-relaxed">
               {query ? highlightMatch(snippet, query) : snippet}

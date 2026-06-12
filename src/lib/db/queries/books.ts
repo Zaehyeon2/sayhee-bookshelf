@@ -116,7 +116,11 @@ export async function searchBooks(
   return q.search(db, authorUserId, qStr, opts)
 }
 
-export async function countSearchBooks(db: Db, authorUserId: number, qStr: string): Promise<number> {
+export async function countSearchBooks(
+  db: Db,
+  authorUserId: number,
+  qStr: string,
+): Promise<number> {
   return q.countSearch(db, authorUserId, qStr)
 }
 

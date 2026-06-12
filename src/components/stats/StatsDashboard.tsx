@@ -1,7 +1,12 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import type { BookDashboard, GameDashboard, MovieDashboard, WritingDashboard } from '@/lib/stats-types'
+import type {
+  BookDashboard,
+  GameDashboard,
+  MovieDashboard,
+  WritingDashboard,
+} from '@/lib/stats-types'
 import { formatRating } from '@/lib/rating'
 import { Skeleton } from '@/components/Skeleton'
 import { SummaryCards } from './SummaryCards'
@@ -64,7 +69,10 @@ export function StatsDashboard(props: StatsData) {
     books: { personTitle: '저자 Top 5', timelineTitle: '연도별 읽은 수' },
     movies: { personTitle: '감독 Top 5', timelineTitle: '연도별 본 수' },
     games: { personTitle: '개발사 Top 5', timelineTitle: '연도별 플레이 수' },
-  } as const satisfies Record<'books' | 'movies' | 'games', { personTitle: string; timelineTitle: string }>
+  } as const satisfies Record<
+    'books' | 'movies' | 'games',
+    { personTitle: string; timelineTitle: string }
+  >
 
   const labels = MEDIA_STATS_LABELS[props.domain]
   const personItems =

@@ -12,11 +12,7 @@ import {
 } from '../schema'
 import { escapeLikePattern } from './shared'
 import type { Db, Tx } from './shared'
-import {
-  attachTagsBatchGeneric,
-  attachTagsGeneric,
-  replaceTagsTxGeneric,
-} from '@/lib/domains/tags'
+import { attachTagsBatchGeneric, attachTagsGeneric, replaceTagsTxGeneric } from '@/lib/domains/tags'
 
 // ─── junction ref 상수 ────────────────────────────────────────────────────────
 
@@ -64,11 +60,7 @@ export async function attachTagsBatch(db: Db, bookIds: number[]): Promise<Map<nu
   return attachTagsBatchGeneric(db, BOOK_TAGS_REF, bookIds)
 }
 
-export async function replaceBookTagsTx(
-  tx: Tx,
-  bookId: number,
-  tagNames: string[],
-): Promise<void> {
+export async function replaceBookTagsTx(tx: Tx, bookId: number, tagNames: string[]): Promise<void> {
   return replaceTagsTxGeneric(tx, BOOK_TAGS_REF, bookId, tagNames, {
     getOrCreate: getOrCreateTagsBatch,
     buildRows: (id, tagIds) => tagIds.map((tagId) => ({ bookId: id, tagId })),
@@ -136,11 +128,7 @@ export async function attachTagsToGamesBatch(
   return attachTagsBatchGeneric(db, GAME_TAGS_REF, gameIds)
 }
 
-export async function replaceGameTagsTx(
-  tx: Tx,
-  gameId: number,
-  tagNames: string[],
-): Promise<void> {
+export async function replaceGameTagsTx(tx: Tx, gameId: number, tagNames: string[]): Promise<void> {
   return replaceTagsTxGeneric(tx, GAME_TAGS_REF, gameId, tagNames, {
     getOrCreate: getOrCreateTagsBatch,
     buildRows: (id, tagIds) => tagIds.map((tagId) => ({ gameId: id, tagId })),
