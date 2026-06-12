@@ -36,13 +36,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
       </head>
       <body className="min-h-screen">
-        <header className="sticky top-0 z-10 bg-[var(--color-header-bg)] backdrop-blur border-b border-[var(--color-border-subtle)]">
-          <nav className="mx-auto max-w-5xl px-5 h-14 flex items-center justify-between">
+        <header className="sticky top-0 z-10 bg-[var(--color-header-bg)] backdrop-blur-[20px] backdrop-saturate-[1.8] border-b border-[var(--color-border-subtle)]">
+          <nav className="mx-auto max-w-5xl px-5 h-12 flex items-center justify-between">
             <Link
               href="/"
-              className="text-[17px] font-bold text-[var(--color-text-strong)] tracking-tight rounded-[var(--radius-field)] px-2 py-1 -mx-2 -my-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+              className="text-[17px] font-semibold text-[var(--color-text-strong)] tracking-tight rounded-[var(--radius-field)] px-2 py-1 -mx-2 -my-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
             >
-              📚 누구의 서재
+              누구의 서재
             </Link>
             <Suspense fallback={<NavSkeleton />}>
               <NavUser />
@@ -79,31 +79,31 @@ async function NavUser() {
               href="/books"
               className="px-3 h-11 inline-flex items-center text-[14px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] rounded-[var(--radius-field)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
             >
-              📚 내 책장
+              내 책장
             </Link>
             <Link
               href="/movies"
               className="px-3 h-11 inline-flex items-center text-[14px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] rounded-[var(--radius-field)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
             >
-              🎬 내 영화관
+              내 영화관
             </Link>
             <Link
               href="/games"
               className="px-3 h-11 inline-flex items-center text-[14px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] rounded-[var(--radius-field)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
             >
-              🎮 내 게임
+              내 게임
             </Link>
             <Link
               href="/writings"
               className="px-3 h-11 inline-flex items-center text-[14px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] rounded-[var(--radius-field)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
             >
-              ✏️ 글방
+              글방
             </Link>
             <Link
               href="/works"
               className="px-3 h-11 inline-flex items-center text-[14px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] rounded-[var(--radius-field)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
             >
-              🔍 작품 검색
+              작품 검색
             </Link>
             <UserMenu displayName={me.displayName} role={me.role as 'admin' | 'member'} />
           </>

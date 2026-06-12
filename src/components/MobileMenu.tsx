@@ -56,35 +56,35 @@ export function MobileMenu({ displayName, role }: Props) {
             onClick={close}
             className="block mx-1 px-3 py-2.5 rounded-[var(--radius-field)] hover:bg-[var(--color-surface-2)]"
           >
-            📚 내 책장
+            내 책장
           </Link>
           <Link
             href="/movies"
             onClick={close}
             className="block mx-1 px-3 py-2.5 rounded-[var(--radius-field)] hover:bg-[var(--color-surface-2)]"
           >
-            🎬 내 영화관
+            내 영화관
           </Link>
           <Link
             href="/games"
             onClick={close}
             className="block mx-1 px-3 py-2.5 rounded-[var(--radius-field)] hover:bg-[var(--color-surface-2)]"
           >
-            🎮 내 게임
+            내 게임
           </Link>
           <Link
             href="/writings"
             onClick={close}
             className="block mx-1 px-3 py-2.5 rounded-[var(--radius-field)] hover:bg-[var(--color-surface-2)]"
           >
-            ✏️ 글방
+            글방
           </Link>
           <Link
             href="/works"
             onClick={close}
             className="block mx-1 px-3 py-2.5 rounded-[var(--radius-field)] hover:bg-[var(--color-surface-2)]"
           >
-            🔍 작품 검색
+            작품 검색
           </Link>
           <div className="border-t border-[var(--color-border-subtle)] my-1" />
           <div className="px-4 py-2 text-[12px] text-[var(--color-text-muted)]">{displayName}</div>

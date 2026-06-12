@@ -8,7 +8,7 @@ test('모바일 viewport에서 햄버거 버튼 표시, 데스크톱 nav 링크 
   await login(page, '/')
   await expect(page.getByRole('button', { name: '메뉴 열기' })).toBeVisible()
   await expect(
-    page.getByTestId('desktop-nav').getByRole('link', { name: /📚 내 책장/ }),
+    page.getByTestId('desktop-nav').getByRole('link', { name: /내 책장/ }),
   ).toBeHidden()
 })
 
@@ -16,7 +16,7 @@ test('햄버거 클릭 → 패널 열림 → 내 책장 클릭 → /books 이동
   await page.setViewportSize(MOBILE_VIEWPORT)
   await login(page, '/')
   await page.getByRole('button', { name: '메뉴 열기' }).click()
-  const panelLink = page.getByTestId('mobile-nav').getByRole('link', { name: /📚 내 책장/ })
+  const panelLink = page.getByTestId('mobile-nav').getByRole('link', { name: /내 책장/ })
   await expect(panelLink).toBeVisible()
   await panelLink.click()
   await expect(page).toHaveURL('/books', { timeout: 10_000 })
@@ -27,6 +27,6 @@ test('데스크톱 viewport에서는 햄버거 숨김, nav 링크 노출', async
   await login(page, '/')
   await expect(page.getByRole('button', { name: '메뉴 열기' })).toBeHidden()
   await expect(
-    page.getByTestId('desktop-nav').getByRole('link', { name: /📚 내 책장/ }),
+    page.getByTestId('desktop-nav').getByRole('link', { name: /내 책장/ }),
   ).toBeVisible()
 })
