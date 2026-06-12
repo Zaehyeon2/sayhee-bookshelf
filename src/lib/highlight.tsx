@@ -16,7 +16,7 @@ export function highlightMatch(text: string, query: string): React.ReactNode {
     part.toLowerCase() === query.toLowerCase() ? (
       <mark
         key={i}
-        className="bg-[var(--color-accent-soft)] text-[var(--color-accent)] rounded-[3px] px-0.5"
+        className="bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] rounded-[3px] px-0.5"
       >
         {part}
       </mark>

@@ -159,7 +159,7 @@ export function WritingForm({ initial, mode }: Props) {
             <button
               type="button"
               onClick={() => coverInputRef.current?.click()}
-              className="h-12 px-5 rounded-[var(--radius-field)] border border-dashed border-[var(--color-border)] text-[14px] font-semibold text-[var(--color-text-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition"
+              className="h-12 px-5 rounded-[var(--radius-field)] border border-dashed border-[var(--color-border)] text-[14px] font-semibold text-[var(--color-text-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent-text)] transition"
             >
               + 이미지 첨부
             </button>

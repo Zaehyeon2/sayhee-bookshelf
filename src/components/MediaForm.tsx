@@ -216,7 +216,7 @@ export function MediaForm<TId extends string | number>({ config, initial, mode }
               className={[
                 'absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-tabular tabular-nums',
                 oneLineReview.length > 120
-                  ? 'text-[var(--color-accent)]'
+                  ? 'text-[var(--color-accent-text)]'
                   : 'text-[var(--color-text-weak)]',
               ].join(' ')}
               aria-hidden

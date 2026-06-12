@@ -43,7 +43,7 @@ export function SelectedChip({
       <button
         type="button"
         onClick={onReopen}
-        className="text-[12px] font-medium text-[var(--color-accent)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] rounded px-1"
+        className="text-[12px] font-medium text-[var(--color-accent-text)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] rounded px-1"
       >
         다시 검색
       </button>

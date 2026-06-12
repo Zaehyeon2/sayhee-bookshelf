@@ -104,7 +104,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, Props>(
               overLimit
                 ? 'text-[var(--color-danger)] font-semibold'
                 : nearLimit
-                  ? 'text-[var(--color-accent)]'
+                  ? 'text-[var(--color-accent-text)]'
                   : 'text-[var(--color-text-weak)]',
             ].join(' ')}
             aria-live="polite"

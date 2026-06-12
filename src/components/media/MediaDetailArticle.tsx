@@ -45,7 +45,7 @@ export function MediaDetailArticle<R extends Row>({
             <time className="text-[13px] text-[var(--color-text-weak)] font-tabular">{date}</time>
             {item.isPublic === 1 && (
               <span
-                className="inline-flex items-center text-[12px] font-semibold text-[var(--color-accent)]"
+                className="inline-flex items-center text-[12px] font-semibold text-[var(--color-accent-text)]"
                 title={publicBadgeTitle}
               >
                 공개
@@ -86,7 +86,7 @@ export function MediaDetailArticle<R extends Row>({
               <li key={t}>
                 <Link
                   href={`${basePath}?tag=${encodeURIComponent(t)}`}
-                  className="inline-flex items-center rounded-full bg-[var(--color-surface-2)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)] px-3 py-1 text-[12px] font-medium text-[var(--color-text-muted)] transition"
+                  className="inline-flex items-center rounded-full bg-[var(--color-surface-2)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent-text)] px-3 py-1 text-[12px] font-medium text-[var(--color-text-muted)] transition"
                 >
                   #{t}
                 </Link>

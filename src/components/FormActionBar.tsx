@@ -51,7 +51,7 @@ export function FormActionBar({
             type="button"
             onClick={openDeleteConfirm}
             disabled={deleting}
-            className="mr-auto h-11 px-5 rounded-[var(--radius-pill)] text-[14px] font-semibold text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-danger)] disabled:opacity-50"
+            className="mr-auto h-11 px-5 rounded-[var(--radius-pill)] text-[14px] font-semibold text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-danger)] focus-visible:ring-offset-2 disabled:opacity-50"
           >
             삭제
           </button>

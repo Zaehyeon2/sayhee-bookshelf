@@ -130,7 +130,7 @@ export function UserAdminTable({
                   <button
                     onClick={() => onReset(u.id, u.username)}
                     disabled={resetting}
-                    className="text-[12px] text-[var(--color-accent)] hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-[12px] text-[var(--color-accent-text)] hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {resetting ? '처리 중…' : '비번 reset'}
                   </button>

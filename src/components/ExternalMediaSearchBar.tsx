@@ -122,7 +122,7 @@ export function ExternalMediaSearchBar<TId extends string | number>({
               }}
             />
           ) : (
-            <div className="w-9 h-[52px] rounded-sm bg-[var(--color-surface-2)] flex items-center justify-center text-base" />
+            <div className="w-9 h-[52px] rounded-sm bg-[var(--color-surface-2)]" />
           )}
           <div className="min-w-0 flex-1">
             <div className="font-semibold truncate">
@@ -141,7 +141,7 @@ export function ExternalMediaSearchBar<TId extends string | number>({
                 .join(' · ') || ' '}
             </div>
             {count > 0 && (
-              <div className="text-[11px] text-[var(--color-accent)] mt-0.5">
+              <div className="text-[11px] text-[var(--color-accent-text)] mt-0.5">
                 ✓ 이미 {count}번 기록했어요
               </div>
             )}

@@ -43,7 +43,7 @@ export function MediaCard({ item, basePath, publicBadgeTitle, snippet, query }: 
         )}
         <div className="flex-1 min-w-0 flex flex-col">
           <div className="flex items-start justify-between gap-3">
-            <h3 className="text-[17px] font-bold leading-snug line-clamp-2 text-[var(--color-text-strong)] group-hover:text-[var(--color-accent)] transition">
+            <h3 className="text-[17px] font-bold leading-snug line-clamp-2 text-[var(--color-text-strong)] group-hover:text-[var(--color-accent-text)] transition">
               {item.title}
             </h3>
             <GenreBadge genre={item.genre} />
@@ -70,7 +70,7 @@ export function MediaCard({ item, basePath, publicBadgeTitle, snippet, query }: 
             <div className="flex items-center gap-2">
               {item.isPublic === 1 && (
                 <span
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--color-accent)]"
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--color-accent-text)]"
                   title={publicBadgeTitle}
                 >
                   공개

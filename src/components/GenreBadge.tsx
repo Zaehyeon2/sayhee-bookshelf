@@ -5,7 +5,7 @@ interface Props {
 
 export function GenreBadge({ genre, active = false }: Props) {
   const cls = active
-    ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent)]'
+    ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]'
     : 'bg-[var(--color-surface-2)] text-[var(--color-text-muted)]'
   return (
     <span

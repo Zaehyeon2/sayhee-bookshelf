@@ -120,7 +120,7 @@ export default async function HomePage() {
           {recentPublicBooks.length > 0 && (
             <Link
               href="/feed"
-              className="text-[13px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition"
+              className="text-[13px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent-text)] transition"
             >
               전체 보기 →
             </Link>
@@ -147,7 +147,7 @@ export default async function HomePage() {
           {recentPublicMovies.length > 0 && (
             <Link
               href="/feed?type=movie"
-              className="text-[13px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition"
+              className="text-[13px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent-text)] transition"
             >
               전체 보기 →
             </Link>
@@ -174,7 +174,7 @@ export default async function HomePage() {
           {recentPublicGames.length > 0 && (
             <Link
               href="/feed?type=game"
-              className="text-[13px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition"
+              className="text-[13px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent-text)] transition"
             >
               전체 보기 →
             </Link>
@@ -201,7 +201,7 @@ export default async function HomePage() {
           {recentWritings.length > 0 && (
             <Link
               href="/writings"
-              className="text-[13px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition"
+              className="text-[13px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent-text)] transition"
             >
               전체 보기 →
             </Link>
@@ -249,7 +249,7 @@ function EntryCard({
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-[18px] font-bold text-[var(--color-text-strong)] group-hover:text-[var(--color-accent)] transition">
+            <span className="text-[18px] font-bold text-[var(--color-text-strong)] group-hover:text-[var(--color-accent-text)] transition">
               {label}
             </span>
           </div>

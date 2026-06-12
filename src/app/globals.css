@@ -4,6 +4,7 @@
   --color-accent: #0071e3;
   --color-accent-hover: #0077ed;
   --color-accent-soft: #e8f0fd;
+  --color-accent-text: #0071e3;
   --color-link: #0066cc;
   --color-star: #ff9500;
 
@@ -132,6 +133,7 @@ body {
   --color-accent: #0071e3;
   --color-accent-hover: #2987f0;
   --color-accent-soft: #16263d;
+  --color-accent-text: #2997ff;
   --color-link: #2997ff;
   --color-star: #ff9f0a;
   --color-danger: #ff453a;
@@ -155,6 +157,7 @@ body {
     --color-accent: #0071e3;
     --color-accent-hover: #2987f0;
     --color-accent-soft: #16263d;
+    --color-accent-text: #2997ff;
     --color-link: #2997ff;
     --color-star: #ff9f0a;
     --color-danger: #ff453a;

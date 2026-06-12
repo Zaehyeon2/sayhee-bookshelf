@@ -40,7 +40,7 @@ export function WritingCard({ writing, snippet, query }: Props) {
           />
         )}
         <div className="flex-1 min-w-0">
-          <h3 className="text-[17px] font-bold leading-snug line-clamp-2 text-[var(--color-text-strong)] group-hover:text-[var(--color-accent)] transition">
+          <h3 className="text-[17px] font-bold leading-snug line-clamp-2 text-[var(--color-text-strong)] group-hover:text-[var(--color-accent-text)] transition">
             {query ? highlightMatch(writing.title, query) : writing.title}
           </h3>
           <p className="mt-2 text-[13px] text-[var(--color-text-muted)] line-clamp-2 leading-relaxed">
