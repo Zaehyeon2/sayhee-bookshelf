@@ -73,6 +73,16 @@ interface MediaRowBase {
   slug: string
 }
 
+/** $dynamic 쿼리에 limit/offset을 조건부 적용 — list/search/public list 5곳이 공유. */
+function applyPaging<Q extends { limit(n: number): Q; offset(n: number): Q }>(
+  q: Q,
+  opts: { limit?: number; offset?: number },
+): Q {
+  if (opts.limit !== undefined) q = q.limit(opts.limit)
+  if (opts.offset !== undefined) q = q.offset(opts.offset)
+  return q
+}
+
 /**
  * 미디어 도메인 쿼리 팩토리. Row = 해당 테이블의 $inferSelect (도메인 컬럼명 유지).
  * 모든 user-scoped 함수는 authorUserId 필터 필수(멀티테넌트 invariant).
@@ -269,15 +279,16 @@ export function createMediaQueries<Row extends MediaRowBase, ExtId extends strin
       const tagId = filters.tagId !== undefined ? filters.tagId : await resolveTagId(db, filters.tag)
       if (tagId === null) return []
 
-      let q = db
-        .select({ row: cfg.table })
-        .from(cfg.table)
-        .innerJoin(cfg.junction, and(eq(cfg.junctionFk, c.id), eq(tagsRef.tagId, tagId)))
-        .where(and(...conditions))
-        .orderBy(...orderForSort(filters.sort))
-        .$dynamic()
-      if (filters.limit !== undefined) q = q.limit(filters.limit)
-      if (filters.offset !== undefined) q = q.offset(filters.offset)
+      const q = applyPaging(
+        db
+          .select({ row: cfg.table })
+          .from(cfg.table)
+          .innerJoin(cfg.junction, and(eq(cfg.junctionFk, c.id), eq(tagsRef.tagId, tagId)))
+          .where(and(...conditions))
+          .orderBy(...orderForSort(filters.sort))
+          .$dynamic(),
+        filters,
+      )
       const rows = (await q) as unknown as { row: Row }[]
 
       const tagMap = await attachTagsBatchGeneric(
@@ -288,14 +299,15 @@ export function createMediaQueries<Row extends MediaRowBase, ExtId extends strin
       return rows.map((r) => ({ ...r.row, tags: tagMap.get(r.row.id) ?? [] }))
     }
 
-    let q = db
-      .select()
-      .from(cfg.table)
-      .where(and(...conditions))
-      .orderBy(...orderForSort(filters.sort))
-      .$dynamic()
-    if (filters.limit !== undefined) q = q.limit(filters.limit)
-    if (filters.offset !== undefined) q = q.offset(filters.offset)
+    const q = applyPaging(
+      db
+        .select()
+        .from(cfg.table)
+        .where(and(...conditions))
+        .orderBy(...orderForSort(filters.sort))
+        .$dynamic(),
+      filters,
+    )
     const rows = (await q) as unknown as Row[]
 
     const tagMap = await attachTagsBatchGeneric(
@@ -318,21 +330,22 @@ export function createMediaQueries<Row extends MediaRowBase, ExtId extends strin
     opts: { limit?: number; offset?: number } = {},
   ): Promise<(Row & { tags: string[] })[]> {
     const pattern = `%${escapeLikePattern(q)}%`
-    let query = db
-      .select()
-      .from(cfg.table)
-      .where(and(eq(c.authorUserId, authorUserId), searchWhere(pattern)))
-      .orderBy(
-        sql`CASE
+    const query = applyPaging(
+      db
+        .select()
+        .from(cfg.table)
+        .where(and(eq(c.authorUserId, authorUserId), searchWhere(pattern)))
+        .orderBy(
+          sql`CASE
         WHEN ${c.title} LIKE ${pattern} ESCAPE '\\' THEN 1
         WHEN ${c.person} LIKE ${pattern} ESCAPE '\\' THEN 2
         ELSE 3
       END`,
-        desc(c.date),
-      )
-      .$dynamic()
-    if (opts.limit !== undefined) query = query.limit(opts.limit)
-    if (opts.offset !== undefined) query = query.offset(opts.offset)
+          desc(c.date),
+        )
+        .$dynamic(),
+      opts,
+    )
     const rows = (await query) as unknown as Row[]
 
     const tagMap = await attachTagsBatchGeneric(
@@ -394,6 +407,7 @@ export function createMediaQueries<Row extends MediaRowBase, ExtId extends strin
   // ─── public feed ───────────────────────────────────────────────────────────
   // MULTITENANT INVARIANT EXCEPTION: 아래 함수들은 authorUserId 필터가 없는 유일한
   // read 경로. 반드시 isPublic=1 AND publishedAt IS NOT NULL 조건 유지.
+  // 다른 모든 list/get(user-scoped 쿼리)은 본인 스코프(authorUserId 매칭) 유지.
 
   const publicWhere = () => and(eq(c.isPublic, 1), isNotNull(c.publishedAt))
 
@@ -401,27 +415,28 @@ export function createMediaQueries<Row extends MediaRowBase, ExtId extends strin
     db: Db,
     opts: { limit: number; offset?: number },
   ): Promise<PublicMediaCard<ExtId>[]> {
-    let q = db
-      .select({
-        id: c.id,
-        slug: c.slug,
-        title: c.title,
-        person: c.person,
-        genre: c.genre,
-        rating: c.rating,
-        oneLineReview: c.oneLineReview,
-        coverUrl: c.coverUrl,
-        externalId: c.externalId,
-        publishedAt: c.publishedAt,
-        authorDisplayName: users.displayName,
-      })
-      .from(cfg.table)
-      .innerJoin(users, eq(c.authorUserId, users.id))
-      .where(publicWhere())
-      .orderBy(desc(c.publishedAt))
-      .$dynamic()
-    q = q.limit(opts.limit)
-    if (opts.offset !== undefined) q = q.offset(opts.offset)
+    const q = applyPaging(
+      db
+        .select({
+          id: c.id,
+          slug: c.slug,
+          title: c.title,
+          person: c.person,
+          genre: c.genre,
+          rating: c.rating,
+          oneLineReview: c.oneLineReview,
+          coverUrl: c.coverUrl,
+          externalId: c.externalId,
+          publishedAt: c.publishedAt,
+          authorDisplayName: users.displayName,
+        })
+        .from(cfg.table)
+        .innerJoin(users, eq(c.authorUserId, users.id))
+        .where(publicWhere())
+        .orderBy(desc(c.publishedAt))
+        .$dynamic(),
+      opts,
+    )
     const rows = await q
     // publishedAt은 위 WHERE로 NOT NULL 보장 — number로 narrow
     return rows.map((r) => ({ ...r, publishedAt: r.publishedAt as number })) as PublicMediaCard<ExtId>[]
@@ -470,6 +485,7 @@ export function createMediaQueries<Row extends MediaRowBase, ExtId extends strin
   // ─── works (external-id aggregation) ──────────────────────────────────────
   // MULTITENANT INVARIANT EXCEPTION: cross-user read — /works 작품별 별점·한줄평 묶음용.
   // 한줄평 유무와 무관하게 published 항목 모두 포함 (별점 집계 왜곡 방지).
+  // 다른 모든 list/get(user-scoped 쿼리)은 본인 스코프(authorUserId 매칭) 유지.
 
   async function getAggregatesByExternalIds(
     db: Db,
@@ -499,23 +515,24 @@ export function createMediaQueries<Row extends MediaRowBase, ExtId extends strin
     externalId: ExtId,
     opts: { limit: number; offset?: number },
   ): Promise<MediaReviewItem[]> {
-    let q = db
-      .select({
-        id: c.id,
-        slug: c.slug,
-        oneLineReview: c.oneLineReview,
-        rating: c.rating,
-        publishedAt: c.publishedAt,
-        authorUsername: users.username,
-        authorDisplayName: users.displayName,
-      })
-      .from(cfg.table)
-      .innerJoin(users, eq(c.authorUserId, users.id))
-      .where(and(publicWhere(), eq(c.externalId, externalId)))
-      .orderBy(desc(c.publishedAt))
-      .$dynamic()
-    q = q.limit(opts.limit)
-    if (opts.offset !== undefined) q = q.offset(opts.offset)
+    const q = applyPaging(
+      db
+        .select({
+          id: c.id,
+          slug: c.slug,
+          oneLineReview: c.oneLineReview,
+          rating: c.rating,
+          publishedAt: c.publishedAt,
+          authorUsername: users.username,
+          authorDisplayName: users.displayName,
+        })
+        .from(cfg.table)
+        .innerJoin(users, eq(c.authorUserId, users.id))
+        .where(and(publicWhere(), eq(c.externalId, externalId)))
+        .orderBy(desc(c.publishedAt))
+        .$dynamic(),
+      opts,
+    )
     const rows = await q
     return rows.map((r) => ({ ...r, publishedAt: r.publishedAt as number })) as MediaReviewItem[]
   }
