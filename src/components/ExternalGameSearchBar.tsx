@@ -28,7 +28,7 @@ export function ExternalGameSearchBar({ initial, onSelect, onClear }: Props) {
       byExternalUrl="/api/games/by-external"
       placeholder="제목으로 검색 (예: 엘든 링)"
       fallbackIcon="🎮"
-      variant="media"
+      display={{ inlineSubtitle: true, secondaryFields: ['year', 'genre'] }}
       initial={
         initial
           ? {

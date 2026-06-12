@@ -6,18 +6,20 @@ import { SelectedChip } from './external/SelectedChip'
 import { useExternalSearch } from './external/useExternalSearch'
 import type { ExternalSearchItem } from '@/lib/external/types'
 
-/**
- * 제네릭 외부 검색바.
- * - variant='book': 제목 줄은 title만, 보조 줄은 [byline, year, genre].
- * - variant='media': 제목 줄에 subtitle 인라인 렌더링, 보조 줄은 [year, genre].
- */
+/** 검색 결과 항목의 도메인별 표시 설정 — renderItem이 분기 없이 해석하는 선언적 명세 */
+export interface SearchItemDisplay {
+  /** 제목 줄에 subtitle을 ' · subtitle'로 인라인 표시 */
+  inlineSubtitle: boolean
+  /** 보조 줄에 합칠 필드 순서 */
+  secondaryFields: readonly ('byline' | 'year' | 'genre')[]
+}
+
 export interface ExternalMediaSearchBarProps<TId extends string | number> {
   searchUrl: string
   byExternalUrl: string
   placeholder: string
   fallbackIcon: string
-  /** book vs movie/game의 renderItem 차이를 제어 */
-  variant: 'book' | 'media'
+  display: SearchItemDisplay
   initial?: {
     externalId?: TId | null
     title?: string
@@ -33,7 +35,7 @@ export function ExternalMediaSearchBar<TId extends string | number>({
   byExternalUrl,
   placeholder,
   fallbackIcon,
-  variant,
+  display,
   initial,
   onSelect,
   onClear,
@@ -113,7 +115,7 @@ export function ExternalMediaSearchBar<TId extends string | number>({
           <div className="min-w-0 flex-1">
             <div className="font-semibold truncate">
               {item.title}
-              {variant === 'media' && item.subtitle && (
+              {display.inlineSubtitle && item.subtitle && (
                 <span className="text-[var(--color-text-muted)] font-normal">
                   {' '}
                   · {item.subtitle}
@@ -121,9 +123,10 @@ export function ExternalMediaSearchBar<TId extends string | number>({
               )}
             </div>
             <div className="text-[12px] text-[var(--color-text-muted)] truncate">
-              {variant === 'book'
-                ? [item.byline, item.year, item.genre].filter(Boolean).join(' · ') || ' '
-                : [item.year, item.genre].filter(Boolean).join(' · ') || ' '}
+              {display.secondaryFields
+                .map((f) => item[f])
+                .filter(Boolean)
+                .join(' · ') || ' '}
             </div>
             {count > 0 && (
               <div className="text-[11px] text-[var(--color-toss-blue)] mt-0.5">
