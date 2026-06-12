@@ -69,7 +69,6 @@ export default async function HomePage() {
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <EntryCard
           href="/books"
-          emoji="📚"
           label="책장"
           count={totalBooks}
           unit="권"
@@ -81,7 +80,6 @@ export default async function HomePage() {
         />
         <EntryCard
           href="/writings"
-          emoji="✏️"
           label="글방"
           count={totalWritings}
           unit="편"
@@ -90,7 +88,6 @@ export default async function HomePage() {
         />
         <EntryCard
           href="/movies"
-          emoji="🎬"
           label="영화관"
           count={movieStats.moviesTotal}
           unit="편"
@@ -104,7 +101,6 @@ export default async function HomePage() {
         />
         <EntryCard
           href="/games"
-          emoji="🎮"
           label="게임"
           count={gameStats.gamesTotal}
           unit="개"
@@ -160,7 +156,6 @@ export default async function HomePage() {
         </div>
         {recentPublicMovies.length === 0 ? (
           <EmptyState
-            emoji="🎬"
             title="아직 공개된 영화가 없어요"
             description="내 영화를 공개하면 모두의 영화관에 올라와요"
             action={{ href: '/movies', label: '내 영화관으로 가기' }}
@@ -188,7 +183,6 @@ export default async function HomePage() {
         </div>
         {recentPublicGames.length === 0 ? (
           <EmptyState
-            emoji="🎮"
             title="아직 공개된 게임이 없어요"
             description="내 게임을 공개하면 모두의 게임방에 올라와요"
             action={{ href: '/games', label: '내 게임으로 가기' }}

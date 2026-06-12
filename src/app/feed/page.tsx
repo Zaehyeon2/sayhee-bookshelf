@@ -46,9 +46,9 @@ export default async function FeedPage({ searchParams }: SP) {
       </div>
 
       <div className="flex gap-2">
-        <TabLink href="/feed?type=book" active={type === 'book'} label="📚 책" />
-        <TabLink href="/feed?type=movie" active={type === 'movie'} label="🎬 영화" />
-        <TabLink href="/feed?type=game" active={type === 'game'} label="🎮 게임" />
+        <TabLink href="/feed?type=book" active={type === 'book'} label="책" />
+        <TabLink href="/feed?type=movie" active={type === 'movie'} label="영화" />
+        <TabLink href="/feed?type=game" active={type === 'game'} label="게임" />
       </div>
 
       {type === 'movie' ? (
@@ -105,7 +105,6 @@ async function MovieFeedContent({ page, offset }: { page: number; offset: number
   if (items.length === 0) {
     return (
       <EmptyState
-        emoji="🎬"
         title="아직 공개된 영화가 없어요"
         description="내 영화를 공개하면 모두의 영화관에 올라와요"
         action={{ href: '/movies', label: '내 영화관으로 가기' }}
@@ -139,7 +138,6 @@ async function GameFeedContent({ page, offset }: { page: number; offset: number 
   if (items.length === 0) {
     return (
       <EmptyState
-        emoji="🎮"
         title="아직 공개된 게임이 없어요"
         description="내 게임을 공개하면 모두의 게임방에 올라와요"
         action={{ href: '/games', label: '내 게임방으로 가기' }}

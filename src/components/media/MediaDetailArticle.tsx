@@ -48,7 +48,7 @@ export function MediaDetailArticle<R extends Row>({
                 className="inline-flex items-center text-[12px] font-semibold text-[var(--color-accent)]"
                 title={publicBadgeTitle}
               >
-                🌐 공개
+                공개
               </span>
             )}
           </div>

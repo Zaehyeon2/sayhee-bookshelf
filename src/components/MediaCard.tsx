@@ -73,7 +73,7 @@ export function MediaCard({ item, basePath, publicBadgeTitle, snippet, query }: 
                   className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--color-accent)]"
                   title={publicBadgeTitle}
                 >
-                  🌐 공개
+                  공개
                 </span>
               )}
               <time className="text-[12px] text-[var(--color-text-weak)] font-tabular">

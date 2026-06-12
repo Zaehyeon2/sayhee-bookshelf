@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 interface Props {
-  emoji: string
+  emoji?: string
   title: string
   description?: string
   action?: { href: string; label: string }
@@ -10,9 +10,11 @@ interface Props {
 export function EmptyState({ emoji, title, description, action }: Props) {
   return (
     <div className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-10 sm:p-12 text-center">
-      <div className="text-[40px] leading-none" aria-hidden>
-        {emoji}
-      </div>
+      {emoji && (
+        <div className="text-[40px] leading-none" aria-hidden>
+          {emoji}
+        </div>
+      )}
       <p className="mt-4 text-[16px] font-semibold text-[var(--color-text-strong)]">{title}</p>
       {description && (
         <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">{description}</p>

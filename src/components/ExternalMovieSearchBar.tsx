@@ -27,7 +27,7 @@ export function ExternalMovieSearchBar({ initial, onSelect, onClear }: Props) {
       searchUrl="/api/external/movies/search"
       byExternalUrl="/api/movies/by-external"
       placeholder="제목으로 검색 (예: 파이트 클럽)"
-      fallbackIcon="🎬"
+      fallbackIcon=""
       display={{ inlineSubtitle: true, secondaryFields: ['year', 'genre'] }}
       initial={
         initial

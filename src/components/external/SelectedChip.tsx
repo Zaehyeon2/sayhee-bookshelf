@@ -33,7 +33,7 @@ export function SelectedChip({
         />
       ) : (
         <div className="w-9 h-[52px] rounded-sm bg-[var(--color-surface)] flex items-center justify-center text-[var(--color-text-muted)] text-lg">
-          {fallbackIcon ?? '📚'}
+          {fallbackIcon ?? ''}
         </div>
       )}
       <div className="min-w-0 flex-1">

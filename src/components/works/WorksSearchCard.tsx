@@ -85,7 +85,7 @@ export function WorksSearchCard(props: Props) {
                   사이트 ★ {props.siteAgg.avg.toFixed(1)}
                 </span>
                 <span className="text-[var(--color-text-weak)] font-tabular tabular-nums">
-                  📝 {props.siteAgg.cnt}
+                  {props.siteAgg.cnt}
                 </span>
               </>
             ) : typeof props.externalRating !== 'number' ? (

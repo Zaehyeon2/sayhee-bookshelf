@@ -102,7 +102,6 @@ async function WritingsResults({
       {writings.length === 0 ? (
         isSearch ? (
           <EmptyState
-            emoji="🔍"
             title="찾는 글이 없어요"
             description={`'${q}' 와 일치하는 결과가 없습니다`}
           />

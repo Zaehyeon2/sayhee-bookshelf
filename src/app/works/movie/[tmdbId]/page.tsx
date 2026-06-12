@@ -73,7 +73,6 @@ export default async function WorksMovieDetailPage({ params, searchParams }: SP)
         </h2>
         {items.length === 0 ? (
           <EmptyState
-            emoji="📝"
             title="아직 평가가 없어요"
             description="이 영화를 보고 별점·한줄평을 남겨보세요"
           />

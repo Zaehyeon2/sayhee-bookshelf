@@ -113,7 +113,7 @@ describe('MovieCard', () => {
 
   test('omits public badge when isPublic=0', () => {
     render(<MovieCard movie={{ ...movie, isPublic: 0 }} />)
-    expect(screen.queryByText(/🌐/)).toBeNull()
+    expect(screen.queryByText(/공개/)).toBeNull()
   })
 
   test('renders up to 3 tags', () => {

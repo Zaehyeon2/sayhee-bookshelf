@@ -44,17 +44,17 @@ export default async function WorksSearchPage({ searchParams }: SP) {
         <TabLink
           href={`/works?type=book${q ? `&q=${encodeURIComponent(q)}` : ''}`}
           active={type === 'book'}
-          label="📚 책"
+          label="책"
         />
         <TabLink
           href={`/works?type=movie${q ? `&q=${encodeURIComponent(q)}` : ''}`}
           active={type === 'movie'}
-          label="🎬 영화"
+          label="영화"
         />
         <TabLink
           href={`/works?type=game${q ? `&q=${encodeURIComponent(q)}` : ''}`}
           active={type === 'game'}
-          label="🎮 게임"
+          label="게임"
         />
       </div>
 
@@ -63,7 +63,6 @@ export default async function WorksSearchPage({ searchParams }: SP) {
       <Suspense fallback={<CardGridSkeleton />} key={`${type}-${q}`}>
         {!q ? (
           <EmptyState
-            emoji="🔍"
             title="키워드로 검색해보세요"
             description={
               type === 'book'

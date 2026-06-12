@@ -38,6 +38,6 @@ test('works tab switches with empty query', async ({ page }) => {
   await expect(page).toHaveURL(/type=movie/)
 
   // 책 탭으로 전환 (q 없는 상태) → placeholder 책용으로 바뀜
-  await page.getByRole('link', { name: /📚 책/ }).click()
+  await page.getByRole('link', { name: '책', exact: true }).click()
   await expect(page.getByPlaceholder('책 제목·저자 검색')).toBeVisible()
 })

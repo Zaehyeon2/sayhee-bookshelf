@@ -115,7 +115,7 @@ export const BOOKS_PAGE_CONFIG: MediaPageConfig<BookWithTags> = {
   countUnit: '권',
   newLabel: '새 책',
   emptySearch: {
-    emoji: '🔍',
+    emoji: '',
     title: '찾는 책이 없어요',
     description: (q) => `'${q}' 와 일치하는 결과가 없습니다`,
   },
@@ -159,12 +159,12 @@ export const MOVIES_PAGE_CONFIG: MediaPageConfig<MovieWithTags> = {
   countUnit: '편',
   newLabel: '새 영화',
   emptySearch: {
-    emoji: '🔍',
+    emoji: '',
     title: '찾는 영화가 없어요',
     description: (q) => `'${q}' 와 일치하는 결과가 없습니다`,
   },
   emptyList: {
-    emoji: '🎬',
+    emoji: '',
     title: '아직 영화가 없어요',
     description: '첫 감상을 남겨보세요',
     actionLabel: '새 감상',
@@ -203,12 +203,12 @@ export const GAMES_PAGE_CONFIG: MediaPageConfig<GameWithTags> = {
   countUnit: '편',
   newLabel: '새 게임',
   emptySearch: {
-    emoji: '🔍',
+    emoji: '',
     title: '찾는 게임이 없어요',
     description: (q) => `'${q}' 와 일치하는 결과가 없습니다`,
   },
   emptyList: {
-    emoji: '🎮',
+    emoji: '',
     title: '아직 게임이 없어요',
     description: '첫 플레이 기록을 남겨보세요',
     actionLabel: '새 기록',
