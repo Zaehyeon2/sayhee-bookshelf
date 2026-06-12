@@ -3,28 +3,30 @@ import { BOOK_GENRES, MOVIE_GENRES, GAME_GENRES } from './genres'
 import { isValidUsername } from './username-normalize'
 import { canonicalIsbn } from './isbn'
 import { isManagedBlobUrl } from './image-constraints'
+import {
+  coverUrlSchema,
+  createListQuerySchema,
+  MAX_CONTENT_LEN,
+  MAX_TAG_LEN,
+  MAX_TAGS,
+  mediaCreateBaseFields,
+  mediaDateSchema,
+  mediaUpdateBaseFields,
+  personSchema,
+} from './domains/schemas'
+import { DOMAIN_TYPES } from './domains/config'
 
-const dateRe = /^\d{4}-\d{2}-\d{2}$/
+// 상수 단일 정의처는 domains/schemas.ts — 여기서는 재export만 (이중 정의 금지)
+export { MAX_TAGS, MAX_TAG_LEN, MAX_CONTENT_LEN } from './domains/schemas'
 
-export const MAX_TAGS = 20
-export const MAX_TAG_LEN = 30
-export const MAX_CONTENT_LEN = 50_000
 export const MAX_SEARCH_Q = 100
 export const MAX_SLUG_LEN = 80
 export const MAX_EXTERNAL_IDS = 50
 
+// 글방(writings)은 미디어 base 필드를 공유하지 않으므로 tags 스키마를 로컬 정의로 유지.
 const tagsArraySchema = z
   .array(z.string().max(MAX_TAG_LEN, '태그는 최대 30자입니다'))
   .max(MAX_TAGS, '태그는 최대 20개까지 등록할 수 있습니다')
-
-const coverUrlSchema = z
-  .string()
-  .trim()
-  .max(500)
-  .url()
-  .refine((u) => /^https?:\/\//i.test(u), { message: 'http/https URL만 허용됩니다' })
-  .nullable()
-  .optional()
 
 // 글방 cover는 항상 업로드된 Vercel Blob URL — 외부 URL은 next/image allow-list 밖이라
 // 렌더 시 400. 직접 API 호출 방어를 위해 managed Blob host로 제한 (books/movies는
@@ -51,26 +53,11 @@ const isbnSchema = z
 
 export const CreateBookSchema = z
   .object({
-    title: z.string().trim().min(1, '제목을 입력하세요').max(200),
-    author: z.string().trim().min(1, '작가를 입력하세요').max(100),
+    ...mediaCreateBaseFields,
+    author: personSchema('작가를 입력하세요'),
     genre: z.enum(BOOK_GENRES),
-    readDate: z.string().regex(dateRe, '날짜 형식은 YYYY-MM-DD'),
-    rating: z.number().int().min(1).max(10),
-    content: z.string().max(MAX_CONTENT_LEN, '본문이 너무 깁니다').default(''),
-    tags: tagsArraySchema
-      .default([])
-      .transform((arr) =>
-        Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))),
-      ),
-    oneLineReview: z
-      .string()
-      .trim()
-      .max(150, '한줄평은 150자 이내로 입력해주세요')
-      .optional()
-      .transform((v) => (v && v.length > 0 ? v : null)),
-    isPublic: z.boolean().optional().default(true),
+    readDate: mediaDateSchema,
     isbn: isbnSchema,
-    coverUrl: coverUrlSchema,
     externalSource: z.enum(['naver']).nullable().optional(),
   })
   .strict()
@@ -80,24 +67,11 @@ export type CreateBookInput = z.infer<typeof CreateBookSchema>
 // UpdateBookSchema: all fields optional, no defaults — so parse({}) returns {}
 export const UpdateBookSchema = z
   .object({
-    title: z.string().trim().min(1, '제목을 입력하세요').max(200).optional(),
-    author: z.string().trim().min(1, '작가를 입력하세요').max(100).optional(),
+    ...mediaUpdateBaseFields,
+    author: personSchema('작가를 입력하세요').optional(),
     genre: z.enum(BOOK_GENRES).optional(),
-    readDate: z.string().regex(dateRe, '날짜 형식은 YYYY-MM-DD').optional(),
-    rating: z.number().int().min(1).max(10).optional(),
-    content: z.string().max(MAX_CONTENT_LEN, '본문이 너무 깁니다').optional(),
-    tags: tagsArraySchema
-      .transform((arr) => Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))))
-      .optional(),
-    oneLineReview: z
-      .string()
-      .trim()
-      .max(150, '한줄평은 150자 이내로 입력해주세요')
-      .optional()
-      .transform((v) => (v === undefined ? undefined : v.length > 0 ? v : null)),
-    isPublic: z.boolean().optional(),
+    readDate: mediaDateSchema.optional(),
     isbn: isbnSchema,
-    coverUrl: coverUrlSchema,
     externalSource: z.enum(['naver']).nullable().optional(),
   })
   .strict()
@@ -106,26 +80,11 @@ export type UpdateBookInput = z.infer<typeof UpdateBookSchema>
 
 export const CreateMovieSchema = z
   .object({
-    title: z.string().trim().min(1, '제목을 입력하세요').max(200),
-    director: z.string().trim().min(1, '감독을 입력하세요').max(100),
+    ...mediaCreateBaseFields,
+    director: personSchema('감독을 입력하세요'),
     genre: z.enum(MOVIE_GENRES),
-    watchedDate: z.string().regex(dateRe, '날짜 형식은 YYYY-MM-DD'),
-    rating: z.number().int().min(1).max(10),
-    content: z.string().max(MAX_CONTENT_LEN, '본문이 너무 깁니다').default(''),
-    tags: tagsArraySchema
-      .default([])
-      .transform((arr) =>
-        Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))),
-      ),
-    oneLineReview: z
-      .string()
-      .trim()
-      .max(150, '한줄평은 150자 이내로 입력해주세요')
-      .optional()
-      .transform((v) => (v && v.length > 0 ? v : null)),
-    isPublic: z.boolean().optional().default(true),
+    watchedDate: mediaDateSchema,
     tmdbId: z.number().int().positive().nullable().optional(),
-    coverUrl: coverUrlSchema,
     externalSource: z.enum(['tmdb']).nullable().optional(),
   })
   .strict()
@@ -134,61 +93,26 @@ export type CreateMovieInput = z.infer<typeof CreateMovieSchema>
 
 export const UpdateMovieSchema = z
   .object({
-    title: z.string().trim().min(1, '제목을 입력하세요').max(200).optional(),
-    director: z.string().trim().min(1, '감독을 입력하세요').max(100).optional(),
+    ...mediaUpdateBaseFields,
+    director: personSchema('감독을 입력하세요').optional(),
     genre: z.enum(MOVIE_GENRES).optional(),
-    watchedDate: z.string().regex(dateRe, '날짜 형식은 YYYY-MM-DD').optional(),
-    rating: z.number().int().min(1).max(10).optional(),
-    content: z.string().max(MAX_CONTENT_LEN, '본문이 너무 깁니다').optional(),
-    tags: tagsArraySchema
-      .transform((arr) => Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))))
-      .optional(),
-    oneLineReview: z
-      .string()
-      .trim()
-      .max(150, '한줄평은 150자 이내로 입력해주세요')
-      .optional()
-      .transform((v) => (v === undefined ? undefined : v.length > 0 ? v : null)),
-    isPublic: z.boolean().optional(),
+    watchedDate: mediaDateSchema.optional(),
     tmdbId: z.number().int().positive().nullable().optional(),
-    coverUrl: coverUrlSchema,
     externalSource: z.enum(['tmdb']).nullable().optional(),
   })
   .strict()
 
 export type UpdateMovieInput = z.infer<typeof UpdateMovieSchema>
 
-export const ListMoviesQuerySchema = z.object({
-  q: z.string().max(MAX_SEARCH_Q).optional(),
-  genre: z.enum(MOVIE_GENRES).optional(),
-  tag: z.string().max(MAX_TAG_LEN).optional(),
-  year: z.coerce.number().int().min(1900).max(2100).optional(),
-  sort: z.enum(['date', 'rating']).optional(),
-  page: z.coerce.number().int().min(1).max(10_000).optional(),
-})
+export const ListMoviesQuerySchema = createListQuerySchema(MOVIE_GENRES, MAX_SEARCH_Q)
 
 export const CreateGameSchema = z
   .object({
-    title: z.string().trim().min(1, '제목을 입력하세요').max(200),
-    developer: z.string().trim().min(1, '개발사를 입력하세요').max(100),
+    ...mediaCreateBaseFields,
+    developer: personSchema('개발사를 입력하세요'),
     genre: z.enum(GAME_GENRES),
-    playedDate: z.string().regex(dateRe, '날짜 형식은 YYYY-MM-DD'),
-    rating: z.number().int().min(1).max(10),
-    content: z.string().max(MAX_CONTENT_LEN, '본문이 너무 깁니다').default(''),
-    tags: tagsArraySchema
-      .default([])
-      .transform((arr) =>
-        Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))),
-      ),
-    oneLineReview: z
-      .string()
-      .trim()
-      .max(150, '한줄평은 150자 이내로 입력해주세요')
-      .optional()
-      .transform((v) => (v && v.length > 0 ? v : null)),
-    isPublic: z.boolean().optional().default(true),
+    playedDate: mediaDateSchema,
     rawgId: z.number().int().positive().nullable().optional(),
-    coverUrl: coverUrlSchema,
     externalSource: z.enum(['rawg']).nullable().optional(),
   })
   .strict()
@@ -197,46 +121,26 @@ export type CreateGameInput = z.infer<typeof CreateGameSchema>
 
 export const UpdateGameSchema = z
   .object({
-    title: z.string().trim().min(1, '제목을 입력하세요').max(200).optional(),
-    developer: z.string().trim().min(1, '개발사를 입력하세요').max(100).optional(),
+    ...mediaUpdateBaseFields,
+    developer: personSchema('개발사를 입력하세요').optional(),
     genre: z.enum(GAME_GENRES).optional(),
-    playedDate: z.string().regex(dateRe, '날짜 형식은 YYYY-MM-DD').optional(),
-    rating: z.number().int().min(1).max(10).optional(),
-    content: z.string().max(MAX_CONTENT_LEN, '본문이 너무 깁니다').optional(),
-    tags: tagsArraySchema
-      .transform((arr) => Array.from(new Set(arr.map((t) => t.trim()).filter((t) => t.length > 0))))
-      .optional(),
-    oneLineReview: z
-      .string()
-      .trim()
-      .max(150, '한줄평은 150자 이내로 입력해주세요')
-      .optional()
-      .transform((v) => (v === undefined ? undefined : v.length > 0 ? v : null)),
-    isPublic: z.boolean().optional(),
+    playedDate: mediaDateSchema.optional(),
     rawgId: z.number().int().positive().nullable().optional(),
-    coverUrl: coverUrlSchema,
     externalSource: z.enum(['rawg']).nullable().optional(),
   })
   .strict()
 
 export type UpdateGameInput = z.infer<typeof UpdateGameSchema>
 
-export const ListGamesQuerySchema = z.object({
-  q: z.string().max(MAX_SEARCH_Q).optional(),
-  genre: z.enum(GAME_GENRES).optional(),
-  tag: z.string().max(MAX_TAG_LEN).optional(),
-  year: z.coerce.number().int().min(1900).max(2100).optional(),
-  sort: z.enum(['date', 'rating']).optional(),
-  page: z.coerce.number().int().min(1).max(10_000).optional(),
-})
+export const ListGamesQuerySchema = createListQuerySchema(GAME_GENRES, MAX_SEARCH_Q)
 
 export const FeedQuerySchema = z.object({
-  type: z.enum(['book', 'movie', 'game']).default('book'),
+  type: z.enum(DOMAIN_TYPES).default('book'),
   page: z.coerce.number().int().min(1).max(10_000).optional(),
 })
 
 export const WorksSearchQuerySchema = z.object({
-  type: z.enum(['book', 'movie', 'game']).default('book'),
+  type: z.enum(DOMAIN_TYPES).default('book'),
   q: z.string().trim().min(1).max(MAX_SEARCH_Q),
   page: z.coerce.number().int().min(1).max(10_000).optional(),
 })
@@ -313,14 +217,7 @@ export const UpdateWritingSchema = z
 export type UpdateWritingInput = z.infer<typeof UpdateWritingSchema>
 
 /** GET /api/books?... 쿼리스트링 검증 — 길이/범위 가드. */
-export const ListBooksQuerySchema = z.object({
-  q: z.string().max(MAX_SEARCH_Q).optional(),
-  genre: z.enum(BOOK_GENRES).optional(),
-  tag: z.string().max(MAX_TAG_LEN).optional(),
-  year: z.coerce.number().int().min(1900).max(2100).optional(),
-  sort: z.enum(['date', 'rating']).optional(),
-  page: z.coerce.number().int().min(1).max(10_000).optional(),
-})
+export const ListBooksQuerySchema = createListQuerySchema(BOOK_GENRES, MAX_SEARCH_Q)
 
 export const ListWritingsQuerySchema = z.object({
   q: z.string().max(MAX_SEARCH_Q).optional(),
