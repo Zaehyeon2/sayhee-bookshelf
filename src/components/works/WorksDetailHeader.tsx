@@ -21,6 +21,7 @@ export function WorksDetailHeader(props: Props) {
           alt=""
           width={160}
           height={240}
+          sizes="160px"
           className="flex-shrink-0 rounded-[var(--radius-toss)] object-cover shadow-[var(--shadow-toss)]"
         />
       ) : (

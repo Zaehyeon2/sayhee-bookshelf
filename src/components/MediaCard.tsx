@@ -37,6 +37,7 @@ export function MediaCard({ item, basePath, publicBadgeTitle, snippet, query }: 
             alt=""
             width={80}
             height={120}
+            sizes="80px"
             className="flex-shrink-0 rounded-sm object-cover"
           />
         )}

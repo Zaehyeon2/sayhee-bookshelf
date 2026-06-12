@@ -11,12 +11,24 @@ interface Entry {
 
 export type RateLimitResult = { ok: true } | { ok: false; retryAfterSeconds: number }
 
+// 만료 엔트리를 따로 지우지 않으면 사용자 수만큼 맵이 무한 성장한다.
+// 타이머 없이(의존성 0) 체크 시점에 기회적으로 청소 — 임계 초과 시에만 O(n)이라 평상시 비용 없음.
+const SWEEP_THRESHOLD = 1000
+
+function sweepExpired(buckets: Map<number, Entry>, nowMs: number): void {
+  if (buckets.size <= SWEEP_THRESHOLD) return
+  for (const [key, entry] of buckets) {
+    if (entry.resetAt <= nowMs) buckets.delete(key)
+  }
+}
+
 function check(
   buckets: Map<number, Entry>,
   limit: number,
   userId: number,
   nowMs: number,
 ): RateLimitResult {
+  sweepExpired(buckets, nowMs)
   const entry = buckets.get(userId)
   if (!entry || entry.resetAt <= nowMs) {
     buckets.set(userId, { count: 1, resetAt: nowMs + WINDOW_MS })

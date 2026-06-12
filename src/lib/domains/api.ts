@@ -34,6 +34,7 @@ export interface MediaRouteDeps<
   UpdateInput,
   Entity extends { id: number; slug: string },
   Row,
+  OwnRow extends { id: number },
 > {
   /** withApiHandler 라벨 — 기존 라벨 문자열 그대로 (예: listGames/createGame/getGame/updateGame/deleteGame) */
   labels: { list: string; create: string; get: string; update: string; delete: string }
@@ -61,10 +62,14 @@ export interface MediaRouteDeps<
     create: (db: Db, userId: number, input: CreateInput) => Promise<Entity>
     update: (db: Db, userId: number, id: number, input: UpdateInput) => Promise<Entity | null>
     delete: (db: Db, userId: number, id: number) => Promise<boolean>
-    getById: (db: Db, userId: number, id: number) => Promise<Row | null>
+    /** 단건 태그 이름 조회 — GET이 requireOwn row에 태그만 붙일 때 사용 (getById 재조회 회피) */
+    tagsOf: (db: Db, id: number) => Promise<string[]>
     resolveTagId: (db: Db, tagName: string) => Promise<number | null>
   }
-  requireOwn: (id: number) => Promise<{ user: User }>
+  /** GET 전용 — 소유권 검증과 동시에 row를 반환해 핸들러의 재조회를 없앤다 */
+  requireOwn: (id: number) => Promise<{ user: User; entity: OwnRow }>
+  /** PATCH/DELETE의 404 본문 — requireOwn 메시지와 동일 문구 유지 */
+  notFoundMessage: string
   /** 도메인 캐시 태그 2개 (public feed + works detail) — 기존 문자열 그대로 */
   revalidateTags: readonly string[]
 }
@@ -74,7 +79,8 @@ export function createMediaRouteHandlers<
   UpdateInput,
   Entity extends { id: number; slug: string },
   Row,
->(deps: MediaRouteDeps<CreateInput, UpdateInput, Entity, Row>) {
+  OwnRow extends { id: number },
+>(deps: MediaRouteDeps<CreateInput, UpdateInput, Entity, Row, OwnRow>) {
   const revalidateAll = () => {
     for (const tag of deps.revalidateTags) revalidateTag(tag, 'max')
   }
@@ -112,18 +118,20 @@ export function createMediaRouteHandlers<
 
   const itemGET = withApiHandler(deps.labels.get, async (_req: Request, { params }: Params) => {
     const id = await requireIdParam(params)
-    const { user } = await deps.requireOwn(id)
-    const entity = await deps.queries.getById(db, user.id, id)
-    if (!entity) return NextResponse.json({ error: 'not found' }, { status: 404 })
-    return NextResponse.json(entity)
+    // requireOwn이 소유권 검증과 동시에 row를 반환 — getById 재조회 제거 (Turso 왕복 1회 절감)
+    const { entity } = await deps.requireOwn(id)
+    const tags = await deps.queries.tagsOf(db, id)
+    return NextResponse.json({ ...entity, tags })
   })
 
   const itemPATCH = withApiHandler(deps.labels.update, async (req: Request, { params }: Params) => {
     const id = await requireIdParam(params)
-    const { user } = await deps.requireOwn(id)
+    // 소유권 검증은 update 내부 SELECT/UPDATE의 WHERE (id, authorUserId)가 수행 —
+    // requireOwn 선조회 왕복 제거. 미소유/미존재 모두 null → 404 (기존과 동일 응답).
+    const user = await requireUser()
     const input = await requireJsonBody(req, deps.updateSchema)
     const updated = await deps.queries.update(db, user.id, id, input)
-    if (!updated) return NextResponse.json({ error: 'not found' }, { status: 404 })
+    if (!updated) return NextResponse.json({ error: deps.notFoundMessage }, { status: 404 })
     revalidateAll()
     return NextResponse.json({ id: updated.id, slug: updated.slug })
   })
@@ -132,9 +140,10 @@ export function createMediaRouteHandlers<
     deps.labels.delete,
     async (_req: Request, { params }: Params) => {
       const id = await requireIdParam(params)
-      const { user } = await deps.requireOwn(id)
+      // 소유권 검증은 DELETE WHERE (id, authorUserId)가 수행 — requireOwn 선조회 왕복 제거.
+      const user = await requireUser()
       const ok = await deps.queries.delete(db, user.id, id)
-      if (!ok) return NextResponse.json({ error: 'not found' }, { status: 404 })
+      if (!ok) return NextResponse.json({ error: deps.notFoundMessage }, { status: 404 })
       revalidateAll()
       return NextResponse.json({ ok: true })
     },

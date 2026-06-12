@@ -76,11 +76,14 @@ async function fetchNaverBookItem(isbn: string): Promise<NaverBookItem> {
   url.searchParams.set('d_isbn', isbn)
   url.searchParams.set('display', '1')
 
+  // 호출자 signal은 cache key 문제로 못 받음(위 주석) — 함수 내부에서 자체 5s timeout 생성.
+  // 없으면 upstream hang 시 캐시 미스 요청이 무한 대기.
   const res = await fetch(url, {
     headers: {
       'X-Naver-Client-Id': clientId,
       'X-Naver-Client-Secret': clientSecret,
     },
+    signal: AbortSignal.timeout(5000),
   })
 
   if (res.status === 429)

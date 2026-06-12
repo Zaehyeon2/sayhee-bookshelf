@@ -159,6 +159,9 @@ export async function countGames(
 // API/페이지에서 tag name → id 선조회용 (list/count에 tagId로 주입 — 백로그 8)
 export const resolveGameTagId = q.resolveTagId
 
+// GET 핸들러가 requireOwn row에 태그만 붙일 때 사용 (getById 재조회 회피)
+export const listGameTags = q.tagsOf
+
 export const countGamesByExternalIds = q.countByExternalIds
 export const getGameAggregatesByRawgIds = q.getAggregatesByExternalIds
 export const listGameReviewsByRawgId = q.listReviewsByExternalId

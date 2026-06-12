@@ -59,6 +59,7 @@ export function WorksSearchCard(props: Props) {
             alt=""
             width={56}
             height={84}
+            sizes="56px"
             className="flex-shrink-0 rounded-sm object-cover"
           />
         ) : (

@@ -4,7 +4,7 @@ import {
   countSearchGames,
   createGame,
   deleteGame,
-  getGameById,
+  listGameTags,
   listGames,
   resolveGameTagId,
   searchGames,
@@ -34,9 +34,13 @@ export const gameRouteHandlers = createMediaRouteHandlers({
     create: createGame,
     update: updateGame,
     delete: deleteGame,
-    getById: getGameById,
+    tagsOf: listGameTags,
     resolveTagId: resolveGameTagId,
   },
-  requireOwn: requireOwnGame,
+  requireOwn: async (id: number) => {
+    const { user, game } = await requireOwnGame(id)
+    return { user, entity: game }
+  },
+  notFoundMessage: '게임을 찾을 수 없습니다',
   revalidateTags: [PUBLIC_FEED_TAGS.games, WORKS_GAME_TAG],
 })

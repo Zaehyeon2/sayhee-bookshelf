@@ -2,10 +2,9 @@
 
 import dynamic from 'next/dynamic'
 import { useEffect, useRef, useState } from 'react'
-import '@toast-ui/editor/dist/toastui-editor.css'
-import '@toast-ui/editor/dist/theme/toastui-editor-dark.css'
 
-const Viewer = dynamic(() => import('@toast-ui/react-editor').then((m) => m.Viewer), {
+// dynamic()은 JS만 지연 — 정적 CSS import는 즉시 번들되므로 CSS는 lazy wrapper 모듈에서 로드한다.
+const Viewer = dynamic(() => import('./toastui-editor-lazy').then((m) => m.Viewer), {
   ssr: false,
   loading: () => <div className="text-[var(--color-text-weak)] text-[14px]">불러오는 중…</div>,
 })

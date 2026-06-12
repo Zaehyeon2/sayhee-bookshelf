@@ -28,11 +28,13 @@ async function fetchTmdbMovie(tmdbId: number): Promise<TmdbMovieDetail | null> {
   url.searchParams.set('language', 'ko-KR')
 
   console.log('[diag] tmdb-movie lookup fetch', tmdbId)
+  // 'use cache: remote' 함수라 호출자 signal을 인자로 못 받음(cache key 오염) — 내부 5s timeout.
   const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${key}`,
       accept: 'application/json',
     },
+    signal: AbortSignal.timeout(5000),
   })
 
   if (res.status === 404) return null

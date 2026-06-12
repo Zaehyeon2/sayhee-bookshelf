@@ -56,8 +56,10 @@ export function createExternalSearchHandler<TId extends string | number>(
         signal: ctl.signal,
       })
       const body: ExternalSearchResponse<TId> = { items, source: opts.source }
+      // 캐시 레이어링: 어댑터의 ISR 1h(next revalidate)가 원본 캐시 역할,
+      // 클라이언트 5분은 같은 검색어 재요청 빈도를 줄이는 절충값 (private — 사용자별 응답).
       return NextResponse.json(body, {
-        headers: { 'Cache-Control': 'private, max-age=60' },
+        headers: { 'Cache-Control': 'private, max-age=300' },
       })
     } catch (e) {
       // SECURITY: never log the upstream URL — adapters MUST NOT interpolate the request URL

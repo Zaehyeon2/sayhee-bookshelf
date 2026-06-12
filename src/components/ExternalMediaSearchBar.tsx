@@ -1,10 +1,24 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
-import { SearchDropdown } from './external/SearchDropdown'
+import type { SearchDropdown as SearchDropdownComponent } from './external/SearchDropdown'
 import { SelectedChip } from './external/SelectedChip'
 import { useExternalSearch } from './external/useExternalSearch'
 import type { ExternalSearchItem } from '@/lib/external/types'
+
+// cmdk(~15KB)가 정적 import면 공용 번들에 들어감 — 폼 페이지에서만 쓰이므로 lazy 로드.
+// 제네릭 시그니처는 dynamic이 지워버리므로 원본 타입으로 다시 캐스트.
+const SearchDropdown = dynamic(
+  () => import('./external/SearchDropdown').then((m) => m.SearchDropdown),
+  {
+    ssr: false,
+    // 로딩 중 레이아웃 시프트 방지용 입력창 자리 표시자
+    loading: () => (
+      <div className="h-12 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)]" />
+    ),
+  },
+) as typeof SearchDropdownComponent
 
 /** 검색 결과 항목의 도메인별 표시 설정 — renderItem이 분기 없이 해석하는 선언적 명세 */
 export interface SearchItemDisplay {

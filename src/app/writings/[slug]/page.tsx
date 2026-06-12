@@ -48,6 +48,7 @@ export default async function WritingDetailPage({ params }: { params: Promise<{ 
             alt={`${w.title} 대표 이미지`}
             width={800}
             height={400}
+            sizes="(max-width: 640px) calc(100vw - 88px), (max-width: 1064px) calc(100vw - 104px), 920px"
             className="mt-3 w-full max-h-[360px] rounded-[var(--radius-toss-sm)] object-cover shadow-[var(--shadow-toss)]"
           />
         )}

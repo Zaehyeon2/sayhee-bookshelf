@@ -29,7 +29,11 @@ async function fetchRawgGame(rawgId: number): Promise<RawgGameDetail | null> {
 
   console.log('[diag] rawg-game lookup fetch', rawgId)
   // SECURITY: 에러 메시지에 url 포함 금지 — 쿼리 파라미터에 API 키가 들어있음.
-  const res = await fetch(url, { headers: { accept: 'application/json' } })
+  // 'use cache: remote' 함수라 호출자 signal을 인자로 못 받음(cache key 오염) — 내부 5s timeout.
+  const res = await fetch(url, {
+    headers: { accept: 'application/json' },
+    signal: AbortSignal.timeout(5000),
+  })
 
   if (res.status === 404) return null
   if (res.status === 429)

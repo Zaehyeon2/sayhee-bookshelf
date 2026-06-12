@@ -159,6 +159,9 @@ export async function countMovies(
 // API/페이지에서 tag name → id 선조회용 (list/count에 tagId로 주입 — 백로그 8)
 export const resolveMovieTagId = q.resolveTagId
 
+// GET 핸들러가 requireOwn row에 태그만 붙일 때 사용 (getById 재조회 회피)
+export const listMovieTags = q.tagsOf
+
 export const countMoviesByExternalIds = q.countByExternalIds
 export const getMovieAggregatesByTmdbIds = q.getAggregatesByExternalIds
 export const listMovieReviewsByTmdbId = q.listReviewsByExternalId

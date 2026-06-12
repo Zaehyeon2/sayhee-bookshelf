@@ -66,6 +66,7 @@ export function MediaDetailArticle<R extends Row>({
               alt={`${item.title} ${coverAltSuffix}`}
               width={150}
               height={220}
+              sizes="150px"
               className="flex-shrink-0 rounded-[var(--radius-toss-sm)] shadow-[var(--shadow-toss)] object-cover"
             />
           )}

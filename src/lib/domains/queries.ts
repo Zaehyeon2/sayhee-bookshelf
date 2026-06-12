@@ -269,6 +269,29 @@ export function createMediaQueries<Row extends MediaRowBase, ExtId extends strin
   const orderForSort = (sort?: 'date' | 'rating') =>
     sort === 'rating' ? [desc(c.rating), desc(c.date), desc(c.id)] : [desc(c.date), desc(c.id)]
 
+  // 목록용 selective select — content(본문, row당 수 KB)는 목록 카드가 사용하지 않는데
+  // Turso(원격 DB) 전송량 대부분을 차지. search()는 본문 발췌(excerpt)에 content가 필요해
+  // full row 유지. 반환 타입은 Row를 유지하지만 content 필드는 런타임에 없음 —
+  // contentOf 등 content 접근은 search 경로에서만 할 것 (MediaListResults가 그렇게 사용).
+  const listColumns = {
+    id: c.id,
+    authorUserId: c.authorUserId,
+    slug: c.slug,
+    title: c.title,
+    [cfg.fields.person]: c.person,
+    genre: c.genre,
+    [cfg.fields.date]: c.date,
+    rating: c.rating,
+    oneLineReview: c.oneLineReview,
+    isPublic: c.isPublic,
+    publishedAt: c.publishedAt,
+    coverUrl: c.coverUrl,
+    [cfg.fields.externalId]: c.externalId,
+    externalSource: cfg.table.externalSource,
+    createdAt: cfg.table.createdAt,
+    updatedAt: cfg.table.updatedAt,
+  }
+
   async function list(
     db: Db,
     authorUserId: number,
@@ -284,7 +307,7 @@ export function createMediaQueries<Row extends MediaRowBase, ExtId extends strin
 
       const q = applyPaging(
         db
-          .select({ row: cfg.table })
+          .select(listColumns)
           .from(cfg.table)
           .innerJoin(cfg.junction, and(eq(cfg.junctionFk, c.id), eq(tagsRef.tagId, tagId)))
           .where(and(...conditions))
@@ -292,19 +315,19 @@ export function createMediaQueries<Row extends MediaRowBase, ExtId extends strin
           .$dynamic(),
         filters,
       )
-      const rows = (await q) as unknown as { row: Row }[]
+      const rows = (await q) as unknown as Row[]
 
       const tagMap = await attachTagsBatchGeneric(
         db,
         tagsRef,
-        rows.map((r) => r.row.id),
+        rows.map((r) => r.id),
       )
-      return rows.map((r) => ({ ...r.row, tags: tagMap.get(r.row.id) ?? [] }))
+      return rows.map((r) => ({ ...r, tags: tagMap.get(r.id) ?? [] }))
     }
 
     const q = applyPaging(
       db
-        .select()
+        .select(listColumns)
         .from(cfg.table)
         .where(and(...conditions))
         .orderBy(...orderForSort(filters.sort))
@@ -583,5 +606,7 @@ export function createMediaQueries<Row extends MediaRowBase, ExtId extends strin
     countReviewsByExternalId,
     getRatingDistributionByExternalId,
     resolveTagId,
+    /** 단건 태그 이름 조회 — requireOwn이 이미 row를 가진 GET 핸들러용 (getById 재조회 회피) */
+    tagsOf: tagNamesOf,
   }
 }

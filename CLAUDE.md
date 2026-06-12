@@ -38,6 +38,8 @@ ESLint 없음 — **Biome 단독**. `npm run lint` 같은 이전 명령은 더 �
 
 전부 `src/lib/auth-helpers.ts`. `mustChangePassword=1` 사용자는 기본적으로 **모든 mutation에서 차단**됨 — `requireUser`가 throw. 비번 변경 endpoint만 opt-in.
 
+**PATCH/DELETE 라우트 변형 (2026-06 왕복 최적화)**: 미디어·글 PATCH/DELETE는 `requireOwn*` 선조회 대신 `requireUser()` + mutation 쿼리 자체의 `WHERE (id, authorUserId)` 스코프로 소유권을 강제 (0 row → 404). 단건 GET은 `requireOwn*`이 row까지 반환하므로 핸들러에서 재조회 금지. 어느 쪽이든 **ID만으로 접근하는 쿼리는 여전히 금지**.
+
 **유일한 예외 = 공개 피드**: `listRecentPublicBooks/Movies/Games`·works 집계만 `authorUserId` 필터 없음. 이들은 반드시 `isPublic = 1 AND publishedAt IS NOT NULL` 조건 — 이 조건 없는 cross-user 쿼리는 무조건 버그.
 
 ### 2. Proxy (`src/proxy.ts`)

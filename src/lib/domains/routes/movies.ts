@@ -4,7 +4,7 @@ import {
   countSearchMovies,
   createMovie,
   deleteMovie,
-  getMovieById,
+  listMovieTags,
   listMovies,
   resolveMovieTagId,
   searchMovies,
@@ -34,9 +34,13 @@ export const movieRouteHandlers = createMediaRouteHandlers({
     create: createMovie,
     update: updateMovie,
     delete: deleteMovie,
-    getById: getMovieById,
+    tagsOf: listMovieTags,
     resolveTagId: resolveMovieTagId,
   },
-  requireOwn: requireOwnMovie,
+  requireOwn: async (id: number) => {
+    const { user, movie } = await requireOwnMovie(id)
+    return { user, entity: movie }
+  },
+  notFoundMessage: '영화를 찾을 수 없습니다',
   revalidateTags: [PUBLIC_FEED_TAGS.movies, WORKS_MOVIE_TAG],
 })

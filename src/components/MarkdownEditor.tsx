@@ -2,10 +2,11 @@
 
 import { useRef, useImperativeHandle, useEffect, useState, forwardRef } from 'react'
 import dynamic from 'next/dynamic'
-import '@toast-ui/editor/dist/toastui-editor.css'
-import '@toast-ui/editor/dist/theme/toastui-editor-dark.css'
 
-const Editor = dynamic(() => import('@toast-ui/react-editor').then((m) => m.Editor), { ssr: false })
+// dynamic()은 JS만 지연 — 정적 CSS import는 즉시 번들되므로 CSS는 lazy wrapper 모듈에서 로드한다.
+const Editor = dynamic(() => import('./toastui-editor-lazy').then((m) => m.Editor), {
+  ssr: false,
+})
 
 export interface MarkdownEditorHandle {
   /** 인스턴스가 아직 준비되지 않았으면 null. 호출자는 null을 받으면 사용자에게 재시도 안내. */

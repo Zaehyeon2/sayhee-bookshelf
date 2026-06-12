@@ -4,7 +4,7 @@ import {
   countSearchBooks,
   createBook,
   deleteBook,
-  getBookById,
+  listBookTags,
   listBooks,
   resolveBookTagId,
   searchBooks,
@@ -34,9 +34,13 @@ export const bookRouteHandlers = createMediaRouteHandlers({
     create: createBook,
     update: updateBook,
     delete: deleteBook,
-    getById: getBookById,
+    tagsOf: listBookTags,
     resolveTagId: resolveBookTagId,
   },
-  requireOwn: requireOwnBook,
+  requireOwn: async (id: number) => {
+    const { user, book } = await requireOwnBook(id)
+    return { user, entity: book }
+  },
+  notFoundMessage: '책을 찾을 수 없습니다',
   revalidateTags: [PUBLIC_FEED_TAGS.books, WORKS_BOOK_TAG],
 })

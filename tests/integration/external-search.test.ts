@@ -105,7 +105,7 @@ describe('GET /api/external/books/search', () => {
     expect(body.items).toHaveLength(1)
     expect(body.items[0].externalId).toBe('9781')
     expect(r.headers.get('cache-control')).toContain('private')
-    expect(r.headers.get('cache-control')).toContain('max-age=60')
+    expect(r.headers.get('cache-control')).toContain('max-age=300')
   })
 
   it('returns 503 when adapter throws', async () => {
@@ -213,7 +213,7 @@ describe('GET /api/external/games/search', () => {
     expect(body.items[0].genre).toBe('RPG')
     expect(body.items[0].externalRating).toBe(9.4)
     expect(r.headers.get('cache-control')).toContain('private')
-    expect(r.headers.get('cache-control')).toContain('max-age=60')
+    expect(r.headers.get('cache-control')).toContain('max-age=300')
   })
 
   it('returns empty items array when adapter returns empty (4xx from RAWG)', async () => {

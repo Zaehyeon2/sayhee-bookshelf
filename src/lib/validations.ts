@@ -237,6 +237,8 @@ export const ExternalIdsQuerySchema = z.object({
   ids: z
     .string()
     .min(1)
+    // raw 문자열 길이 상한: 50개 × id당 ~50자 — 파싱 전 무한 길이 입력 차단
+    .max(2500)
     .transform((s) =>
       Array.from(
         new Set(
