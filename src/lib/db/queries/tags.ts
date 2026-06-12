@@ -1,39 +1,42 @@
-import { eq, inArray, sql } from 'drizzle-orm'
-import { books, bookTags, tags, writingTags, writings, movieTags, movies, gameTags, games } from '../schema'
+import { inArray, sql } from 'drizzle-orm'
+import {
+  bookTags,
+  books,
+  gameTags,
+  games,
+  movieTags,
+  movies,
+  tags,
+  writingTags,
+  writings,
+} from '../schema'
 import { escapeLikePattern } from './shared'
 import type { Db, Tx } from './shared'
+import {
+  attachTagsBatchGeneric,
+  attachTagsGeneric,
+  replaceTagsTxGeneric,
+} from '@/lib/domains/tags'
 
-export async function attachTags(db: Db, bookId: number): Promise<string[]> {
-  const rows = await db
-    .select({ name: tags.name })
-    .from(bookTags)
-    .innerJoin(tags, eq(bookTags.tagId, tags.id))
-    .where(eq(bookTags.bookId, bookId))
-  return rows.map((r) => r.name)
-}
+// ─── junction ref 상수 ────────────────────────────────────────────────────────
 
-export async function attachTagsBatch(db: Db, bookIds: number[]): Promise<Map<number, string[]>> {
-  if (bookIds.length === 0) return new Map()
-  const rows = await db
-    .select({ bookId: bookTags.bookId, name: tags.name })
-    .from(bookTags)
-    .innerJoin(tags, eq(bookTags.tagId, tags.id))
-    .where(inArray(bookTags.bookId, bookIds))
-  const map = new Map<number, string[]>()
-  for (const r of rows) {
-    const existing = map.get(r.bookId) ?? []
-    existing.push(r.name)
-    map.set(r.bookId, existing)
-  }
-  return map
+const BOOK_TAGS_REF = { junction: bookTags, fk: bookTags.bookId, tagId: bookTags.tagId }
+const WRITING_TAGS_REF = {
+  junction: writingTags,
+  fk: writingTags.writingId,
+  tagId: writingTags.tagId,
 }
+const MOVIE_TAGS_REF = { junction: movieTags, fk: movieTags.movieId, tagId: movieTags.tagId }
+const GAME_TAGS_REF = { junction: gameTags, fk: gameTags.gameId, tagId: gameTags.tagId }
+
+// ─── getOrCreateTagsBatch ────────────────────────────────────────────────────
 
 /**
  * 태그 이름 배열을 한 번의 INSERT(ON CONFLICT DO NOTHING) + 한 번의 SELECT로 처리.
  * N개 태그 → 2 round trips (기존: N×2).
  * 반환값은 names 순서와 동일한 id 배열.
  */
-async function getOrCreateTagsBatch(tx: Tx, names: string[]): Promise<number[]> {
+export async function getOrCreateTagsBatch(tx: Tx, names: string[]): Promise<number[]> {
   if (names.length === 0) return []
   await tx
     .insert(tags)
@@ -51,39 +54,38 @@ async function getOrCreateTagsBatch(tx: Tx, names: string[]): Promise<number[]> 
   })
 }
 
-export async function replaceBookTagsTx(tx: Tx, bookId: number, tagNames: string[]): Promise<void> {
-  await tx.delete(bookTags).where(eq(bookTags.bookId, bookId))
-  if (tagNames.length === 0) return
-  const tagIds = await getOrCreateTagsBatch(tx, tagNames)
-  await tx.insert(bookTags).values(tagIds.map((tagId) => ({ bookId, tagId })))
+// ─── books ────────────────────────────────────────────────────────────────────
+
+export async function attachTags(db: Db, bookId: number): Promise<string[]> {
+  return attachTagsGeneric(db, BOOK_TAGS_REF, bookId)
 }
 
+export async function attachTagsBatch(db: Db, bookIds: number[]): Promise<Map<number, string[]>> {
+  return attachTagsBatchGeneric(db, BOOK_TAGS_REF, bookIds)
+}
+
+export async function replaceBookTagsTx(
+  tx: Tx,
+  bookId: number,
+  tagNames: string[],
+): Promise<void> {
+  return replaceTagsTxGeneric(tx, BOOK_TAGS_REF, bookId, tagNames, {
+    getOrCreate: getOrCreateTagsBatch,
+    buildRows: (id, tagIds) => tagIds.map((tagId) => ({ bookId: id, tagId })),
+  })
+}
+
+// ─── writings ─────────────────────────────────────────────────────────────────
+
 export async function attachWritingTags(db: Db, writingId: number): Promise<string[]> {
-  const rows = await db
-    .select({ name: tags.name })
-    .from(writingTags)
-    .innerJoin(tags, eq(writingTags.tagId, tags.id))
-    .where(eq(writingTags.writingId, writingId))
-  return rows.map((r) => r.name)
+  return attachTagsGeneric(db, WRITING_TAGS_REF, writingId)
 }
 
 export async function attachWritingTagsBatch(
   db: Db,
   writingIds: number[],
 ): Promise<Map<number, string[]>> {
-  if (writingIds.length === 0) return new Map()
-  const rows = await db
-    .select({ writingId: writingTags.writingId, name: tags.name })
-    .from(writingTags)
-    .innerJoin(tags, eq(writingTags.tagId, tags.id))
-    .where(inArray(writingTags.writingId, writingIds))
-  const map = new Map<number, string[]>()
-  for (const r of rows) {
-    const existing = map.get(r.writingId) ?? []
-    existing.push(r.name)
-    map.set(r.writingId, existing)
-  }
-  return map
+  return attachTagsBatchGeneric(db, WRITING_TAGS_REF, writingIds)
 }
 
 export async function replaceWritingTagsTx(
@@ -91,38 +93,23 @@ export async function replaceWritingTagsTx(
   writingId: number,
   tagNames: string[],
 ): Promise<void> {
-  await tx.delete(writingTags).where(eq(writingTags.writingId, writingId))
-  if (tagNames.length === 0) return
-  const tagIds = await getOrCreateTagsBatch(tx, tagNames)
-  await tx.insert(writingTags).values(tagIds.map((tagId) => ({ writingId, tagId })))
+  return replaceTagsTxGeneric(tx, WRITING_TAGS_REF, writingId, tagNames, {
+    getOrCreate: getOrCreateTagsBatch,
+    buildRows: (id, tagIds) => tagIds.map((tagId) => ({ writingId: id, tagId })),
+  })
 }
 
+// ─── movies ───────────────────────────────────────────────────────────────────
+
 export async function attachMovieTags(db: Db, movieId: number): Promise<string[]> {
-  const rows = await db
-    .select({ name: tags.name })
-    .from(movieTags)
-    .innerJoin(tags, eq(movieTags.tagId, tags.id))
-    .where(eq(movieTags.movieId, movieId))
-  return rows.map((r) => r.name)
+  return attachTagsGeneric(db, MOVIE_TAGS_REF, movieId)
 }
 
 export async function attachTagsToMoviesBatch(
   db: Db,
   movieIds: number[],
 ): Promise<Map<number, string[]>> {
-  if (movieIds.length === 0) return new Map()
-  const rows = await db
-    .select({ movieId: movieTags.movieId, name: tags.name })
-    .from(movieTags)
-    .innerJoin(tags, eq(movieTags.tagId, tags.id))
-    .where(inArray(movieTags.movieId, movieIds))
-  const map = new Map<number, string[]>()
-  for (const r of rows) {
-    const existing = map.get(r.movieId) ?? []
-    existing.push(r.name)
-    map.set(r.movieId, existing)
-  }
-  return map
+  return attachTagsBatchGeneric(db, MOVIE_TAGS_REF, movieIds)
 }
 
 export async function replaceMovieTagsTx(
@@ -130,38 +117,23 @@ export async function replaceMovieTagsTx(
   movieId: number,
   tagNames: string[],
 ): Promise<void> {
-  await tx.delete(movieTags).where(eq(movieTags.movieId, movieId))
-  if (tagNames.length === 0) return
-  const tagIds = await getOrCreateTagsBatch(tx, tagNames)
-  await tx.insert(movieTags).values(tagIds.map((tagId) => ({ movieId, tagId })))
+  return replaceTagsTxGeneric(tx, MOVIE_TAGS_REF, movieId, tagNames, {
+    getOrCreate: getOrCreateTagsBatch,
+    buildRows: (id, tagIds) => tagIds.map((tagId) => ({ movieId: id, tagId })),
+  })
 }
 
+// ─── games ────────────────────────────────────────────────────────────────────
+
 export async function attachGameTags(db: Db, gameId: number): Promise<string[]> {
-  const rows = await db
-    .select({ name: tags.name })
-    .from(gameTags)
-    .innerJoin(tags, eq(gameTags.tagId, tags.id))
-    .where(eq(gameTags.gameId, gameId))
-  return rows.map((r) => r.name)
+  return attachTagsGeneric(db, GAME_TAGS_REF, gameId)
 }
 
 export async function attachTagsToGamesBatch(
   db: Db,
   gameIds: number[],
 ): Promise<Map<number, string[]>> {
-  if (gameIds.length === 0) return new Map()
-  const rows = await db
-    .select({ gameId: gameTags.gameId, name: tags.name })
-    .from(gameTags)
-    .innerJoin(tags, eq(gameTags.tagId, tags.id))
-    .where(inArray(gameTags.gameId, gameIds))
-  const map = new Map<number, string[]>()
-  for (const r of rows) {
-    const existing = map.get(r.gameId) ?? []
-    existing.push(r.name)
-    map.set(r.gameId, existing)
-  }
-  return map
+  return attachTagsBatchGeneric(db, GAME_TAGS_REF, gameIds)
 }
 
 export async function replaceGameTagsTx(
@@ -169,11 +141,13 @@ export async function replaceGameTagsTx(
   gameId: number,
   tagNames: string[],
 ): Promise<void> {
-  await tx.delete(gameTags).where(eq(gameTags.gameId, gameId))
-  if (tagNames.length === 0) return
-  const tagIds = await getOrCreateTagsBatch(tx, tagNames)
-  await tx.insert(gameTags).values(tagIds.map((tagId) => ({ gameId, tagId })))
+  return replaceTagsTxGeneric(tx, GAME_TAGS_REF, gameId, tagNames, {
+    getOrCreate: getOrCreateTagsBatch,
+    buildRows: (id, tagIds) => tagIds.map((tagId) => ({ gameId: id, tagId })),
+  })
 }
+
+// ─── suggest + list (무변경) ──────────────────────────────────────────────────
 
 export async function suggestTags(db: Db, authorUserId: number, q: string): Promise<string[]> {
   const pattern = `${escapeLikePattern(q)}%`
