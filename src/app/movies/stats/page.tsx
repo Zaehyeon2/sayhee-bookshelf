@@ -19,7 +19,7 @@ export default async function MovieStatsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-baseline justify-between">
-        <h1 className="text-[24px] font-bold text-[var(--color-text-strong)]">📊 영화관 통계</h1>
+        <h1 className="text-[24px] font-bold text-[var(--color-text-strong)]">영화관 통계</h1>
         <Link
           href="/movies"
           className="text-[14px] text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] transition"

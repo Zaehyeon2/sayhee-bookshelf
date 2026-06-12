@@ -92,7 +92,6 @@ async function BookResults({ q }: { q: string }) {
     logAdapterError('works/search', e)
     return (
       <EmptyState
-        emoji="📡"
         title="외부 검색 서비스 일시 불가"
         description="잠시 후 다시 시도해주세요"
       />
@@ -101,7 +100,6 @@ async function BookResults({ q }: { q: string }) {
   if (items.length === 0) {
     return (
       <EmptyState
-        emoji="📭"
         title="검색 결과가 없어요"
         description={`"${q}"에 대한 책을 찾지 못했어요`}
       />
@@ -136,7 +134,6 @@ async function MovieResults({ q }: { q: string }) {
     logAdapterError('works/search', e)
     return (
       <EmptyState
-        emoji="📡"
         title="외부 검색 서비스 일시 불가"
         description="잠시 후 다시 시도해주세요"
       />
@@ -145,7 +142,6 @@ async function MovieResults({ q }: { q: string }) {
   if (items.length === 0) {
     return (
       <EmptyState
-        emoji="📭"
         title="검색 결과가 없어요"
         description={`"${q}"에 대한 영화를 찾지 못했어요`}
       />
@@ -180,7 +176,6 @@ async function GameResults({ q }: { q: string }) {
     logAdapterError('works/search', e)
     return (
       <EmptyState
-        emoji="📡"
         title="외부 검색 서비스 일시 불가"
         description="잠시 후 다시 시도해주세요"
       />
@@ -189,7 +184,6 @@ async function GameResults({ q }: { q: string }) {
   if (items.length === 0) {
     return (
       <EmptyState
-        emoji="📭"
         title="검색 결과가 없어요"
         description={`"${q}"에 대한 게임을 찾지 못했어요`}
       />

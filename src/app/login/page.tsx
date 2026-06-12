@@ -38,8 +38,7 @@ function LoginForm() {
   return (
     <div className="mx-auto max-w-sm pt-16">
       <div className="rounded-[var(--radius-panel)] bg-[var(--color-surface)] p-8">
-        <div className="text-center text-[40px] leading-none">🔒</div>
-        <h1 className="mt-4 text-center text-[22px] font-bold text-[var(--color-text-strong)]">
+        <h1 className="text-center text-[22px] font-bold text-[var(--color-text-strong)]">
           로그인
         </h1>
         <p className="mt-1 text-center text-[13px] text-[var(--color-text-weak)]">

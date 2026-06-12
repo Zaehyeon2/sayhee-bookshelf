@@ -71,7 +71,6 @@ async function BookFeedContent({ page, offset }: { page: number; offset: number 
   if (items.length === 0) {
     return (
       <EmptyState
-        emoji="📭"
         title="아직 공개된 책이 없어요"
         description="내 책을 공개하면 모두의 서재에 올라와요"
         action={{ href: '/books', label: '내 책장으로 가기' }}

@@ -32,7 +32,6 @@ export interface ExternalMediaSearchBarProps<TId extends string | number> {
   searchUrl: string
   byExternalUrl: string
   placeholder: string
-  fallbackIcon: string
   display: SearchItemDisplay
   initial?: {
     externalId?: TId | null
@@ -54,7 +53,6 @@ export function ExternalMediaSearchBar<TId extends string | number>({
   searchUrl,
   byExternalUrl,
   placeholder,
-  fallbackIcon,
   display,
   initial,
   onSelect,
@@ -78,7 +76,6 @@ export function ExternalMediaSearchBar<TId extends string | number>({
         title={initial.title ?? ''}
         byline={initial.byline}
         coverUrl={initial.coverUrl}
-        fallbackIcon={fallbackIcon}
         onClear={() => {
           setShowChip(false)
           onClear()
@@ -125,9 +122,7 @@ export function ExternalMediaSearchBar<TId extends string | number>({
               }}
             />
           ) : (
-            <div className="w-9 h-[52px] rounded-sm bg-[var(--color-surface-2)] flex items-center justify-center text-base">
-              {fallbackIcon}
-            </div>
+            <div className="w-9 h-[52px] rounded-sm bg-[var(--color-surface-2)] flex items-center justify-center text-base" />
           )}
           <div className="min-w-0 flex-1">
             <div className="font-semibold truncate">

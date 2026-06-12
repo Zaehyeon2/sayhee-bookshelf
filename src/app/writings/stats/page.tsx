@@ -19,7 +19,7 @@ export default async function WritingStatsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-baseline justify-between">
-        <h1 className="text-[24px] font-bold text-[var(--color-text-strong)]">📊 글방 통계</h1>
+        <h1 className="text-[24px] font-bold text-[var(--color-text-strong)]">글방 통계</h1>
         <Link
           href="/writings"
           className="text-[14px] text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] transition"

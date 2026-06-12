@@ -124,13 +124,11 @@ async function Results<Row extends { id: number; slug: string; title: string; ra
       {items.length === 0 ? (
         isSearch ? (
           <EmptyState
-            emoji={config.emptySearch.emoji}
             title={config.emptySearch.title}
             description={config.emptySearch.description(q)}
           />
         ) : (
           <EmptyState
-            emoji={config.emptyList.emoji}
             title={config.emptyList.title}
             description={config.emptyList.description}
             action={{ href: `${config.basePath}/new`, label: config.emptyList.actionLabel }}

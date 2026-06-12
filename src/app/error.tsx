@@ -10,8 +10,7 @@ export default function ErrorPage({
   return (
     <div className="mx-auto max-w-md text-center py-20">
       <div className="rounded-[var(--radius-panel)] bg-[var(--color-surface)] p-8">
-        <div className="text-[40px] leading-none">⚠️</div>
-        <h1 className="mt-4 text-[22px] font-bold text-[var(--color-text-strong)]">
+        <h1 className="text-[22px] font-bold text-[var(--color-text-strong)]">
           문제가 발생했어요
         </h1>
         {error.digest && (

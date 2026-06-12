@@ -107,7 +107,6 @@ async function WritingsResults({
           />
         ) : (
           <EmptyState
-            emoji="✍️"
             title="아직 쓴 글이 없어요"
             description="첫 글을 남겨보세요"
             action={{ href: '/writings/new', label: '새 글 쓰기' }}

@@ -11,7 +11,7 @@ export function StatsPageLink({ href }: { href: string }) {
       href={href}
       className="inline-flex items-center h-9 px-3 rounded-[var(--radius-field)] border border-[var(--color-border)] bg-[var(--color-surface)] text-[13px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] hover:bg-[var(--color-surface-2)] active:scale-[0.97] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
     >
-      📊 통계
+      통계
     </Link>
   )
 }

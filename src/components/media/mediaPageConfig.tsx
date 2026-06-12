@@ -44,8 +44,8 @@ export interface MediaPageConfig<Row extends { id: number; slug: string }> {
   /** 새 기록 버튼 라벨 (예: `새 게임`) */
   newLabel: string
   /** list/stats 경로 prefix는 basePath로 파생, new 라벨만 별도 */
-  emptySearch: { emoji: string; title: string; description: (q: string) => string }
-  emptyList: { emoji: string; title: string; description: string; actionLabel: string }
+  emptySearch: { title: string; description: (q: string) => string }
+  emptyList: { title: string; description: string; actionLabel: string }
   listQuerySchema: z.ZodType<
     {
       genre?: string
@@ -115,12 +115,10 @@ export const BOOKS_PAGE_CONFIG: MediaPageConfig<BookWithTags> = {
   countUnit: '권',
   newLabel: '새 책',
   emptySearch: {
-    emoji: '',
     title: '찾는 책이 없어요',
     description: (q) => `'${q}' 와 일치하는 결과가 없습니다`,
   },
   emptyList: {
-    emoji: '📭',
     title: '아직 책이 없어요',
     description: '첫 독후감을 남겨보세요',
     actionLabel: '새 독후감',
@@ -159,12 +157,10 @@ export const MOVIES_PAGE_CONFIG: MediaPageConfig<MovieWithTags> = {
   countUnit: '편',
   newLabel: '새 영화',
   emptySearch: {
-    emoji: '',
     title: '찾는 영화가 없어요',
     description: (q) => `'${q}' 와 일치하는 결과가 없습니다`,
   },
   emptyList: {
-    emoji: '',
     title: '아직 영화가 없어요',
     description: '첫 감상을 남겨보세요',
     actionLabel: '새 감상',
@@ -203,12 +199,10 @@ export const GAMES_PAGE_CONFIG: MediaPageConfig<GameWithTags> = {
   countUnit: '편',
   newLabel: '새 게임',
   emptySearch: {
-    emoji: '',
     title: '찾는 게임이 없어요',
     description: (q) => `'${q}' 와 일치하는 결과가 없습니다`,
   },
   emptyList: {
-    emoji: '',
     title: '아직 게임이 없어요',
     description: '첫 플레이 기록을 남겨보세요',
     actionLabel: '새 기록',

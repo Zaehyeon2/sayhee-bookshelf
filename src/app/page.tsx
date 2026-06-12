@@ -128,7 +128,6 @@ export default async function HomePage() {
         </div>
         {recentPublicBooks.length === 0 ? (
           <EmptyState
-            emoji="📭"
             title="아직 공개된 책이 없어요"
             description="내 책을 공개하면 모두의 서재에 올라와요"
             action={{ href: '/books', label: '내 책장으로 가기' }}
@@ -210,7 +209,6 @@ export default async function HomePage() {
         </div>
         {recentWritings.length === 0 ? (
           <EmptyState
-            emoji="✍️"
             title="아직 쓴 글이 없어요"
             description="첫 글을 남겨보세요"
             action={{ href: '/writings/new', label: '새 글 쓰기' }}
@@ -229,7 +227,6 @@ export default async function HomePage() {
 
 function EntryCard({
   href,
-  emoji,
   label,
   count,
   unit,
@@ -237,7 +234,6 @@ function EntryCard({
   subAction,
 }: {
   href: string
-  emoji: string
   label: string
   count: number
   unit: string
@@ -253,9 +249,6 @@ function EntryCard({
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-[32px] leading-none" aria-hidden>
-              {emoji}
-            </span>
             <span className="text-[18px] font-bold text-[var(--color-text-strong)] group-hover:text-[var(--color-accent)] transition">
               {label}
             </span>

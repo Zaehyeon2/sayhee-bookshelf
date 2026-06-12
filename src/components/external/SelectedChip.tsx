@@ -4,7 +4,6 @@ interface Props {
   title: string
   byline?: string
   coverUrl?: string | null
-  fallbackIcon?: string
   onClear: () => void
   onReopen: () => void
 }
@@ -13,7 +12,6 @@ export function SelectedChip({
   title,
   byline,
   coverUrl,
-  fallbackIcon,
   onClear,
   onReopen,
 }: Props) {
@@ -32,9 +30,7 @@ export function SelectedChip({
           }}
         />
       ) : (
-        <div className="w-9 h-[52px] rounded-sm bg-[var(--color-surface)] flex items-center justify-center text-[var(--color-text-muted)] text-lg">
-          {fallbackIcon ?? ''}
-        </div>
+        <div className="w-9 h-[52px] rounded-sm bg-[var(--color-surface)] flex items-center justify-center text-[var(--color-text-muted)] text-lg" />
       )}
       <div className="min-w-0 flex-1">
         <div className="text-[14px] font-semibold text-[var(--color-text-strong)] truncate">

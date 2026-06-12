@@ -27,7 +27,6 @@ export function ExternalBookSearchBar({ initial, onSelect, onClear }: Props) {
       searchUrl="/api/external/books/search"
       byExternalUrl="/api/books/by-external"
       placeholder="제목으로 검색 (예: 해리포터)"
-      fallbackIcon=""
       display={{ inlineSubtitle: false, secondaryFields: ['byline', 'year', 'genre'] }}
       initial={
         initial
