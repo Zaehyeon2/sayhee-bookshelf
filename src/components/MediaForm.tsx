@@ -67,7 +67,7 @@ interface Props<TId extends string | number> {
 }
 
 const inputCls =
-  'w-full h-12 px-4 rounded-[var(--radius-field)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] text-[var(--color-text-strong)] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/15 outline-none transition'
+  'w-full h-12 px-4 rounded-[var(--radius-field)] bg-[var(--color-surface-2)] text-[16px] text-[var(--color-text-strong)] placeholder:text-[var(--color-text-placeholder)] focus:ring-2 focus:ring-[var(--color-accent)] outline-none transition'
 
 const labelCls = 'block text-[13px] font-semibold text-[var(--color-text-muted)] mb-2'
 

@@ -25,7 +25,7 @@ export default async function HomePage() {
         </p>
         <Link
           href="/login"
-          className="inline-block px-6 h-11 leading-[44px] rounded-[var(--radius-field)] bg-[var(--color-accent)] text-white text-[15px] font-medium"
+          className="inline-block px-6 h-11 leading-[44px] rounded-[var(--radius-pill)] bg-[var(--color-accent)] text-white text-[17px] font-normal hover:bg-[var(--color-accent-hover)] active:scale-[0.98] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
         >
           로그인
         </Link>
@@ -281,7 +281,7 @@ function EntryCard({
       </Link>
       <Link
         href={subAction.href}
-        className="mt-4 inline-flex items-center h-9 px-3 rounded-[var(--radius-field)] bg-[var(--color-accent)] text-white text-[13px] font-semibold hover:bg-[var(--color-accent-hover)] active:scale-[0.97] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+        className="mt-4 inline-flex items-center h-9 px-3 rounded-[var(--radius-pill)] bg-[var(--color-accent)] text-white text-[13px] font-normal hover:bg-[var(--color-accent-hover)] active:scale-[0.97] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
       >
         + {subAction.label}
       </Link>

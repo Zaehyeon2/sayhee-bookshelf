@@ -30,24 +30,18 @@ export function SearchBox({ basePath = '/books', placeholder = '제목·작가·
 
   return (
     <form onSubmit={submit} className="relative">
-      <span
-        aria-hidden
-        className="absolute left-4 top-1/2 -translate-y-1/2 text-[18px] text-[var(--color-text-weak)] pointer-events-none"
-      >
-        🔍
-      </span>
       <input
         type="search"
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder={placeholder}
-        className="w-full h-12 pl-11 pr-24 rounded-[var(--radius-field)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/15 outline-none transition"
+        className="w-full h-12 pl-4 pr-24 rounded-[var(--radius-field)] bg-[var(--color-surface-2)] text-[16px] placeholder:text-[var(--color-text-placeholder)] focus:ring-2 focus:ring-[var(--color-accent)] outline-none transition"
       />
       <button
         type="submit"
         disabled={isPending}
         aria-busy={isPending}
-        className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 px-4 min-w-[64px] rounded-[var(--radius-field)] bg-[var(--color-accent)] text-white text-[14px] font-semibold hover:bg-[var(--color-accent-hover)] active:scale-[0.97] transition disabled:opacity-70 disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] inline-flex items-center justify-center gap-1"
+        className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 px-4 min-w-[64px] rounded-[var(--radius-field)] bg-[var(--color-accent)] text-white text-[14px] font-medium hover:bg-[var(--color-accent-hover)] active:scale-[0.97] transition disabled:opacity-70 disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] inline-flex items-center justify-center gap-1"
       >
         {isPending ? (
           <span

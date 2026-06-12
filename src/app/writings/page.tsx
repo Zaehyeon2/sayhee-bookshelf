@@ -93,7 +93,7 @@ async function WritingsResults({
           <StatsPageLink href="/writings/stats" />
           <Link
             href="/writings/new"
-            className="inline-flex items-center h-10 px-4 rounded-[var(--radius-field)] bg-[var(--color-accent)] text-white text-[14px] font-semibold hover:bg-[var(--color-accent-hover)] active:scale-[0.97] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+            className="inline-flex items-center h-10 px-4 rounded-[var(--radius-pill)] bg-[var(--color-accent)] text-white text-[14px] font-normal hover:bg-[var(--color-accent-hover)] active:scale-[0.97] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
             새 글
           </Link>

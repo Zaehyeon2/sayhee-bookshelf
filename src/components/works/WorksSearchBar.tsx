@@ -40,7 +40,7 @@ export function WorksSearchBar({ type, initialQuery }: Props) {
         onChange={(e) => setQ(e.target.value)}
         maxLength={MAX_SEARCH_Q}
         placeholder={WORKS_SEARCH_LABELS[type].placeholder}
-        className="flex-1 h-11 px-4 rounded-[var(--radius-card)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[14px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+        className="flex-1 h-11 px-4 rounded-[var(--radius-card)] bg-[var(--color-surface-2)] text-[14px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
       />
       <button
         type="submit"

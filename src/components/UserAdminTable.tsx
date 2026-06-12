@@ -167,7 +167,7 @@ export function UserAdminTable({
                   onChange={(e) => setNewUsername(e.target.value)}
                   required
                   maxLength={20}
-                  className="mt-1 w-full h-11 px-3 rounded-[var(--radius-field)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/15 outline-none transition"
+                  className="mt-1 w-full h-11 px-3 rounded-[var(--radius-field)] bg-[var(--color-surface-2)] text-[15px] focus:ring-2 focus:ring-[var(--color-accent)] outline-none transition"
                 />
               </label>
               <label className="block">
@@ -179,7 +179,7 @@ export function UserAdminTable({
                   value={newDisplayName}
                   onChange={(e) => setNewDisplayName(e.target.value)}
                   maxLength={30}
-                  className="mt-1 w-full h-11 px-3 rounded-[var(--radius-field)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/15 outline-none transition"
+                  className="mt-1 w-full h-11 px-3 rounded-[var(--radius-field)] bg-[var(--color-surface-2)] text-[15px] focus:ring-2 focus:ring-[var(--color-accent)] outline-none transition"
                 />
               </label>
               <p className="text-[12px] text-[var(--color-text-muted)]">

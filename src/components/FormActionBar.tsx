@@ -50,7 +50,7 @@ export function FormActionBar({
           <button
             type="button"
             onClick={openDeleteConfirm}
-            className="mr-auto h-12 px-5 rounded-[var(--radius-field)] text-[14px] font-semibold text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-danger)]"
+            className="mr-auto h-11 px-5 rounded-[var(--radius-pill)] text-[14px] font-semibold text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-danger)]"
           >
             삭제
           </button>
@@ -69,14 +69,14 @@ export function FormActionBar({
       <button
         type="button"
         onClick={() => router.back()}
-        className="h-12 px-5 rounded-[var(--radius-field)] text-[15px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+        className="h-11 px-5 rounded-[var(--radius-pill)] border border-[var(--color-border)] text-[15px] font-medium text-[var(--color-text-strong)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
       >
         취소
       </button>
       <button
         type="submit"
         disabled={submitting || submitDisabled}
-        className="inline-flex items-center gap-2 h-12 px-6 rounded-[var(--radius-field)] bg-[var(--color-accent)] text-white text-[15px] font-semibold hover:bg-[var(--color-accent-hover)] active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+        className="inline-flex items-center gap-2 h-11 px-[21px] rounded-[var(--radius-pill)] bg-[var(--color-accent)] text-white text-[17px] font-normal hover:bg-[var(--color-accent-hover)] active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
       >
         {submitting && <Spinner />}
         {submitting ? '저장 중' : mode === 'create' ? '등록' : '수정'}

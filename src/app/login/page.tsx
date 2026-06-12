@@ -53,7 +53,7 @@ function LoginForm() {
             placeholder="아이디"
             autoComplete="username"
             required
-            className="w-full h-12 px-4 rounded-[var(--radius-field)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/15 outline-none transition"
+            className="w-full h-12 px-4 rounded-[var(--radius-field)] bg-[var(--color-surface-2)] text-[16px] placeholder:text-[var(--color-text-placeholder)] focus:ring-2 focus:ring-[var(--color-accent)] outline-none transition"
           />
           <input
             type="password"
@@ -62,13 +62,13 @@ function LoginForm() {
             placeholder="비밀번호"
             autoComplete="current-password"
             required
-            className="w-full h-12 px-4 rounded-[var(--radius-field)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/15 outline-none transition"
+            className="w-full h-12 px-4 rounded-[var(--radius-field)] bg-[var(--color-surface-2)] text-[16px] placeholder:text-[var(--color-text-placeholder)] focus:ring-2 focus:ring-[var(--color-accent)] outline-none transition"
           />
           {error && <p className="text-[13px] text-[var(--color-danger)] font-medium">{error}</p>}
           <button
             type="submit"
             disabled={loading || username.length === 0 || pw.length === 0}
-            className="inline-flex w-full h-12 items-center justify-center gap-2 rounded-[var(--radius-field)] bg-[var(--color-accent)] text-white text-[15px] font-semibold hover:bg-[var(--color-accent-hover)] active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+            className="inline-flex w-full h-12 items-center justify-center gap-2 rounded-[var(--radius-pill)] bg-[var(--color-accent)] text-white text-[17px] font-normal hover:bg-[var(--color-accent-hover)] active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
             {loading && <Spinner />}
             {loading ? '확인 중' : '로그인'}
