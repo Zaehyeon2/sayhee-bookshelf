@@ -60,18 +60,19 @@ export function StatsDashboard(props: StatsData) {
   }
 
   // books/movies/games는 동형 — 도메인별 차이는 타이틀 2개와 person 필드뿐
-  const person =
+  const MEDIA_STATS_LABELS = {
+    books: { personTitle: '저자 Top 5', timelineTitle: '연도별 읽은 수' },
+    movies: { personTitle: '감독 Top 5', timelineTitle: '연도별 본 수' },
+    games: { personTitle: '개발사 Top 5', timelineTitle: '연도별 플레이 수' },
+  } as const satisfies Record<'books' | 'movies' | 'games', { personTitle: string; timelineTitle: string }>
+
+  const labels = MEDIA_STATS_LABELS[props.domain]
+  const personItems =
     props.domain === 'books'
-      ? { title: '저자 Top 5', items: props.data.topAuthors }
+      ? props.data.topAuthors
       : props.domain === 'movies'
-        ? { title: '감독 Top 5', items: props.data.topDirectors }
-        : { title: '개발사 Top 5', items: props.data.topDevelopers }
-  const timelineTitle =
-    props.domain === 'books'
-      ? '연도별 읽은 수'
-      : props.domain === 'movies'
-        ? '연도별 본 수'
-        : '연도별 플레이 수'
+        ? props.data.topDirectors
+        : props.data.topDevelopers
   const d = props.data
 
   return (
@@ -90,14 +91,14 @@ export function StatsDashboard(props: StatsData) {
         <Widget title="장르 분포">
           <CountDoughnutChart items={d.genreDist} />
         </Widget>
-        <Widget title={timelineTitle}>
+        <Widget title={labels.timelineTitle}>
           <CountBarChart items={d.yearTimeline} color="#9061f9" />
         </Widget>
         <Widget title="태그 Top 5">
           <CountBarChart items={d.topTags} horizontal color="#1fc7c1" />
         </Widget>
-        <Widget title={person.title}>
-          <CountBarChart items={person.items} horizontal color="#ffb331" />
+        <Widget title={labels.personTitle}>
+          <CountBarChart items={personItems} horizontal color="#ffb331" />
         </Widget>
       </div>
     </div>

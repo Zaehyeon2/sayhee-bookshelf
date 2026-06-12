@@ -52,7 +52,7 @@ export default async function WorksGameDetailPage({ params, searchParams }: SP) 
       <WorksDetailHeader
         title={meta?.title ?? fallback?.title ?? `RAWG ${rawgId}`}
         subtitle={meta?.originalTitle}
-        developer={meta?.developer ?? fallback?.developer}
+        byline={(meta?.developer ?? fallback?.developer) ? `개발사 ${meta?.developer ?? fallback?.developer}` : undefined}
         coverUrl={meta?.coverUrl ?? fallback?.coverUrl ?? undefined}
         description={meta?.description}
         externalRating={meta?.externalRating}

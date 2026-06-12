@@ -3,9 +3,16 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { MAX_SEARCH_Q } from '@/lib/validations'
+import type { DomainType } from '@/lib/domains/config'
+
+const WORKS_SEARCH_LABELS: Record<DomainType, { aria: string; placeholder: string }> = {
+  book: { aria: '책 검색', placeholder: '책 제목·저자 검색' },
+  movie: { aria: '영화 검색', placeholder: '영화 제목 검색' },
+  game: { aria: '게임 검색', placeholder: '게임 제목 검색' },
+}
 
 interface Props {
-  type: 'book' | 'movie' | 'game'
+  type: DomainType
   initialQuery: string
 }
 
@@ -28,13 +35,11 @@ export function WorksSearchBar({ type, initialQuery }: Props) {
     <form onSubmit={onSubmit} className="flex gap-2">
       <input
         type="search"
-        aria-label={type === 'book' ? '책 검색' : type === 'game' ? '게임 검색' : '영화 검색'}
+        aria-label={WORKS_SEARCH_LABELS[type].aria}
         value={q}
         onChange={(e) => setQ(e.target.value)}
         maxLength={MAX_SEARCH_Q}
-        placeholder={
-          type === 'book' ? '책 제목·저자 검색' : type === 'game' ? '게임 제목 검색' : '영화 제목 검색'
-        }
+        placeholder={WORKS_SEARCH_LABELS[type].placeholder}
         className="flex-1 h-11 px-4 rounded-[var(--radius-toss)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[14px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
       />
       <button

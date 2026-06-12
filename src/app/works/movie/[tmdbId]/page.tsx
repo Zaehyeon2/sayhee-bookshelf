@@ -52,7 +52,7 @@ export default async function WorksMovieDetailPage({ params, searchParams }: SP)
       <WorksDetailHeader
         title={meta?.title ?? fallback?.title ?? `TMDB ${tmdbId}`}
         subtitle={meta?.originalTitle}
-        director={fallback?.director}
+        byline={fallback?.director ? `감독 ${fallback.director}` : undefined}
         coverUrl={meta?.coverUrl ?? fallback?.coverUrl ?? undefined}
         description={meta?.description}
         externalRating={meta?.externalRating}
