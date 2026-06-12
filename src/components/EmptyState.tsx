@@ -20,7 +20,7 @@ export function EmptyState({ emoji, title, description, action }: Props) {
       {action && (
         <Link
           href={action.href}
-          className="mt-6 inline-flex h-11 items-center px-5 rounded-[var(--radius-pill)] bg-[var(--color-accent)] text-white text-[17px] font-normal hover:bg-[var(--color-accent-hover)] active:scale-[0.97] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+          className="mt-6 inline-flex h-11 items-center px-5 rounded-[var(--radius-pill)] bg-[var(--color-accent)] text-white text-[17px] font-normal hover:bg-[var(--color-accent-hover)] active:scale-[0.98] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
         >
           {action.label}
         </Link>

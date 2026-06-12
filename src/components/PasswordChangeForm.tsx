@@ -104,7 +104,7 @@ export function PasswordChangeForm({ forced }: { forced: boolean }) {
       <button
         type="submit"
         disabled={!canSubmit}
-        className="inline-flex w-full h-11 items-center justify-center gap-2 rounded-[var(--radius-pill)] bg-[var(--color-accent)] text-white text-[17px] font-normal hover:bg-[var(--color-accent-hover)] active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+        className="inline-flex w-full h-11 px-[21px] items-center justify-center gap-2 rounded-[var(--radius-pill)] bg-[var(--color-accent)] text-white text-[17px] font-normal hover:bg-[var(--color-accent-hover)] active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
       >
         {busy && <Spinner />}
         변경

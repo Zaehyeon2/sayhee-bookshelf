@@ -46,7 +46,7 @@ export function WorksSearchBar({ type, initialQuery }: Props) {
         type="submit"
         disabled={isPending}
         aria-busy={isPending}
-        className="h-11 px-5 min-w-[72px] rounded-[var(--radius-field)] bg-[var(--color-accent)] text-white text-[14px] font-medium hover:opacity-90 transition disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] inline-flex items-center justify-center gap-1"
+        className="h-11 px-5 min-w-[72px] rounded-[var(--radius-field)] bg-[var(--color-accent)] text-white text-[14px] font-medium hover:bg-[var(--color-accent-hover)] transition disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] inline-flex items-center justify-center gap-1"
       >
         {isPending ? (
           <span
