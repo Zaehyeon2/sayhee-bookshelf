@@ -34,21 +34,26 @@ export interface MediaRouteDeps<
   CreateInput,
   UpdateInput,
   Entity extends { id: number; slug: string },
+  Row,
 > {
   /** withApiHandler 라벨 — 기존 라벨 문자열 그대로 (예: listGames/createGame/getGame/updateGame/deleteGame) */
   labels: { list: string; create: string; get: string; update: string; delete: string }
-  createSchema: z.ZodTypeAny
-  updateSchema: z.ZodTypeAny
-  listQuerySchema: z.ZodTypeAny
+  createSchema: z.ZodType<CreateInput, unknown>
+  updateSchema: z.ZodType<UpdateInput, unknown>
+  listQuerySchema: z.ZodType<ListQueryShape, unknown>
   queries: {
     search: (
       db: Db,
       userId: number,
       q: string,
       opts: { limit: number; offset: number },
-    ) => Promise<unknown[]>
+    ) => Promise<Row[]>
     countSearch: (db: Db, userId: number, q: string) => Promise<number>
-    list: (db: Db, userId: number, filters: ListFilters) => Promise<unknown[]>
+    list: (db: Db, userId: number, filters: ListFilters) => Promise<Row[]>
+    /**
+     * tag(name)와 tagId는 동시에 전달될 수 있음 — 의도된 설계.
+     * tagId를 선조회하지 않는 호출자는 tag name으로 fallback 조회한다 (백로그 8).
+     */
     count: (
       db: Db,
       userId: number,
@@ -57,7 +62,7 @@ export interface MediaRouteDeps<
     create: (db: Db, userId: number, input: CreateInput) => Promise<Entity>
     update: (db: Db, userId: number, id: number, input: UpdateInput) => Promise<Entity | null>
     delete: (db: Db, userId: number, id: number) => Promise<boolean>
-    getById: (db: Db, userId: number, id: number) => Promise<unknown | null>
+    getById: (db: Db, userId: number, id: number) => Promise<Row | null>
     resolveTagId: (db: Db, tagName: string) => Promise<number | null>
   }
   requireOwn: (id: number) => Promise<{ user: User }>
@@ -69,17 +74,15 @@ export function createMediaRouteHandlers<
   CreateInput,
   UpdateInput,
   Entity extends { id: number; slug: string },
->(deps: MediaRouteDeps<CreateInput, UpdateInput, Entity>) {
+  Row,
+>(deps: MediaRouteDeps<CreateInput, UpdateInput, Entity, Row>) {
   const revalidateAll = () => {
     for (const tag of deps.revalidateTags) revalidateTag(tag, 'max')
   }
 
   const listGET = withApiHandler(deps.labels.list, async (req: Request) => {
     const user = await requireUser()
-    const { q, genre, tag, year, sort, page } = requireQuery(
-      req,
-      deps.listQuerySchema,
-    ) as ListQueryShape
+    const { q, genre, tag, year, sort, page } = requireQuery(req, deps.listQuerySchema)
     const currentPage = page ?? 1
     const offset = (currentPage - 1) * PAGE_SIZE
 
@@ -102,7 +105,7 @@ export function createMediaRouteHandlers<
 
   const createPOST = withApiHandler(deps.labels.create, async (req: Request) => {
     const user = await requireUser()
-    const input = (await requireJsonBody(req, deps.createSchema)) as CreateInput
+    const input = await requireJsonBody(req, deps.createSchema)
     const entity = await deps.queries.create(db, user.id, input)
     revalidateAll()
     return NextResponse.json({ id: entity.id, slug: entity.slug }, { status: 201 })
@@ -119,7 +122,7 @@ export function createMediaRouteHandlers<
   const itemPATCH = withApiHandler(deps.labels.update, async (req: Request, { params }: Params) => {
     const id = await requireIdParam(params)
     const { user } = await deps.requireOwn(id)
-    const input = (await requireJsonBody(req, deps.updateSchema)) as UpdateInput
+    const input = await requireJsonBody(req, deps.updateSchema)
     const updated = await deps.queries.update(db, user.id, id, input)
     if (!updated) return NextResponse.json({ error: 'not found' }, { status: 404 })
     revalidateAll()
