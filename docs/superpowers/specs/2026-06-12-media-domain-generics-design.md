@@ -23,8 +23,7 @@ src/lib/domains/
 ├ config.ts      MEDIA_DOMAINS = { books, movies, games }
 ├ queries.ts     createMediaQueries(cfg)   — 도메인당 18개 쿼리 함수 제네릭화
 ├ tags.ts        attachTags/attachTagsBatch/replaceTagsTx 제네릭 (writings 포함)
-├ auth.ts        requireOwnEntity 팩토리 — HttpError(API)/notFound(page) 변형
-├ schemas.ts     createMediaSchemas(cfg)   — Create/Update/List/검색 zod
+├ schemas.ts     공유 필드 조각 + List 쿼리 팩토리 (동적 키 z.object는 추론 붕괴라 회피)
 └ api.ts         createMediaRouteHandlers(cfg) — GET/POST · [id] · by-external
 ```
 
@@ -109,7 +108,7 @@ feature 브랜치(`refactor/media-domain-generics`), 단계별 테스트 통과 
 
 1. **config + 쿼리 팩토리** — 위험 최대라 최선두. 통합 테스트(멀티테넌트 scoping ·
    stats · public-feed · works-aggregation)가 가드.
-2. **tags + auth 제네릭** — writings 포함.
+2. **tags 제네릭** — writings 포함. (auth는 `makeOwnershipHelpers` 팩토리가 이미 존재해 변경 불필요 — 계획 수립 중 확인.)
 3. **validations 팩토리 + DOMAIN_TYPES** — 단위 테스트 가드.
 4. **API route 팩토리** — wrapper 미적용 예외(login, works/search, external lookup,
    by-external 커스텀 쿼리 shape)는 현행 유지.
