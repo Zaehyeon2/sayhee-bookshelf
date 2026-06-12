@@ -54,6 +54,8 @@ function makeOwnershipHelpers<Row>(
   notFoundMessage: string,
 ) {
   return {
+    /** 같은 entity의 404 문구 단일 소스 — PATCH/DELETE 라우트가 GET(requireOwn)과 동일 문구를 재사용 */
+    notFoundMessage,
     async forApi(id: number): Promise<{ user: User; row: Row }> {
       const user = await requireUser()
       const row = await fetchOwn(id, user.id)
@@ -70,7 +72,9 @@ function makeOwnershipHelpers<Row>(
   }
 }
 
-const ownBook = makeOwnershipHelpers<Book>(
+// 정규화 shape({ user, row })가 필요한 호출자(도메인 제네릭 라우트 팩토리)는 ownership 객체를
+// 직접 사용 — requireOwn*(도메인별 키 이름)과 달리 어댑터 closure 없이 forApi를 바로 전달 가능.
+export const bookOwnership = makeOwnershipHelpers<Book>(
   async (id, userId) =>
     (
       await db
@@ -82,7 +86,7 @@ const ownBook = makeOwnershipHelpers<Book>(
   '책을 찾을 수 없습니다',
 )
 
-const ownWriting = makeOwnershipHelpers<Writing>(
+export const writingOwnership = makeOwnershipHelpers<Writing>(
   async (id, userId) =>
     (
       await db
@@ -94,7 +98,7 @@ const ownWriting = makeOwnershipHelpers<Writing>(
   '글을 찾을 수 없습니다',
 )
 
-const ownMovie = makeOwnershipHelpers<Movie>(
+export const movieOwnership = makeOwnershipHelpers<Movie>(
   async (id, userId) =>
     (
       await db
@@ -106,7 +110,7 @@ const ownMovie = makeOwnershipHelpers<Movie>(
   '영화를 찾을 수 없습니다',
 )
 
-const ownGame = makeOwnershipHelpers<Game>(
+export const gameOwnership = makeOwnershipHelpers<Game>(
   async (id, userId) =>
     (
       await db
@@ -119,49 +123,49 @@ const ownGame = makeOwnershipHelpers<Game>(
 )
 
 export async function requireOwnBook(bookId: number): Promise<{ user: User; book: Book }> {
-  const { user, row: book } = await ownBook.forApi(bookId)
+  const { user, row: book } = await bookOwnership.forApi(bookId)
   return { user, book }
 }
 
 export async function requireOwnBookForPage(bookId: number): Promise<{ user: User; book: Book }> {
-  const { user, row: book } = await ownBook.forPage(bookId)
+  const { user, row: book } = await bookOwnership.forPage(bookId)
   return { user, book }
 }
 
 export async function requireOwnWriting(
   writingId: number,
 ): Promise<{ user: User; writing: Writing }> {
-  const { user, row: writing } = await ownWriting.forApi(writingId)
+  const { user, row: writing } = await writingOwnership.forApi(writingId)
   return { user, writing }
 }
 
 export async function requireOwnWritingForPage(
   writingId: number,
 ): Promise<{ user: User; writing: Writing }> {
-  const { user, row: writing } = await ownWriting.forPage(writingId)
+  const { user, row: writing } = await writingOwnership.forPage(writingId)
   return { user, writing }
 }
 
 export async function requireOwnMovie(movieId: number): Promise<{ user: User; movie: Movie }> {
-  const { user, row: movie } = await ownMovie.forApi(movieId)
+  const { user, row: movie } = await movieOwnership.forApi(movieId)
   return { user, movie }
 }
 
 export async function requireOwnMovieForPage(
   movieId: number,
 ): Promise<{ user: User; movie: Movie }> {
-  const { user, row: movie } = await ownMovie.forPage(movieId)
+  const { user, row: movie } = await movieOwnership.forPage(movieId)
   return { user, movie }
 }
 
 export async function requireOwnGame(gameId: number): Promise<{ user: User; game: Game }> {
-  const { user, row: game } = await ownGame.forApi(gameId)
+  const { user, row: game } = await gameOwnership.forApi(gameId)
   return { user, game }
 }
 
 export async function requireOwnGameForPage(
   gameId: number,
 ): Promise<{ user: User; game: Game }> {
-  const { user, row: game } = await ownGame.forPage(gameId)
+  const { user, row: game } = await gameOwnership.forPage(gameId)
   return { user, game }
 }

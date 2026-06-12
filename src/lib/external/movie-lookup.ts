@@ -1,5 +1,6 @@
 import { cacheLife, cacheTag } from 'next/cache'
 import type { MovieLookupResult } from './types'
+import { EXTERNAL_FETCH_TIMEOUT_MS } from './timeout'
 
 const TMDB_BASE = 'https://api.themoviedb.org/3'
 const POSTER_PREFIX = 'https://image.tmdb.org/t/p/w342'
@@ -34,7 +35,7 @@ async function fetchTmdbMovie(tmdbId: number): Promise<TmdbMovieDetail | null> {
       Authorization: `Bearer ${key}`,
       accept: 'application/json',
     },
-    signal: AbortSignal.timeout(5000),
+    signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
   })
 
   if (res.status === 404) return null
@@ -47,10 +48,7 @@ async function fetchTmdbMovie(tmdbId: number): Promise<TmdbMovieDetail | null> {
   return (await res.json()) as TmdbMovieDetail
 }
 
-export async function lookupMovieByTmdbId(
-  tmdbId: number,
-  _opts: { signal?: AbortSignal } = {},
-): Promise<MovieLookupResult | null> {
+export async function lookupMovieByTmdbId(tmdbId: number): Promise<MovieLookupResult | null> {
   if (!Number.isInteger(tmdbId) || tmdbId <= 0) return null
   const data = await fetchTmdbMovie(tmdbId)
   if (!data || !data.id || !data.title) return null

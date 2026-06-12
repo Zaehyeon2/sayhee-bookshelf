@@ -1,5 +1,5 @@
 import { cache } from 'react'
-import { and, count, desc, eq, inArray, isNotNull, like, sql } from 'drizzle-orm'
+import { and, count, desc, eq, getTableColumns, inArray, isNotNull, like, sql } from 'drizzle-orm'
 import { tags, users } from '@/lib/db/schema'
 import { toSlug } from '@/lib/slug'
 import {
@@ -271,26 +271,10 @@ export function createMediaQueries<Row extends MediaRowBase, ExtId extends strin
 
   // 목록용 selective select — content(본문, row당 수 KB)는 목록 카드가 사용하지 않는데
   // Turso(원격 DB) 전송량 대부분을 차지. search()는 본문 발췌(excerpt)에 content가 필요해
-  // full row 유지. 반환 타입은 Row를 유지하지만 content 필드는 런타임에 없음 —
-  // contentOf 등 content 접근은 search 경로에서만 할 것 (MediaListResults가 그렇게 사용).
-  const listColumns = {
-    id: c.id,
-    authorUserId: c.authorUserId,
-    slug: c.slug,
-    title: c.title,
-    [cfg.fields.person]: c.person,
-    genre: c.genre,
-    [cfg.fields.date]: c.date,
-    rating: c.rating,
-    oneLineReview: c.oneLineReview,
-    isPublic: c.isPublic,
-    publishedAt: c.publishedAt,
-    coverUrl: c.coverUrl,
-    [cfg.fields.externalId]: c.externalId,
-    externalSource: cfg.table.externalSource,
-    createdAt: cfg.table.createdAt,
-    updatedAt: cfg.table.updatedAt,
-  }
+  // full row 유지. 손-열거 대신 테이블에서 파생해 새 컬럼이 자동 포함되게 한다(drift 방지).
+  // 반환 타입은 Row를 유지하지만 content 필드는 런타임에 없음 — contentOf 등 content 접근은
+  // search 경로에서만 할 것 (MediaListResults가 그렇게 사용).
+  const { content: _content, ...listColumns } = getTableColumns(cfg.table)
 
   async function list(
     db: Db,

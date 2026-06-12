@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, getTableColumns, sql } from 'drizzle-orm'
 import { writings, writingTags, tags } from '../schema'
 import { toSlug } from '@/lib/slug'
 import type { CreateWritingInput, UpdateWritingInput } from '@/lib/validations'
@@ -141,15 +141,10 @@ export async function listWritings(
   let q = db
     // body는 카드 미리보기(마크다운 strip 후 ~80자)에만 쓰임 — full body(글당 수 KB) 대신
     // 앞 600자만 전송해 Turso payload 절감. searchWritings는 매치 위치 발췌가 필요해 full 유지.
+    // 나머지 컬럼은 테이블에서 파생 — 새 컬럼이 목록에서 누락되는 drift 방지.
     .select({
-      id: writings.id,
-      authorUserId: writings.authorUserId,
-      title: writings.title,
+      ...getTableColumns(writings),
       body: sql<string>`substr(${writings.body}, 1, 600)`,
-      coverUrl: writings.coverUrl,
-      slug: writings.slug,
-      createdAt: writings.createdAt,
-      updatedAt: writings.updatedAt,
     })
     .from(writings)
     .where(eq(writings.authorUserId, authorUserId))

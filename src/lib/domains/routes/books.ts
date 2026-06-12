@@ -1,4 +1,4 @@
-import { requireOwnBook } from '@/lib/auth-helpers'
+import { bookOwnership } from '@/lib/auth-helpers'
 import {
   countBooks,
   countSearchBooks,
@@ -37,10 +37,7 @@ export const bookRouteHandlers = createMediaRouteHandlers({
     tagsOf: listBookTags,
     resolveTagId: resolveBookTagId,
   },
-  requireOwn: async (id: number) => {
-    const { user, book } = await requireOwnBook(id)
-    return { user, entity: book }
-  },
-  notFoundMessage: '책을 찾을 수 없습니다',
+  requireOwn: bookOwnership.forApi,
+  notFoundMessage: bookOwnership.notFoundMessage,
   revalidateTags: [PUBLIC_FEED_TAGS.books, WORKS_BOOK_TAG],
 })

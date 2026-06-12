@@ -1,4 +1,4 @@
-import { requireOwnGame } from '@/lib/auth-helpers'
+import { gameOwnership } from '@/lib/auth-helpers'
 import {
   countGames,
   countSearchGames,
@@ -37,10 +37,7 @@ export const gameRouteHandlers = createMediaRouteHandlers({
     tagsOf: listGameTags,
     resolveTagId: resolveGameTagId,
   },
-  requireOwn: async (id: number) => {
-    const { user, game } = await requireOwnGame(id)
-    return { user, entity: game }
-  },
-  notFoundMessage: '게임을 찾을 수 없습니다',
+  requireOwn: gameOwnership.forApi,
+  notFoundMessage: gameOwnership.notFoundMessage,
   revalidateTags: [PUBLIC_FEED_TAGS.games, WORKS_GAME_TAG],
 })

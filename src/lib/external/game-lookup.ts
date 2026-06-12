@@ -1,5 +1,6 @@
 import { cacheLife, cacheTag } from 'next/cache'
 import type { GameLookupResult } from './types'
+import { EXTERNAL_FETCH_TIMEOUT_MS } from './timeout'
 
 const RAWG_BASE = 'https://api.rawg.io/api'
 
@@ -32,7 +33,7 @@ async function fetchRawgGame(rawgId: number): Promise<RawgGameDetail | null> {
   // 'use cache: remote' 함수라 호출자 signal을 인자로 못 받음(cache key 오염) — 내부 5s timeout.
   const res = await fetch(url, {
     headers: { accept: 'application/json' },
-    signal: AbortSignal.timeout(5000),
+    signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
   })
 
   if (res.status === 404) return null
@@ -45,10 +46,7 @@ async function fetchRawgGame(rawgId: number): Promise<RawgGameDetail | null> {
   return (await res.json()) as RawgGameDetail
 }
 
-export async function lookupGameByRawgId(
-  rawgId: number,
-  _opts: { signal?: AbortSignal } = {},
-): Promise<GameLookupResult | null> {
+export async function lookupGameByRawgId(rawgId: number): Promise<GameLookupResult | null> {
   if (!Number.isInteger(rawgId) || rawgId <= 0) return null
   const data = await fetchRawgGame(rawgId)
   if (!data || !data.id || !data.name) return null

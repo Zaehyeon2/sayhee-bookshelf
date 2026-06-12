@@ -1,5 +1,6 @@
 import { cacheLife, cacheTag } from 'next/cache'
 import type { BookLookupResult } from './types'
+import { EXTERNAL_FETCH_TIMEOUT_MS } from './timeout'
 import { isbn10to13 } from '@/lib/isbn'
 
 export const NAVER_BOOK_LOOKUP_TAG = 'naver-book-lookup'
@@ -83,7 +84,7 @@ async function fetchNaverBookItem(isbn: string): Promise<NaverBookItem> {
       'X-Naver-Client-Id': clientId,
       'X-Naver-Client-Secret': clientSecret,
     },
-    signal: AbortSignal.timeout(5000),
+    signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
   })
 
   if (res.status === 429)
@@ -99,10 +100,7 @@ async function fetchNaverBookItem(isbn: string): Promise<NaverBookItem> {
   return item
 }
 
-export async function lookupBookByIsbn(
-  isbn: string,
-  _opts: { signal?: AbortSignal } = {},
-): Promise<BookLookupResult | null> {
+export async function lookupBookByIsbn(isbn: string): Promise<BookLookupResult | null> {
   if (!/^\d{10}(\d{3})?$/.test(isbn)) return null
   let item: NaverBookItem
   try {

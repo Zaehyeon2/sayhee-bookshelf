@@ -4,7 +4,8 @@ import dynamic from 'next/dynamic'
 import { useEffect, useRef, useState } from 'react'
 
 // dynamic()은 JS만 지연 — 정적 CSS import는 즉시 번들되므로 CSS는 lazy wrapper 모듈에서 로드한다.
-const Viewer = dynamic(() => import('./toastui-editor-lazy').then((m) => m.Viewer), {
+// 뷰어 전용 빌드 사용: react-editor index를 거치면 풀 에디터(~940KB)가 딸려온다.
+const Viewer = dynamic(() => import('./toastui-viewer-lazy'), {
   ssr: false,
   loading: () => <div className="text-[var(--color-text-weak)] text-[14px]">불러오는 중…</div>,
 })

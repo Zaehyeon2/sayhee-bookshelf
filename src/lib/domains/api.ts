@@ -66,9 +66,9 @@ export interface MediaRouteDeps<
     tagsOf: (db: Db, id: number) => Promise<string[]>
     resolveTagId: (db: Db, tagName: string) => Promise<number | null>
   }
-  /** GET 전용 — 소유권 검증과 동시에 row를 반환해 핸들러의 재조회를 없앤다 */
-  requireOwn: (id: number) => Promise<{ user: User; entity: OwnRow }>
-  /** PATCH/DELETE의 404 본문 — requireOwn 메시지와 동일 문구 유지 */
+  /** GET 전용 — 소유권 검증과 동시에 row를 반환해 핸들러의 재조회를 없앤다 (*Ownership.forApi 직접 전달) */
+  requireOwn: (id: number) => Promise<{ user: User; row: OwnRow }>
+  /** PATCH/DELETE의 404 본문 — *Ownership.notFoundMessage를 전달해 GET(404)과 문구 단일 소스 유지 */
   notFoundMessage: string
   /** 도메인 캐시 태그 2개 (public feed + works detail) — 기존 문자열 그대로 */
   revalidateTags: readonly string[]
@@ -118,9 +118,12 @@ export function createMediaRouteHandlers<
 
   const itemGET = withApiHandler(deps.labels.get, async (_req: Request, { params }: Params) => {
     const id = await requireIdParam(params)
-    // requireOwn이 소유권 검증과 동시에 row를 반환 — getById 재조회 제거 (Turso 왕복 1회 절감)
-    const { entity } = await deps.requireOwn(id)
-    const tags = await deps.queries.tagsOf(db, id)
+    // requireOwn이 소유권 검증과 동시에 row를 반환 — getById 재조회 제거 (Turso 왕복 1회 절감).
+    // tagsOf는 id로만 조회하며 requireOwn 실패 시 결과가 버려지므로 병렬 실행해도 누출 없음.
+    const [{ row: entity }, tags] = await Promise.all([
+      deps.requireOwn(id),
+      deps.queries.tagsOf(db, id),
+    ])
     return NextResponse.json({ ...entity, tags })
   })
 

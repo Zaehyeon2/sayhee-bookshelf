@@ -15,8 +15,13 @@ export type RateLimitResult = { ok: true } | { ok: false; retryAfterSeconds: num
 // 타이머 없이(의존성 0) 체크 시점에 기회적으로 청소 — 임계 초과 시에만 O(n)이라 평상시 비용 없음.
 const SWEEP_THRESHOLD = 1000
 
+// 임계 초과인데 전부 유효(삭제 0건)면 매 요청 O(n) 공회전 — sweep을 윈도우당 1회로 제한.
+const lastSweepAt = new WeakMap<Map<number, Entry>, number>()
+
 function sweepExpired(buckets: Map<number, Entry>, nowMs: number): void {
   if (buckets.size <= SWEEP_THRESHOLD) return
+  if (nowMs - (lastSweepAt.get(buckets) ?? 0) < WINDOW_MS) return
+  lastSweepAt.set(buckets, nowMs)
   for (const [key, entry] of buckets) {
     if (entry.resetAt <= nowMs) buckets.delete(key)
   }

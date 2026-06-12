@@ -1,4 +1,4 @@
-import { requireOwnMovie } from '@/lib/auth-helpers'
+import { movieOwnership } from '@/lib/auth-helpers'
 import {
   countMovies,
   countSearchMovies,
@@ -37,10 +37,7 @@ export const movieRouteHandlers = createMediaRouteHandlers({
     tagsOf: listMovieTags,
     resolveTagId: resolveMovieTagId,
   },
-  requireOwn: async (id: number) => {
-    const { user, movie } = await requireOwnMovie(id)
-    return { user, entity: movie }
-  },
-  notFoundMessage: '영화를 찾을 수 없습니다',
+  requireOwn: movieOwnership.forApi,
+  notFoundMessage: movieOwnership.notFoundMessage,
   revalidateTags: [PUBLIC_FEED_TAGS.movies, WORKS_MOVIE_TAG],
 })

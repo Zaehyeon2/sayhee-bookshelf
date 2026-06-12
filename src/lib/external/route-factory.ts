@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 import { requireUser, HttpError } from '@/lib/auth-helpers'
 import { ExternalSearchQuerySchema } from '@/lib/validations'
 import { checkRateLimit } from './rate-limit'
+import { EXTERNAL_FETCH_TIMEOUT_MS } from './timeout'
 import type { ExternalSearchItem, ExternalSearchResponse } from './types'
 
-const TIMEOUT_MS = 5000
 const SEARCH_LIMIT = 10
 
 type Source = 'naver' | 'tmdb' | 'rawg'
@@ -49,7 +49,7 @@ export function createExternalSearchHandler<TId extends string | number>(
     }
 
     const ctl = new AbortController()
-    const timeout = setTimeout(() => ctl.abort(), TIMEOUT_MS)
+    const timeout = setTimeout(() => ctl.abort(), EXTERNAL_FETCH_TIMEOUT_MS)
     try {
       const items = await opts.adapter(parsed.data.q, {
         limit: SEARCH_LIMIT,
