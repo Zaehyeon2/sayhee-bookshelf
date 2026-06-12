@@ -15,16 +15,16 @@ import type { CountItem } from '@/lib/stats-types'
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend)
 
 const PALETTE = [
-  '#3182f6',
-  '#f04452',
-  '#ffb331',
-  '#1fc7c1',
-  '#9061f9',
-  '#fd6f22',
-  '#51cf66',
-  '#f783ac',
-  '#748ffc',
-  '#a9e34b',
+  '#0071e3',
+  '#ff3b30',
+  '#ff9500',
+  '#30b0c7',
+  '#af52de',
+  '#ff2d55',
+  '#34c759',
+  '#5e5ce6',
+  '#a2845e',
+  '#ffd60a',
 ]
 
 export function CountBarChart({
