@@ -3,7 +3,8 @@
 games 도메인 추가(2026-06-12, feature/games-domain) 코드 리뷰에서 나온 후보들.
 전부 "동작엔 문제 없음 — 유지보수·효율 개선" 버킷. 별도 브랜치에서 묶어서 처리 권장.
 
-> **2026-06-13 갱신**: 1~5·8·10·11번은 `refactor/media-domain-generics` 브랜치에서 완료
+> **2026-06-13 갱신**: 1~5·8·10번은 `refactor/media-domain-generics` 브랜치에서 완료
+> (11번은 파생화 시도 후 회귀로 기각 — 아래 11번 항목 참조).
 > (설계: `docs/superpowers/specs/2026-06-12-media-domain-generics-design.md`,
 > 계획: `docs/superpowers/plans/2026-06-12-media-domain-generics.md`).
 > 잔존: 6·7·9·12·13번.
@@ -37,8 +38,9 @@ games 도메인 추가(2026-06-12, feature/games-domain) 코드 리뷰에서 나
 
 10. ~~**search/countSearch LIKE 절 공유**~~ — ✅ 완료 (2026-06-13). 쿼리 팩토리의
     `searchWhere` fragment를 search/countSearch가 공유 (aeaa86e).
-11. ~~**폼 `externalSource` 파생 상태 제거**~~ — ✅ 완료 (2026-06-13). MediaForm이 payload에서
-    `externalId != null ? source : null`로 파생 (03f2e46).
+11. ~~**폼 `externalSource` 파생 상태 제거**~~ — **기각 (2026-06-13)**: 파생 시도 결과
+    `externalSource`는 `externalId`로부터 복원 불가한 provenance(직접 API 생성 레코드의 null
+    출처를 'naver'로 오라벨) — controlled state 유지가 정답. 코드리뷰에서 회귀로 확인되어 원복.
 12. **lookup 어댑터 AbortSignal 미전달** — `lookupGameByRawgId(_opts.signal)`이 `'use cache'`
     함수(`fetchRawgGame`)에 전달 안 됨 → 라우트의 5초 AbortController 무효.
     movie-lookup도 동일. 'use cache' 제약이라 signal 전달 불가 — 타임아웃 설계 재검토 필요.

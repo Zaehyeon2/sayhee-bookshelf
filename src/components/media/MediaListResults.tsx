@@ -8,9 +8,8 @@ import { EmptyState } from '@/components/EmptyState'
 import { CardGridSkeleton } from '@/components/CardGridSkeleton'
 import { Skeleton } from '@/components/Skeleton'
 import { StatsPageLink } from '@/components/StatsPageLink'
+import { MEDIA_PAGE_SIZE as PAGE_SIZE } from '@/lib/domains/config'
 import type { MediaPageConfig } from './mediaPageConfig'
-
-const PAGE_SIZE = 24
 
 type ListSP = {
   genre?: string

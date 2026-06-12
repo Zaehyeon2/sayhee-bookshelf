@@ -7,6 +7,9 @@ import {
   isSlugUniqueViolation,
 } from '@/lib/db/queries/shared'
 
+// 목록 페이지네이션 페이지 크기 단일 소스 — API 라우트·목록 페이지가 공유 (불일치 시 totalPages 어긋남)
+export const MEDIA_PAGE_SIZE = 24
+
 // 도메인 타입 단일 소스 — FeedQuerySchema·WorksSearchQuerySchema가 이 배열을 참조 (백로그 2번)
 export const DOMAIN_TYPES = ['book', 'movie', 'game'] as const
 export type DomainType = (typeof DOMAIN_TYPES)[number]

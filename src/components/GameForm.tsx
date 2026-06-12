@@ -75,6 +75,7 @@ export function GameForm({ initial, mode }: Props) {
           isPublic: initial.isPublic,
           externalId: initial.rawgId,
           coverUrl: initial.coverUrl,
+          externalSource: initial.externalSource,
         }
       }
     />

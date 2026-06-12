@@ -75,6 +75,7 @@ export function MovieForm({ initial, mode }: Props) {
           isPublic: initial.isPublic,
           externalId: initial.tmdbId,
           coverUrl: initial.coverUrl,
+          externalSource: initial.externalSource,
         }
       }
     />

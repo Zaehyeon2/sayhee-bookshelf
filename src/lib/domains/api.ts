@@ -6,8 +6,7 @@ import { requireUser } from '@/lib/auth-helpers'
 import { db } from '@/lib/db/client'
 import type { Db } from '@/lib/db/queries/shared'
 import type { User } from '@/lib/db/schema'
-
-const PAGE_SIZE = 24
+import { MEDIA_PAGE_SIZE as PAGE_SIZE } from './config'
 
 type Params = { params: Promise<{ id: string }> }
 

@@ -77,6 +77,7 @@ export function BookForm({ initial, mode }: Props) {
           isPublic: initial.isPublic,
           externalId: initial.isbn,
           coverUrl: initial.coverUrl,
+          externalSource: initial.externalSource,
         }
       }
     />

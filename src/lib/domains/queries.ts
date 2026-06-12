@@ -79,6 +79,8 @@ function applyPaging<Q extends { limit(n: number): Q; offset(n: number): Q }>(
   opts: { limit?: number; offset?: number },
 ): Q {
   if (opts.limit !== undefined) q = q.limit(opts.limit)
+  // SQLite는 OFFSET 단독을 문법 에러로 거부 — offset만 온 경우 LIMIT -1(무제한)을 끼워 방어
+  else if (opts.offset !== undefined) q = q.limit(-1)
   if (opts.offset !== undefined) q = q.offset(opts.offset)
   return q
 }

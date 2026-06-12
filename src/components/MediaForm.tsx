@@ -57,6 +57,7 @@ export interface MediaFormValues<TId extends string | number> {
   isPublic: boolean
   externalId: TId | null
   coverUrl: string | null
+  externalSource: string | null
 }
 
 interface Props<TId extends string | number> {
@@ -83,6 +84,11 @@ export function MediaForm<TId extends string | number>({ config, initial, mode }
   )
   const [externalId, setExternalId] = useState<TId | null>(initial?.externalId ?? null)
   const [coverUrl, setCoverUrl] = useState<string | null>(initial?.coverUrl ?? null)
+  // externalSource는 externalId로부터 복원 불가한 provenance(직접 API 생성 레코드는 null) —
+  // 파생식 금지, controlled state로 보존 (백로그 11 기각).
+  const [externalSource, setExternalSource] = useState<string | null>(
+    initial?.externalSource ?? null,
+  )
   const editorRef = useRef<MarkdownEditorHandle>(null)
 
   const crud = useCrudForm({
@@ -101,7 +107,7 @@ export function MediaForm<TId extends string | number>({ config, initial, mode }
         isPublic,
         [config.fieldKeys.externalId]: externalId,
         coverUrl,
-        externalSource: externalId != null ? config.externalSource : null,
+        externalSource,
       }
       const url = mode === 'create' ? config.apiBase : `${config.apiBase}/${initial?.id}`
       const data = await saveJsonOrToast(url, mode === 'create' ? 'POST' : 'PATCH', payload)
@@ -134,10 +140,12 @@ export function MediaForm<TId extends string | number>({ config, initial, mode }
               if (sel.genre) setGenre(sel.genre)
               setExternalId(sel.externalId)
               setCoverUrl(sel.coverUrl ?? null)
+              setExternalSource(config.externalSource)
             },
             onClear: () => {
               setExternalId(null)
               setCoverUrl(null)
+              setExternalSource(null)
             },
           })}
         </div>
