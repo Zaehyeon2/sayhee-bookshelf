@@ -43,13 +43,13 @@ export function ProfileForm({ initialDisplayName }: { initialDisplayName: string
           required
           minLength={1}
           maxLength={30}
-          className="mt-1 w-full h-11 px-3 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition"
+          className="mt-1 w-full h-11 px-3 rounded-[var(--radius-field)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/15 outline-none transition"
         />
       </label>
       <button
         type="submit"
         disabled={!canSubmit}
-        className="inline-flex w-full h-11 items-center justify-center gap-2 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[15px] font-medium disabled:opacity-50 transition"
+        className="inline-flex w-full h-11 items-center justify-center gap-2 rounded-[var(--radius-field)] bg-[var(--color-accent)] text-white text-[15px] font-medium disabled:opacity-50 transition"
       >
         {busy && <Spinner />}
         저장

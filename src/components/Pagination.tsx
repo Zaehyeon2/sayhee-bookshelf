@@ -25,10 +25,10 @@ function buildHref(
 }
 
 const linkCls =
-  'inline-flex items-center h-9 px-3 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] text-[13px] font-semibold text-[var(--color-text-strong)] shadow-[var(--shadow-toss)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50'
+  'inline-flex items-center h-9 px-3 rounded-[var(--radius-field)] bg-[var(--color-surface)] text-[13px] font-semibold text-[var(--color-text-strong)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]'
 
 const disabledCls =
-  'inline-flex items-center h-9 px-3 rounded-[var(--radius-toss-sm)] text-[13px] font-medium text-[var(--color-text-weak)] cursor-not-allowed select-none'
+  'inline-flex items-center h-9 px-3 rounded-[var(--radius-field)] text-[13px] font-medium text-[var(--color-text-weak)] cursor-not-allowed select-none'
 
 export function Pagination({ currentPage, totalPages, basePath, preservedQuery }: Props) {
   if (totalPages <= 1) return null

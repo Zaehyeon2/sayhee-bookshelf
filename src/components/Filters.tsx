@@ -17,9 +17,9 @@ function ChipButton({
       type="button"
       onClick={onClick}
       className={
-        'shrink-0 h-9 px-4 rounded-full text-[13px] font-semibold transition active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50 ' +
+        'shrink-0 h-9 px-4 rounded-full text-[13px] font-semibold transition active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] ' +
         (active
-          ? 'bg-[var(--color-toss-blue)] text-white'
+          ? 'bg-[var(--color-accent)] text-white'
           : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)]')
       }
     >
@@ -144,7 +144,7 @@ export function Filters({ basePath, genres }: FiltersProps) {
       <select
         value={currentSort}
         onChange={(e) => setParam('sort', e.target.value === 'date' ? null : e.target.value)}
-        className="shrink-0 h-9 pl-3 pr-8 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] text-[var(--color-text-strong)] focus:outline-none focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15"
+        className="shrink-0 h-9 pl-3 pr-8 rounded-[var(--radius-field)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] text-[var(--color-text-strong)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/15"
       >
         <option value="date">최근 순</option>
         <option value="rating">별점 순</option>

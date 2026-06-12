@@ -67,7 +67,7 @@ interface Props<TId extends string | number> {
 }
 
 const inputCls =
-  'w-full h-12 px-4 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] text-[var(--color-text-strong)] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition'
+  'w-full h-12 px-4 rounded-[var(--radius-field)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] text-[var(--color-text-strong)] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/15 outline-none transition'
 
 const labelCls = 'block text-[13px] font-semibold text-[var(--color-text-muted)] mb-2'
 
@@ -124,7 +124,7 @@ export function MediaForm<TId extends string | number>({ config, initial, mode }
 
   return (
     <form onSubmit={handleFormSubmit} onKeyDown={config.onFormKeyDown} className="space-y-6">
-      <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-toss)] space-y-5">
+      <section className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-6 space-y-5">
         <div>
           <label className={labelCls}>
             작품 검색 <span className="text-[var(--color-text-weak)] font-normal">(선택)</span>
@@ -216,7 +216,7 @@ export function MediaForm<TId extends string | number>({ config, initial, mode }
               className={[
                 'absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-tabular tabular-nums',
                 oneLineReview.length > 120
-                  ? 'text-[var(--color-toss-blue)]'
+                  ? 'text-[var(--color-accent)]'
                   : 'text-[var(--color-text-weak)]',
               ].join(' ')}
               aria-hidden
@@ -235,7 +235,7 @@ export function MediaForm<TId extends string | number>({ config, initial, mode }
         </div>
       </section>
 
-      <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-2 shadow-[var(--shadow-toss)] overflow-hidden">
+      <section className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-2 overflow-hidden">
         <MarkdownEditor
           ref={editorRef}
           initialValue={initial?.content ?? ''}

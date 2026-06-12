@@ -15,7 +15,7 @@ const SearchDropdown = dynamic(
     ssr: false,
     // 로딩 중 레이아웃 시프트 방지용 입력창 자리 표시자
     loading: () => (
-      <div className="h-12 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)]" />
+      <div className="h-12 rounded-[var(--radius-field)] bg-[var(--color-surface)] border border-[var(--color-border)]" />
     ),
   },
 ) as typeof SearchDropdownComponent
@@ -146,7 +146,7 @@ export function ExternalMediaSearchBar<TId extends string | number>({
                 .join(' · ') || ' '}
             </div>
             {count > 0 && (
-              <div className="text-[11px] text-[var(--color-toss-blue)] mt-0.5">
+              <div className="text-[11px] text-[var(--color-accent)] mt-0.5">
                 ✓ 이미 {count}번 기록했어요
               </div>
             )}

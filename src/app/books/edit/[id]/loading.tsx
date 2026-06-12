@@ -4,7 +4,7 @@ export default function Loading() {
   return (
     <div className="space-y-6">
       <Skeleton className="h-8 w-40" />
-      <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-toss)] space-y-5">
+      <section className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-6 space-y-5">
         <Skeleton className="h-4 w-12" />
         <Skeleton className="h-12 w-full" />
         <Skeleton className="h-4 w-12" />
@@ -16,7 +16,7 @@ export default function Loading() {
         <Skeleton className="h-7 w-40" />
         <Skeleton className="h-11 w-full" />
       </section>
-      <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-2 shadow-[var(--shadow-toss)]">
+      <section className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-2">
         <Skeleton className="h-[320px] w-full" />
       </section>
       <div className="flex justify-end gap-3">

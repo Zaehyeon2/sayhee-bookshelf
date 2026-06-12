@@ -25,7 +25,7 @@ export default async function HomePage() {
         </p>
         <Link
           href="/login"
-          className="inline-block px-6 h-11 leading-[44px] rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[15px] font-medium"
+          className="inline-block px-6 h-11 leading-[44px] rounded-[var(--radius-field)] bg-[var(--color-accent)] text-white text-[15px] font-medium"
         >
           로그인
         </Link>
@@ -124,7 +124,7 @@ export default async function HomePage() {
           {recentPublicBooks.length > 0 && (
             <Link
               href="/feed"
-              className="text-[13px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-toss-blue)] transition"
+              className="text-[13px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition"
             >
               전체 보기 →
             </Link>
@@ -152,7 +152,7 @@ export default async function HomePage() {
           {recentPublicMovies.length > 0 && (
             <Link
               href="/feed?type=movie"
-              className="text-[13px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-toss-blue)] transition"
+              className="text-[13px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition"
             >
               전체 보기 →
             </Link>
@@ -180,7 +180,7 @@ export default async function HomePage() {
           {recentPublicGames.length > 0 && (
             <Link
               href="/feed?type=game"
-              className="text-[13px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-toss-blue)] transition"
+              className="text-[13px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition"
             >
               전체 보기 →
             </Link>
@@ -208,7 +208,7 @@ export default async function HomePage() {
           {recentWritings.length > 0 && (
             <Link
               href="/writings"
-              className="text-[13px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-toss-blue)] transition"
+              className="text-[13px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition"
             >
               전체 보기 →
             </Link>
@@ -252,17 +252,17 @@ function EntryCard({
 }) {
   const visibleMetrics = metrics.filter((m): m is string => !!m)
   return (
-    <div className="group relative rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] transition">
+    <div className="group relative rounded-[var(--radius-card)] bg-[var(--color-surface)] p-6 hover:shadow-[var(--shadow-float)] transition">
       <Link
         href={href}
-        className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50 rounded-[var(--radius-toss-sm)]"
+        className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] rounded-[var(--radius-field)]"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-[32px] leading-none" aria-hidden>
               {emoji}
             </span>
-            <span className="text-[18px] font-bold text-[var(--color-text-strong)] group-hover:text-[var(--color-toss-blue)] transition">
+            <span className="text-[18px] font-bold text-[var(--color-text-strong)] group-hover:text-[var(--color-accent)] transition">
               {label}
             </span>
           </div>
@@ -281,7 +281,7 @@ function EntryCard({
       </Link>
       <Link
         href={subAction.href}
-        className="mt-4 inline-flex items-center h-9 px-3 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[13px] font-semibold hover:bg-[var(--color-toss-blue-hover)] active:scale-[0.97] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+        className="mt-4 inline-flex items-center h-9 px-3 rounded-[var(--radius-field)] bg-[var(--color-accent)] text-white text-[13px] font-semibold hover:bg-[var(--color-accent-hover)] active:scale-[0.97] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
       >
         + {subAction.label}
       </Link>

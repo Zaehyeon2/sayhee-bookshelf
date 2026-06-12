@@ -9,7 +9,7 @@ export default function ErrorPage({
 }) {
   return (
     <div className="mx-auto max-w-md text-center py-20">
-      <div className="rounded-[var(--radius-toss-lg)] bg-[var(--color-surface)] p-8 shadow-[var(--shadow-toss)]">
+      <div className="rounded-[var(--radius-panel)] bg-[var(--color-surface)] p-8">
         <div className="text-[40px] leading-none">⚠️</div>
         <h1 className="mt-4 text-[22px] font-bold text-[var(--color-text-strong)]">
           문제가 발생했어요
@@ -21,7 +21,7 @@ export default function ErrorPage({
         )}
         <button
           onClick={() => reset()}
-          className="mt-6 h-12 px-6 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[15px] font-semibold hover:bg-[var(--color-toss-blue-hover)] active:scale-[0.98] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+          className="mt-6 h-12 px-6 rounded-[var(--radius-field)] bg-[var(--color-accent)] text-white text-[15px] font-semibold hover:bg-[var(--color-accent-hover)] active:scale-[0.98] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
         >
           다시 시도
         </button>

@@ -30,14 +30,14 @@ export default async function WritingDetailPage({ params }: { params: Promise<{ 
 
   return (
     <article className="space-y-6">
-      <header className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 sm:p-8 shadow-[var(--shadow-toss)]">
+      <header className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-6 sm:p-8">
         <div className="flex items-start justify-between gap-3">
           <time className="text-[13px] text-[var(--color-text-weak)] font-tabular">
             <LocalDate ts={w.createdAt} />
           </time>
           <Link
             href={`/writings/edit/${w.id}`}
-            className="inline-flex items-center h-9 px-3 rounded-[var(--radius-toss-sm)] text-[13px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+            className="inline-flex items-center h-9 px-3 rounded-[var(--radius-field)] text-[13px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
           >
             수정
           </Link>
@@ -49,7 +49,7 @@ export default async function WritingDetailPage({ params }: { params: Promise<{ 
             width={800}
             height={400}
             sizes="(max-width: 640px) calc(100vw - 88px), (max-width: 1064px) calc(100vw - 104px), 920px"
-            className="mt-3 w-full max-h-[360px] rounded-[var(--radius-toss-sm)] object-cover shadow-[var(--shadow-toss)]"
+            className="mt-3 w-full max-h-[360px] rounded-[var(--radius-field)] object-cover"
           />
         )}
         <h1 className="mt-3 text-[28px] sm:text-[32px] font-bold tracking-tight leading-tight text-[var(--color-text-strong)]">
@@ -67,7 +67,7 @@ export default async function WritingDetailPage({ params }: { params: Promise<{ 
           </ul>
         )}
       </header>
-      <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 sm:p-8 shadow-[var(--shadow-toss)]">
+      <section className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-6 sm:p-8">
         {w.body ? (
           <MarkdownViewer initialValue={w.body} />
         ) : (

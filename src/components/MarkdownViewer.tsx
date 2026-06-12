@@ -58,7 +58,7 @@ export function MarkdownViewer({ initialValue }: { initialValue: string }) {
   }, [])
 
   return (
-    <div ref={containerRef} className="prose-toss">
+    <div ref={containerRef} className="prose-apple">
       <Viewer key={theme} initialValue={initialValue} theme={theme} />
     </div>
   )

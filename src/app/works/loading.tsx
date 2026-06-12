@@ -11,13 +11,13 @@ export default function WorksLoading() {
       </div>
 
       <div className="flex gap-2">
-        <Skeleton className="h-11 flex-1 rounded-[var(--radius-toss)]" />
-        <Skeleton className="h-11 w-20 rounded-[var(--radius-toss)]" />
+        <Skeleton className="h-11 flex-1 rounded-[var(--radius-card)]" />
+        <Skeleton className="h-11 w-20 rounded-[var(--radius-card)]" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-[140px] rounded-[var(--radius-toss)]" />
+          <Skeleton key={i} className="h-[140px] rounded-[var(--radius-card)]" />
         ))}
       </div>
     </div>

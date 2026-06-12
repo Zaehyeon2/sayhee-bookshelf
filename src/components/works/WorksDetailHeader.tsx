@@ -22,10 +22,10 @@ export function WorksDetailHeader(props: Props) {
           width={160}
           height={240}
           sizes="160px"
-          className="flex-shrink-0 rounded-[var(--radius-toss)] object-cover shadow-[var(--shadow-toss)]"
+          className="flex-shrink-0 rounded-[var(--radius-card)] object-cover"
         />
       ) : (
-        <div className="w-40 h-60 flex-shrink-0 rounded-[var(--radius-toss)] bg-[var(--color-surface-2)]" />
+        <div className="w-40 h-60 flex-shrink-0 rounded-[var(--radius-card)] bg-[var(--color-surface-2)]" />
       )}
       <div className="min-w-0 flex-1 space-y-3">
         <div>

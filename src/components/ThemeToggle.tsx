@@ -73,7 +73,7 @@ export function ThemeToggle() {
       aria-label={`현재 ${LABEL[pref]}. 누르면 ${LABEL[next]}로 전환됩니다.`}
       title={LABEL[pref]}
       suppressHydrationWarning
-      className="inline-flex w-11 h-11 items-center justify-center rounded-[var(--radius-toss-sm)] text-[18px] leading-none text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+      className="inline-flex w-11 h-11 items-center justify-center rounded-[var(--radius-field)] text-[18px] leading-none text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
     >
       <span aria-hidden style={{ visibility: mounted ? 'visible' : 'hidden' }}>
         {ICON[pref]}

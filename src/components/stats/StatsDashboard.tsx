@@ -30,7 +30,7 @@ export type StatsData =
 
 function Widget({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-[var(--radius-toss-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-toss)] md:p-4">
+    <div className="rounded-[var(--radius-field)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 md:p-4">
       <h3 className="mb-2 text-[13px] font-semibold text-[var(--color-text-weak)] md:mb-3 md:text-sm">
         {title}
       </h3>

@@ -4,7 +4,7 @@ export default function WorksMovieDetailLoading() {
   return (
     <div className="space-y-8">
       <div className="flex gap-4">
-        <Skeleton className="h-[180px] w-[120px] rounded-[var(--radius-toss-sm)]" />
+        <Skeleton className="h-[180px] w-[120px] rounded-[var(--radius-field)]" />
         <div className="flex-1 space-y-3">
           <Skeleton className="h-7 w-3/4" />
           <Skeleton className="h-5 w-1/2" />
@@ -26,7 +26,7 @@ export default function WorksMovieDetailLoading() {
         <Skeleton className="h-5 w-24" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-[140px] rounded-[var(--radius-toss)]" />
+            <Skeleton key={i} className="h-[140px] rounded-[var(--radius-card)]" />
           ))}
         </div>
       </section>

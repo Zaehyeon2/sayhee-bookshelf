@@ -53,7 +53,7 @@ export function PasswordChangeForm({ forced }: { forced: boolean }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4 max-w-sm">
       {forced && (
-        <p className="rounded-[var(--radius-toss-sm)] bg-yellow-50 dark:bg-yellow-900/20 px-3 py-2 text-[13px] text-yellow-900 dark:text-yellow-200">
+        <p className="rounded-[var(--radius-field)] bg-yellow-50 dark:bg-yellow-900/20 px-3 py-2 text-[13px] text-yellow-900 dark:text-yellow-200">
           기본 비밀번호를 사용 중입니다. 변경 후 다른 기능을 이용할 수 있어요.
         </p>
       )}
@@ -67,7 +67,7 @@ export function PasswordChangeForm({ forced }: { forced: boolean }) {
           onChange={(e) => setCurrent(e.target.value)}
           required
           autoComplete="current-password"
-          className="mt-1 w-full h-11 px-3 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition"
+          className="mt-1 w-full h-11 px-3 rounded-[var(--radius-field)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/15 outline-none transition"
         />
       </label>
       <label className="block">
@@ -79,7 +79,7 @@ export function PasswordChangeForm({ forced }: { forced: boolean }) {
           required
           minLength={8}
           autoComplete="new-password"
-          className="mt-1 w-full h-11 px-3 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition"
+          className="mt-1 w-full h-11 px-3 rounded-[var(--radius-field)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/15 outline-none transition"
         />
         {tooShort && <p className="mt-1 text-[12px] text-[var(--color-danger)]">최소 8자 이상</p>}
       </label>
@@ -93,7 +93,7 @@ export function PasswordChangeForm({ forced }: { forced: boolean }) {
           onChange={(e) => setConfirm(e.target.value)}
           required
           autoComplete="new-password"
-          className="mt-1 w-full h-11 px-3 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition"
+          className="mt-1 w-full h-11 px-3 rounded-[var(--radius-field)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/15 outline-none transition"
         />
         {mismatch && (
           <p className="mt-1 text-[12px] text-[var(--color-danger)]">
@@ -104,7 +104,7 @@ export function PasswordChangeForm({ forced }: { forced: boolean }) {
       <button
         type="submit"
         disabled={!canSubmit}
-        className="inline-flex w-full h-11 items-center justify-center gap-2 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[15px] font-medium disabled:opacity-50 transition"
+        className="inline-flex w-full h-11 items-center justify-center gap-2 rounded-[var(--radius-field)] bg-[var(--color-accent)] text-white text-[15px] font-medium disabled:opacity-50 transition"
       >
         {busy && <Spinner />}
         변경

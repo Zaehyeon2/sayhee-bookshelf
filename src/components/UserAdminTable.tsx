@@ -97,7 +97,7 @@ export function UserAdminTable({
       <div className="flex justify-end">
         <button
           onClick={() => setCreating(true)}
-          className="inline-flex items-center px-4 h-9 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[13px] font-medium"
+          className="inline-flex items-center px-4 h-9 rounded-[var(--radius-field)] bg-[var(--color-accent)] text-white text-[13px] font-medium"
         >
           신규 사용자
         </button>
@@ -130,7 +130,7 @@ export function UserAdminTable({
                   <button
                     onClick={() => onReset(u.id, u.username)}
                     disabled={resetting}
-                    className="text-[12px] text-[var(--color-toss-blue)] hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-[12px] text-[var(--color-accent)] hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {resetting ? '처리 중…' : '비번 reset'}
                   </button>
@@ -152,7 +152,7 @@ export function UserAdminTable({
       <Dialog.Root open={creating} onOpenChange={(open) => !busy && setCreating(open)}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/30 z-20" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 bg-[var(--color-surface)] rounded-[var(--radius-toss)] p-6 w-[360px] shadow-xl">
+          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 bg-[var(--color-surface)] rounded-[var(--radius-card)] p-6 w-[360px] shadow-xl">
             <Dialog.Title className="text-[18px] font-bold text-[var(--color-text-strong)] mb-4">
               신규 사용자
             </Dialog.Title>
@@ -167,7 +167,7 @@ export function UserAdminTable({
                   onChange={(e) => setNewUsername(e.target.value)}
                   required
                   maxLength={20}
-                  className="mt-1 w-full h-11 px-3 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition"
+                  className="mt-1 w-full h-11 px-3 rounded-[var(--radius-field)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/15 outline-none transition"
                 />
               </label>
               <label className="block">
@@ -179,7 +179,7 @@ export function UserAdminTable({
                   value={newDisplayName}
                   onChange={(e) => setNewDisplayName(e.target.value)}
                   maxLength={30}
-                  className="mt-1 w-full h-11 px-3 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition"
+                  className="mt-1 w-full h-11 px-3 rounded-[var(--radius-field)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/15 outline-none transition"
                 />
               </label>
               <p className="text-[12px] text-[var(--color-text-muted)]">
@@ -189,14 +189,14 @@ export function UserAdminTable({
               <div className="flex justify-end gap-2 pt-2">
                 <Dialog.Close
                   disabled={busy}
-                  className="px-4 h-9 rounded-[var(--radius-toss-sm)] text-[13px] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] disabled:opacity-50 transition"
+                  className="px-4 h-9 rounded-[var(--radius-field)] text-[13px] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] disabled:opacity-50 transition"
                 >
                   취소
                 </Dialog.Close>
                 <button
                   type="submit"
                   disabled={busy}
-                  className="inline-flex items-center px-4 h-9 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[13px] gap-2 disabled:opacity-50 transition"
+                  className="inline-flex items-center px-4 h-9 rounded-[var(--radius-field)] bg-[var(--color-accent)] text-white text-[13px] gap-2 disabled:opacity-50 transition"
                 >
                   {busy && <Spinner />}
                   생성

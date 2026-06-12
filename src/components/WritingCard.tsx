@@ -26,7 +26,7 @@ export function WritingCard({ writing, snippet, query }: Props) {
   return (
     <Link
       href={`/writings/${encodeURIComponent(writing.slug)}`}
-      className="group block rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] active:scale-[0.99] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+      className="group block rounded-[var(--radius-card)] bg-[var(--color-surface)] p-5 hover:shadow-[var(--shadow-float)] active:scale-[0.99] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
     >
       <div className="flex gap-3">
         {writing.coverUrl && (
@@ -40,7 +40,7 @@ export function WritingCard({ writing, snippet, query }: Props) {
           />
         )}
         <div className="flex-1 min-w-0">
-          <h3 className="text-[17px] font-bold leading-snug line-clamp-2 text-[var(--color-text-strong)] group-hover:text-[var(--color-toss-blue)] transition">
+          <h3 className="text-[17px] font-bold leading-snug line-clamp-2 text-[var(--color-text-strong)] group-hover:text-[var(--color-accent)] transition">
             {query ? highlightMatch(writing.title, query) : writing.title}
           </h3>
           <p className="mt-2 text-[13px] text-[var(--color-text-muted)] line-clamp-2 leading-relaxed">

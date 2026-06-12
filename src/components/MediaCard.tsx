@@ -28,7 +28,7 @@ export function MediaCard({ item, basePath, publicBadgeTitle, snippet, query }: 
   return (
     <Link
       href={`${basePath}/${item.slug}`}
-      className="group block rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] active:scale-[0.99] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+      className="group block rounded-[var(--radius-card)] bg-[var(--color-surface)] p-5 hover:shadow-[var(--shadow-float)] active:scale-[0.99] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
     >
       <div className="flex gap-3">
         {item.coverUrl && (
@@ -43,7 +43,7 @@ export function MediaCard({ item, basePath, publicBadgeTitle, snippet, query }: 
         )}
         <div className="flex-1 min-w-0 flex flex-col">
           <div className="flex items-start justify-between gap-3">
-            <h3 className="text-[17px] font-bold leading-snug line-clamp-2 text-[var(--color-text-strong)] group-hover:text-[var(--color-toss-blue)] transition">
+            <h3 className="text-[17px] font-bold leading-snug line-clamp-2 text-[var(--color-text-strong)] group-hover:text-[var(--color-accent)] transition">
               {item.title}
             </h3>
             <GenreBadge genre={item.genre} />
@@ -70,7 +70,7 @@ export function MediaCard({ item, basePath, publicBadgeTitle, snippet, query }: 
             <div className="flex items-center gap-2">
               {item.isPublic === 1 && (
                 <span
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--color-toss-blue)]"
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--color-accent)]"
                   title={publicBadgeTitle}
                 >
                   🌐 공개

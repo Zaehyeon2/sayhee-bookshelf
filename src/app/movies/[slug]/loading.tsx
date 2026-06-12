@@ -4,7 +4,7 @@ export default function MovieDetailLoading() {
   return (
     <div className="space-y-6">
       {/* Hero card */}
-      <div className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] shadow-[var(--shadow-toss)] p-6 sm:p-8">
+      <div className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-6 sm:p-8">
         {/* Badge + date */}
         <div className="flex items-center gap-2">
           <Skeleton className="h-6 w-16 rounded-full" />
@@ -19,7 +19,7 @@ export default function MovieDetailLoading() {
       </div>
 
       {/* Body card */}
-      <div className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] shadow-[var(--shadow-toss)] p-6 sm:p-8 space-y-3">
+      <div className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-6 sm:p-8 space-y-3">
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-5/6" />
         <Skeleton className="h-4 w-4/5" />

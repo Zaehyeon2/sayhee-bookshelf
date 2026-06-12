@@ -40,13 +40,13 @@ export function WorksSearchBar({ type, initialQuery }: Props) {
         onChange={(e) => setQ(e.target.value)}
         maxLength={MAX_SEARCH_Q}
         placeholder={WORKS_SEARCH_LABELS[type].placeholder}
-        className="flex-1 h-11 px-4 rounded-[var(--radius-toss)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[14px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+        className="flex-1 h-11 px-4 rounded-[var(--radius-card)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[14px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
       />
       <button
         type="submit"
         disabled={isPending}
         aria-busy={isPending}
-        className="h-11 px-5 min-w-[72px] rounded-[var(--radius-toss)] bg-[var(--color-toss-blue)] text-white text-[14px] font-semibold hover:opacity-90 transition disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50 inline-flex items-center justify-center gap-1"
+        className="h-11 px-5 min-w-[72px] rounded-[var(--radius-card)] bg-[var(--color-accent)] text-white text-[14px] font-semibold hover:opacity-90 transition disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] inline-flex items-center justify-center gap-1"
       >
         {isPending ? (
           <span

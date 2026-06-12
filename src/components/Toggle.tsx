@@ -51,8 +51,8 @@ export function Toggle({ checked, onChange, label, description, disabled }: Prop
         disabled={disabled}
         onClick={toggle}
         className={[
-          'relative shrink-0 inline-flex w-11 h-[26px] rounded-full transition outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50',
-          checked ? 'bg-[var(--color-toss-blue)]' : 'bg-[var(--color-border)]',
+          'relative shrink-0 inline-flex w-11 h-[26px] rounded-full transition outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]',
+          checked ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-border)]',
           disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
         ].join(' ')}
       >

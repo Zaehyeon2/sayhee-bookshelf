@@ -12,7 +12,7 @@ export default function HomeLoading() {
       {/* Stat cards */}
       <section className="grid grid-cols-3 gap-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-[100px] rounded-[var(--radius-toss)]" />
+          <Skeleton key={i} className="h-[100px] rounded-[var(--radius-card)]" />
         ))}
       </section>
 
@@ -22,7 +22,7 @@ export default function HomeLoading() {
         {/* Genre grid */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-[72px] rounded-[var(--radius-toss)]" />
+            <Skeleton key={i} className="h-[72px] rounded-[var(--radius-card)]" />
           ))}
         </div>
       </section>
@@ -33,7 +33,7 @@ export default function HomeLoading() {
         {/* Book card grid */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-[160px] rounded-[var(--radius-toss)]" />
+            <Skeleton key={i} className="h-[160px] rounded-[var(--radius-card)]" />
           ))}
         </div>
       </section>

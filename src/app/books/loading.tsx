@@ -4,7 +4,7 @@ export default function BooksLoading() {
   return (
     <div className="space-y-6">
       {/* Search input */}
-      <Skeleton className="h-12 w-full rounded-[var(--radius-toss-sm)]" />
+      <Skeleton className="h-12 w-full rounded-[var(--radius-field)]" />
 
       {/* Chip filters */}
       <div className="flex gap-2">
@@ -24,7 +24,7 @@ export default function BooksLoading() {
       {/* Book card grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-[160px] rounded-[var(--radius-toss)]" />
+          <Skeleton key={i} className="h-[160px] rounded-[var(--radius-card)]" />
         ))}
       </div>
     </div>

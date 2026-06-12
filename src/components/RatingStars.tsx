@@ -38,7 +38,7 @@ export function RatingStars({ value, onChange, size = 'md' }: Props) {
             <span className="text-[var(--color-border)]">★</span>
             {fillPct > 0 && (
               <span
-                className="absolute inset-0 overflow-hidden text-[var(--color-toss-yellow)]"
+                className="absolute inset-0 overflow-hidden text-[var(--color-star)]"
                 style={{ width: `${fillPct}%` }}
                 aria-hidden
               >
@@ -66,13 +66,13 @@ export function RatingStars({ value, onChange, size = 'md' }: Props) {
               type="button"
               onClick={() => onChange?.(halfValue)}
               aria-label={`${formatHalfStars(halfValue)}점`}
-              className="absolute left-0 top-0 w-1/2 h-full bg-transparent cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50 rounded-l"
+              className="absolute left-0 top-0 w-1/2 h-full bg-transparent cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] rounded-l"
             />
             <button
               type="button"
               onClick={() => onChange?.(fullValue)}
               aria-label={`${formatHalfStars(fullValue)}점`}
-              className="absolute right-0 top-0 w-1/2 h-full bg-transparent cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50 rounded-r"
+              className="absolute right-0 top-0 w-1/2 h-full bg-transparent cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] rounded-r"
             />
           </span>
         )

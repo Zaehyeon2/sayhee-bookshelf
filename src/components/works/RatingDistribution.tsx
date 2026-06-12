@@ -24,7 +24,7 @@ export function RatingDistribution({ distribution }: Props) {
               <span aria-hidden="true">★</span> {score}
             </span>
             <div className="flex-1 h-3 rounded-sm bg-[var(--color-surface-2)] overflow-hidden">
-              <div className="h-full bg-[var(--color-toss-blue)]" style={{ width: `${ratio}%` }} />
+              <div className="h-full bg-[var(--color-accent)]" style={{ width: `${ratio}%` }} />
             </div>
             <span className="w-8 text-right text-[var(--color-text-weak)] tabular-nums">
               {count}

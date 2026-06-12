@@ -20,7 +20,7 @@ function formatDate(ts: number): string {
 
 export function ReviewListItem({ item }: Props) {
   return (
-    <article className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] transition h-full flex flex-col">
+    <article className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-5 hover:shadow-[var(--shadow-float)] transition h-full flex flex-col">
       <div className="flex items-center justify-between gap-3">
         <RatingScore value={item.rating} />
         {/* TODO: link to /u/<username> when that route exists */}
@@ -29,7 +29,7 @@ export function ReviewListItem({ item }: Props) {
         </span>
       </div>
       {item.oneLineReview && (
-        <blockquote className="mt-3 border-l-4 border-[var(--color-toss-blue)] pl-3 py-1 flex-1">
+        <blockquote className="mt-3 border-l-4 border-[var(--color-accent)] pl-3 py-1 flex-1">
           <span className="sr-only">{item.authorDisplayName}의 한줄평: </span>
           <p className="text-[14px] leading-relaxed text-[var(--color-text-strong)]">
             {item.oneLineReview}

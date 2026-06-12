@@ -38,14 +38,14 @@ export function MediaDetailArticle<R extends Row>({
 }) {
   return (
     <article className="space-y-6">
-      <header className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 sm:p-8 shadow-[var(--shadow-toss)]">
+      <header className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-6 sm:p-8">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
             <GenreBadge genre={item.genre} />
             <time className="text-[13px] text-[var(--color-text-weak)] font-tabular">{date}</time>
             {item.isPublic === 1 && (
               <span
-                className="inline-flex items-center text-[12px] font-semibold text-[var(--color-toss-blue)]"
+                className="inline-flex items-center text-[12px] font-semibold text-[var(--color-accent)]"
                 title={publicBadgeTitle}
               >
                 🌐 공개
@@ -54,7 +54,7 @@ export function MediaDetailArticle<R extends Row>({
           </div>
           <Link
             href={`${basePath}/edit/${item.id}`}
-            className="shrink-0 inline-flex items-center h-9 px-3 rounded-[var(--radius-toss-sm)] text-[13px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+            className="shrink-0 inline-flex items-center h-9 px-3 rounded-[var(--radius-field)] text-[13px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
           >
             수정
           </Link>
@@ -67,7 +67,7 @@ export function MediaDetailArticle<R extends Row>({
               width={150}
               height={220}
               sizes="150px"
-              className="flex-shrink-0 rounded-[var(--radius-toss-sm)] shadow-[var(--shadow-toss)] object-cover"
+              className="flex-shrink-0 rounded-[var(--radius-field)] object-cover"
             />
           )}
           <div className="flex-1 min-w-0">
@@ -86,7 +86,7 @@ export function MediaDetailArticle<R extends Row>({
               <li key={t}>
                 <Link
                   href={`${basePath}?tag=${encodeURIComponent(t)}`}
-                  className="inline-flex items-center rounded-full bg-[var(--color-surface-2)] hover:bg-[var(--color-toss-blue-light)] hover:text-[var(--color-toss-blue)] px-3 py-1 text-[12px] font-medium text-[var(--color-text-muted)] transition"
+                  className="inline-flex items-center rounded-full bg-[var(--color-surface-2)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)] px-3 py-1 text-[12px] font-medium text-[var(--color-text-muted)] transition"
                 >
                   #{t}
                 </Link>
@@ -96,9 +96,9 @@ export function MediaDetailArticle<R extends Row>({
         )}
       </header>
 
-      <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 sm:p-8 shadow-[var(--shadow-toss)]">
+      <section className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-6 sm:p-8">
         {item.oneLineReview && (
-          <blockquote className="mb-6 px-5 py-4 rounded-[var(--radius-toss)] bg-[var(--color-surface-2)] border-l-4 border-[var(--color-toss-blue)]">
+          <blockquote className="mb-6 px-5 py-4 rounded-[var(--radius-card)] bg-[var(--color-surface-2)] border-l-4 border-[var(--color-accent)]">
             <p className="text-[16px] leading-relaxed text-[var(--color-text-strong)] font-medium">
               &ldquo;{item.oneLineReview}&rdquo;
             </p>

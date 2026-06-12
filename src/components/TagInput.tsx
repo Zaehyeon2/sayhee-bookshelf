@@ -74,7 +74,7 @@ export function TagInput({ value, onChange }: Props) {
                 type="button"
                 onClick={() => remove(t)}
                 aria-label={`${t} 제거`}
-                className="text-[var(--color-text-weak)] hover:text-[var(--color-text-strong)] inline-flex items-center justify-center w-6 h-6 -mr-1 leading-none text-[16px] rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+                className="text-[var(--color-text-weak)] hover:text-[var(--color-text-strong)] inline-flex items-center justify-center w-6 h-6 -mr-1 leading-none text-[16px] rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
               >
                 ×
               </button>
@@ -96,10 +96,10 @@ export function TagInput({ value, onChange }: Props) {
           }
         }}
         placeholder="태그 입력 후 Enter"
-        className="w-full h-11 px-4 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition"
+        className="w-full h-11 px-4 rounded-[var(--radius-field)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/15 outline-none transition"
       />
       {suggestions.length > 0 && (
-        <ul className="mt-2 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-toss-hover)] overflow-hidden">
+        <ul className="mt-2 rounded-[var(--radius-field)] bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-float)] overflow-hidden">
           {suggestions.map((s) => (
             <li key={s}>
               <button

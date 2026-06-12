@@ -9,7 +9,7 @@ interface Props {
 
 export function EmptyState({ emoji, title, description, action }: Props) {
   return (
-    <div className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-10 sm:p-12 text-center shadow-[var(--shadow-toss)]">
+    <div className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-10 sm:p-12 text-center">
       <div className="text-[40px] leading-none" aria-hidden>
         {emoji}
       </div>
@@ -20,7 +20,7 @@ export function EmptyState({ emoji, title, description, action }: Props) {
       {action && (
         <Link
           href={action.href}
-          className="mt-6 inline-flex h-11 items-center px-5 rounded-[var(--radius-toss-sm)] bg-[var(--color-toss-blue)] text-white text-[14px] font-semibold hover:bg-[var(--color-toss-blue-hover)] active:scale-[0.97] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+          className="mt-6 inline-flex h-11 items-center px-5 rounded-[var(--radius-field)] bg-[var(--color-accent)] text-white text-[14px] font-semibold hover:bg-[var(--color-accent-hover)] active:scale-[0.97] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
         >
           {action.label}
         </Link>

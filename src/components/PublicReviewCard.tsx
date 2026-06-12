@@ -17,9 +17,9 @@ export function PublicReviewCard({ item }: Props) {
           ? `/works/book/${item.isbn}`
           : `/works?type=book&q=${encodeURIComponent(item.title.slice(0, MAX_SEARCH_Q))}`
       }
-      className="block rounded-[var(--radius-toss)] active:scale-[0.99] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+      className="block rounded-[var(--radius-card)] active:scale-[0.99] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
     >
-      <article className="h-full flex flex-col bg-[var(--color-surface)] p-5 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] rounded-[var(--radius-toss)] transition">
+      <article className="h-full flex flex-col bg-[var(--color-surface)] p-5 hover:shadow-[var(--shadow-float)] rounded-[var(--radius-card)] transition">
         <div className="flex gap-3">
           {item.coverUrl && (
             <Image
@@ -44,7 +44,7 @@ export function PublicReviewCard({ item }: Props) {
           </div>
         </div>
         {item.oneLineReview && (
-          <blockquote className="mt-4 border-l-4 border-[var(--color-toss-blue)] pl-3 py-1">
+          <blockquote className="mt-4 border-l-4 border-[var(--color-accent)] pl-3 py-1">
             <span className="sr-only">{item.authorDisplayName}의 한줄평: </span>
             <p className="text-[15px] leading-relaxed font-medium text-[var(--color-text-strong)] line-clamp-3">
               {item.oneLineReview}

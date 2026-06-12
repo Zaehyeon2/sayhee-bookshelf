@@ -33,7 +33,7 @@ export function SearchDropdown<T>({
   return (
     <Command
       shouldFilter={false}
-      className="rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] overflow-hidden"
+      className="rounded-[var(--radius-field)] bg-[var(--color-surface)] border border-[var(--color-border)] overflow-hidden"
     >
       <Command.Input
         value={query}

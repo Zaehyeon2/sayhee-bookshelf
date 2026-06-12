@@ -222,9 +222,9 @@ function TabLink({ href, active, label }: { href: string; active: boolean; label
     <Link
       href={href}
       className={
-        'h-9 px-4 inline-flex items-center rounded-full text-[13px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50 ' +
+        'h-9 px-4 inline-flex items-center rounded-full text-[13px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] ' +
         (active
-          ? 'bg-[var(--color-toss-blue)] text-white'
+          ? 'bg-[var(--color-accent)] text-white'
           : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)]')
       }
     >

@@ -49,7 +49,7 @@ export function WorksSearchCard(props: Props) {
   return (
     <Link
       href={href}
-      className="h-full flex flex-col rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-toss)] hover:shadow-[var(--shadow-toss-hover)] transition"
+      className="h-full flex flex-col rounded-[var(--radius-card)] bg-[var(--color-surface)] p-4 hover:shadow-[var(--shadow-float)] transition"
     >
       <div className="flex gap-3 flex-1">
         {props.coverUrl ? (

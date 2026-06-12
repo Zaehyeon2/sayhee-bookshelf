@@ -45,44 +45,44 @@ export function MobileMenu({ displayName, role }: Props) {
         aria-label={open ? '메뉴 닫기' : '메뉴 열기'}
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="cursor-pointer h-11 w-11 inline-flex items-center justify-center rounded-[var(--radius-toss-sm)] text-[20px] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-toss-blue)]/50"
+        className="cursor-pointer h-11 w-11 inline-flex items-center justify-center rounded-[var(--radius-field)] text-[20px] hover:bg-[var(--color-surface-2)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
       >
         <span aria-hidden="true">☰</span>
       </button>
       {open && (
-        <div className="absolute right-0 mt-1 w-56 max-w-[calc(100vw-2rem)] rounded-[var(--radius-toss)] bg-[var(--color-surface)] shadow-[var(--shadow-toss)] border border-[var(--color-border-subtle)] py-1 text-[14px] z-50">
+        <div className="absolute right-0 mt-1 w-56 max-w-[calc(100vw-2rem)] rounded-[var(--radius-card)] bg-[var(--color-surface)] shadow-[var(--shadow-float)] border border-[var(--color-border-subtle)] py-1 text-[14px] z-50">
           <Link
             href="/books"
             onClick={close}
-            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
+            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-field)] hover:bg-[var(--color-surface-2)]"
           >
             📚 내 책장
           </Link>
           <Link
             href="/movies"
             onClick={close}
-            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
+            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-field)] hover:bg-[var(--color-surface-2)]"
           >
             🎬 내 영화관
           </Link>
           <Link
             href="/games"
             onClick={close}
-            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
+            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-field)] hover:bg-[var(--color-surface-2)]"
           >
             🎮 내 게임
           </Link>
           <Link
             href="/writings"
             onClick={close}
-            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
+            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-field)] hover:bg-[var(--color-surface-2)]"
           >
             ✏️ 글방
           </Link>
           <Link
             href="/works"
             onClick={close}
-            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
+            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-field)] hover:bg-[var(--color-surface-2)]"
           >
             🔍 작품 검색
           </Link>
@@ -91,14 +91,14 @@ export function MobileMenu({ displayName, role }: Props) {
           <Link
             href="/settings/profile"
             onClick={close}
-            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
+            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-field)] hover:bg-[var(--color-surface-2)]"
           >
             프로필 변경
           </Link>
           <Link
             href="/settings/password"
             onClick={close}
-            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
+            className="block mx-1 px-3 py-2.5 rounded-[var(--radius-field)] hover:bg-[var(--color-surface-2)]"
           >
             비밀번호 변경
           </Link>
@@ -106,7 +106,7 @@ export function MobileMenu({ displayName, role }: Props) {
             <Link
               href="/admin/users"
               onClick={close}
-              className="block mx-1 px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
+              className="block mx-1 px-3 py-2.5 rounded-[var(--radius-field)] hover:bg-[var(--color-surface-2)]"
             >
               사용자 관리
             </Link>
@@ -118,7 +118,7 @@ export function MobileMenu({ displayName, role }: Props) {
           >
             <button
               type="submit"
-              className="mx-1 w-[calc(100%-8px)] text-left px-3 py-2.5 rounded-[var(--radius-toss-sm)] hover:bg-[var(--color-surface-2)]"
+              className="mx-1 w-[calc(100%-8px)] text-left px-3 py-2.5 rounded-[var(--radius-field)] hover:bg-[var(--color-surface-2)]"
             >
               로그아웃
             </button>

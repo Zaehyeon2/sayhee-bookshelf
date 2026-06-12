@@ -23,7 +23,7 @@ interface Props {
 }
 
 const inputCls =
-  'w-full h-12 px-4 rounded-[var(--radius-toss-sm)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] text-[var(--color-text-strong)] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-toss-blue)] focus:ring-2 focus:ring-[var(--color-toss-blue)]/15 outline-none transition'
+  'w-full h-12 px-4 rounded-[var(--radius-field)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[16px] text-[var(--color-text-strong)] placeholder:text-[var(--color-text-placeholder)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/15 outline-none transition'
 
 const labelCls = 'block text-[13px] font-semibold text-[var(--color-text-muted)] mb-2'
 
@@ -121,7 +121,7 @@ export function WritingForm({ initial, mode }: Props) {
 
   return (
     <form onSubmit={handleFormSubmit} onKeyDown={focusNextOnEnter} className="space-y-6">
-      <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-toss)] space-y-5">
+      <section className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-6 space-y-5">
         <div>
           <label className={labelCls}>제목</label>
           <input
@@ -145,12 +145,12 @@ export function WritingForm({ initial, mode }: Props) {
               <img
                 src={coverPreview}
                 alt="대표 이미지 미리보기"
-                className="h-32 w-auto rounded-[var(--radius-toss-sm)] border border-[var(--color-border)] object-cover"
+                className="h-32 w-auto rounded-[var(--radius-field)] border border-[var(--color-border)] object-cover"
               />
               <button
                 type="button"
                 onClick={onRemoveCover}
-                className="h-9 px-3 rounded-[var(--radius-toss-sm)] text-[13px] font-semibold text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition"
+                className="h-9 px-3 rounded-[var(--radius-field)] text-[13px] font-semibold text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition"
               >
                 이미지 제거
               </button>
@@ -159,7 +159,7 @@ export function WritingForm({ initial, mode }: Props) {
             <button
               type="button"
               onClick={() => coverInputRef.current?.click()}
-              className="h-12 px-5 rounded-[var(--radius-toss-sm)] border border-dashed border-[var(--color-border)] text-[14px] font-semibold text-[var(--color-text-muted)] hover:border-[var(--color-toss-blue)] hover:text-[var(--color-toss-blue)] transition"
+              className="h-12 px-5 rounded-[var(--radius-field)] border border-dashed border-[var(--color-border)] text-[14px] font-semibold text-[var(--color-text-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition"
             >
               + 이미지 첨부
             </button>
@@ -174,7 +174,7 @@ export function WritingForm({ initial, mode }: Props) {
         </div>
       </section>
 
-      <section className="rounded-[var(--radius-toss)] bg-[var(--color-surface)] p-2 shadow-[var(--shadow-toss)] overflow-hidden">
+      <section className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-2 overflow-hidden">
         <MarkdownEditor ref={editorRef} initialValue={initial?.body ?? ''} maxLength={50_000} />
       </section>
 
