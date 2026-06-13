@@ -167,6 +167,17 @@ tests/
 - factory는 `createdAt`/`updatedAt` **override를 존중** — 통계 연도 필터링 테스트가 이걸 필요로 함.
 - 통합 테스트는 멀티테넌트 격리가 진짜로 작동하는지 검증하는 회귀 가드 — 새 user-scoped 쿼리 추가 시 cross-user 격리 케이스 1개씩 추가.
 
+## 디자인 시스템 (Apple HIG, 2026-06 리스킨)
+
+`globals.css` 시맨틱 토큰 단일 소스. 참조 스펙은 `docs/superpowers/specs/2026-06-13-apple-reskin-design.md`.
+
+- **토큰 용도 분리**: `--color-accent`(#0071e3)는 fill·포커스 링 전용, `--color-accent-text`(다크 #2997ff)는 텍스트 전용(다크 대비 AA), `--color-link`는 링크 전용 — **link 색을 버튼 배경으로 금지**.
+- **다크 토큰 2벌 동기화**: `[data-theme="dark"]` + `@media prefers-color-scheme` fallback 블록 둘 다 수정. 한쪽 누락 = no-JS/프리하이드레이션 사용자만 깨져 lint로 안 잡힘.
+- **radius 이름은 역할 기반** (`--radius-field/card/panel/pill`): Tailwind v4는 `@theme`의 `--radius-sm` 류가 `rounded-sm` 유틸 스케일을 덮어쓰므로 크기 이름 금지.
+- **그림자 문법**: 정적 카드 무그림자(흰 surface가 #f5f5f7 캔버스 대비로 lift). `--shadow-float`는 플로팅 요소(드롭다운·다이얼로그·카드 hover) 전용.
+- **버튼 2종**: 단독 CTA = pill(`--radius-pill`, 17px/400), 인풋 부착·테이블 소형 = compact(`--radius-field`, 14px). 인풋은 frosted(`--color-surface-2` fill, 무border, 불투명 포커스 링).
+- **UI 크롬 이모지 금지** (Apple voice). 예외: 기능적 문자 ★(별점)·☰(햄버거)·✓(상태), `icon.tsx` 파비콘 글리프.
+
 ## 코드 스타일 (Biome)
 
 - 싱글 따옴표, 세미콜론 as-needed, trailing comma all, line width 100, indent 2 spaces (`biome.json`).
