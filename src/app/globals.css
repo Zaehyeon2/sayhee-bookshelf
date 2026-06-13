@@ -30,6 +30,15 @@
 
   --shadow-float: 0 3px 30px rgba(0, 0, 0, 0.12);
 
+  /* Motion — single source for DESIGN.md §15 durations + easings */
+  --motion-instant: 0ms;
+  --motion-fast: 150ms;
+  --motion-standard: 300ms;
+  --motion-slow: 500ms;
+  --ease-enter: cubic-bezier(0.2, 0.6, 0.25, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
+
   --font-sans:
     var(--font-pretendard), -apple-system, BlinkMacSystemFont,
     'system-ui', 'Segoe UI', Roboto, sans-serif;

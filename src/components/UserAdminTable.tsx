@@ -151,8 +151,8 @@ export function UserAdminTable({
 
       <Dialog.Root open={creating} onOpenChange={(open) => !busy && setCreating(open)}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/30 z-20" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 bg-[var(--color-surface)] rounded-[var(--radius-card)] p-6 w-[360px] shadow-xl">
+          <Dialog.Overlay className="fixed inset-0 bg-black/30 z-20 data-[state=open]:animate-[fade-in_var(--motion-fast)_var(--ease-enter)] data-[state=closed]:animate-[fade-out_var(--motion-fast)_var(--ease-exit)]" />
+          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 bg-[var(--color-surface)] rounded-[var(--radius-card)] p-6 w-[360px] shadow-[var(--shadow-float)] data-[state=open]:animate-[scale-in_var(--motion-fast)_var(--ease-enter)] data-[state=closed]:animate-[scale-out_var(--motion-fast)_var(--ease-exit)]">
             <Dialog.Title className="text-[18px] font-bold text-[var(--color-text-strong)] mb-4">
               신규 사용자
             </Dialog.Title>

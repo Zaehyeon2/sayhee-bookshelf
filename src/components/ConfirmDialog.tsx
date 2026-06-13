@@ -36,8 +36,8 @@ export function ConfirmDialog({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm data-[state=open]:animate-[fade-in_150ms_ease-out] data-[state=closed]:animate-[fade-out_120ms_ease-in]" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(420px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 rounded-[var(--radius-panel)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-float)] data-[state=open]:animate-[scale-in_180ms_cubic-bezier(0.2,0.8,0.2,1)] data-[state=closed]:animate-[scale-out_120ms_ease-in] focus:outline-none">
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm data-[state=open]:animate-[fade-in_var(--motion-fast)_var(--ease-enter)] data-[state=closed]:animate-[fade-out_var(--motion-fast)_var(--ease-exit)]" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(420px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 rounded-[var(--radius-panel)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-float)] data-[state=open]:animate-[scale-in_var(--motion-fast)_var(--ease-enter)] data-[state=closed]:animate-[scale-out_var(--motion-fast)_var(--ease-exit)] focus:outline-none">
           <Dialog.Title className="text-[17px] font-bold text-[var(--color-text-strong)]">
             {title}
           </Dialog.Title>
